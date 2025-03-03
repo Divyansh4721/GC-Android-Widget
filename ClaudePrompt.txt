@@ -144,9 +144,9 @@ import java.util.Locale;
 
 public class RatesFetchTask extends AsyncTask<Void, Void, String[]> {
     private static final String API_URL = "https://bcast.jmdpatil.com:7768/VOTSBroadcastStreaming/Services/xml/GetLiveRateByTemplateID/jmd";
-    private static final int GOLD_ROW = 4;
-    private static final int SILVER_ROW = 3;
-    private static final int RATE_COLUMN = 6;
+    private static final int GOLD_ROW = 6;
+    private static final int SILVER_ROW = 5;
+    private static final int RATE_COLUMN = 4;
     
     private final Context context;
     private final RemoteViews views;
@@ -162,10 +162,10 @@ public class RatesFetchTask extends AsyncTask<Void, Void, String[]> {
 
     @Override
     protected void onPreExecute() {
-        // Update the last updated time
-        SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss", Locale.getDefault());
+        // Update the last updated time in 24-hour format (HH:mm)
+        SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
         String currentTime = dateFormat.format(new Date());
-        views.setTextViewText(R.id.last_updated, "Last Updated: " + currentTime);
+        views.setTextViewText(R.id.last_updated, "Updated: " + currentTime);
         
         // Show loading indicator
         views.setTextViewText(R.id.gold_rate, "Loading...");
@@ -220,8 +220,8 @@ public class RatesFetchTask extends AsyncTask<Void, Void, String[]> {
         String goldRate = rates[0] != null ? rates[0] : "N/A";
         String silverRate = rates[1] != null ? rates[1] : "N/A";
         
-        views.setTextViewText(R.id.gold_rate, "Gold: ₹" + goldRate);
-        views.setTextViewText(R.id.silver_rate, "Silver: ₹" + silverRate);
+        views.setTextViewText(R.id.gold_rate, "Gold 995 - ₹" + goldRate);
+        views.setTextViewText(R.id.silver_rate, "Silver 999 - ₹" + silverRate);
         
         // Set the colors
         views.setTextColor(R.id.gold_rate, Color.rgb(255, 215, 0)); // Gold color
@@ -623,28 +623,41 @@ Content:
     <path
         android:fillColor="#FFFFFF"
         android:pathData="M17.65,6.35C16.2,4.9 14.21,4 12,4c-4.42,0 -7.99,3.58 -7.99,8s3.57,8 7.99,8c3.73,0 6.84,-2.55 7.73,-6h-2.08c-0.82,2.33 -3.04,4 -5.65,4 -3.31,0 -6,-2.69 -6,-6s2.69,-6 6,-6c1.66,0 3.14,0.69 4.22,1.78L13,11h7V4l-2.35,2.35z"/>
+    <path
+        android:fillColor="#000000"
+        android:pathData="M17.65,6.35C16.2,4.9 14.21,4 12,4c-4.42,0 -7.99,3.58 -7.99,8s3.57,8 7.99,8c3.73,0 6.84,-2.55 7.73,-6h-2.08c-0.82,2.33 -3.04,4 -5.65,4 -3.31,0 -6,-2.69 -6,-6s2.69,-6 6,-6c1.66,0 3.14,0.69 4.22,1.78L13,11h7V4l-2.35,2.35z"
+        android:strokeWidth="0.5"
+        android:strokeColor="#000000"
+        android:strokeAlpha="0.5"
+        android:fillAlpha="0" />
 </vector>
 
 Path: C:\Users\divya\AndroidStudioProjects\rateswidget\app\src\main\res\drawable\widget_background.xml
 Content:
 <?xml version="1.0" encoding="utf-8"?>
 <shape xmlns:android="http://schemas.android.com/apk/res/android">
-    <solid android:color="#333333" />
-    <corners android:radius="8dp" />
-    <stroke
-        android:width="1dp"
-        android:color="#FFD700" />
+    <solid android:color="#80333333" /> <!-- 80 prefix adds 50% transparency -->
+    <corners android:radius="12dp" />
+    <!-- Removed the stroke/border element -->
+    <gradient
+        android:angle="135"
+        android:endColor="#80222222"
+        android:startColor="#80444444"
+        android:type="linear" />
 </shape>
 
 Path: C:\Users\divya\AndroidStudioProjects\rateswidget\app\src\main\res\drawable\widget_preview.xml
 Content:
 <?xml version="1.0" encoding="utf-8"?>
 <shape xmlns:android="http://schemas.android.com/apk/res/android">
-    <solid android:color="#333333" />
-    <corners android:radius="8dp" />
-    <stroke
-        android:width="2dp"
-        android:color="#FFD700" />
+    <solid android:color="#80333333" /> <!-- 80 prefix adds 50% transparency -->
+    <corners android:radius="12dp" />
+    <!-- Removed the stroke/border element -->
+    <gradient
+        android:angle="135"
+        android:endColor="#80222222"
+        android:startColor="#80444444"
+        android:type="linear" />
 </shape>
 
 Path: C:\Users\divya\AndroidStudioProjects\rateswidget\app\src\main\res\layout\activity_main.xml
@@ -694,7 +707,7 @@ Content:
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/widget_background"
-    android:padding="8dp">
+    android:padding="12dp">
 
     <TextView
         android:id="@+id/widget_title"
@@ -704,47 +717,64 @@ Content:
         android:gravity="center"
         android:text="GC Jewellers"
         android:textColor="@android:color/white"
-        android:textSize="18sp"
-        android:textStyle="bold" />
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:shadowColor="#000000"
+        android:shadowDx="1"
+        android:shadowDy="1"
+        android:shadowRadius="2" />
 
     <TextView
         android:id="@+id/gold_rate"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@id/widget_title"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="10dp"
         android:gravity="center"
         android:text="Gold: Loading..."
         android:textColor="#FFD700"
-        android:textSize="16sp" />
+        android:textSize="18sp"
+        android:shadowColor="#000000"
+        android:shadowDx="1"
+        android:shadowDy="1"
+        android:shadowRadius="1.5" />
 
     <TextView
         android:id="@+id/silver_rate"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@id/gold_rate"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="10dp"
         android:gravity="center"
         android:text="Silver: Loading..."
         android:textColor="#C0C0C0"
-        android:textSize="16sp" />
+        android:textSize="18sp"
+        android:shadowColor="#000000"
+        android:shadowDx="1"
+        android:shadowDy="1"
+        android:shadowRadius="1.5" />
 
     <TextView
         android:id="@+id/last_updated"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@id/silver_rate"
-        android:layout_marginTop="4dp"
-        android:text="Last Updated: --:--:--"
-        android:textColor="@android:color/white"
-        android:textSize="12sp" />
+        android:layout_marginTop="8dp"
+        android:text="Updated: --:--"
+        android:textColor="#E0E0E0"
+        android:textSize="12sp"
+        android:shadowColor="#000000"
+        android:shadowDx="0.5"
+        android:shadowDy="0.5"
+        android:shadowRadius="1" />
 
     <ImageButton
         android:id="@+id/refresh_button"
-        android:layout_width="30dp"
-        android:layout_height="30dp"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
         android:layout_alignParentEnd="true"
         android:layout_below="@id/silver_rate"
+        android:layout_marginTop="4dp"
         android:background="@android:color/transparent"
         android:src="@drawable/ic_refresh" />
 
@@ -866,7 +896,8 @@ Content:
     android:previewImage="@drawable/widget_preview"
     android:resizeMode="horizontal|vertical"
     android:updatePeriodMillis="10000"
-    android:widgetCategory="home_screen">
+    android:widgetCategory="home_screen"
+    android:configure="com.example.rateswidget.MainActivity">
 </appwidget-provider>
 
 
