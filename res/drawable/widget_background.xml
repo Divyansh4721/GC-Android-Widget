@@ -2,9 +2,7 @@
 <shape xmlns:android="http://schemas.android.com/apk/res/android">
     <solid android:color="#80333333" /> <!-- 80 prefix adds 50% transparency -->
     <corners android:radius="12dp" />
-    <stroke
-        android:width="1.5dp"
-        android:color="#BAFFD700" /> <!-- BA prefix adds 73% opacity to gold color -->
+    <!-- Removed the stroke/border element -->
     <gradient
         android:angle="135"
         android:endColor="#80222222"

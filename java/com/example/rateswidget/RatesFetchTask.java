@@ -16,9 +16,9 @@ import java.util.Locale;
 
 public class RatesFetchTask extends AsyncTask<Void, Void, String[]> {
     private static final String API_URL = "https://bcast.jmdpatil.com:7768/VOTSBroadcastStreaming/Services/xml/GetLiveRateByTemplateID/jmd";
-    private static final int GOLD_ROW = 4;
-    private static final int SILVER_ROW = 3;
-    private static final int RATE_COLUMN = 6;
+    private static final int GOLD_ROW = 6;
+    private static final int SILVER_ROW = 5;
+    private static final int RATE_COLUMN = 4;
     
     private final Context context;
     private final RemoteViews views;
@@ -34,10 +34,10 @@ public class RatesFetchTask extends AsyncTask<Void, Void, String[]> {
 
     @Override
     protected void onPreExecute() {
-        // Update the last updated time
-        SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss", Locale.getDefault());
+        // Update the last updated time in 24-hour format (HH:mm)
+        SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
         String currentTime = dateFormat.format(new Date());
-        views.setTextViewText(R.id.last_updated, "Last Updated: " + currentTime);
+        views.setTextViewText(R.id.last_updated, "Updated: " + currentTime);
         
         // Show loading indicator
         views.setTextViewText(R.id.gold_rate, "Loading...");
@@ -92,8 +92,8 @@ public class RatesFetchTask extends AsyncTask<Void, Void, String[]> {
         String goldRate = rates[0] != null ? rates[0] : "N/A";
         String silverRate = rates[1] != null ? rates[1] : "N/A";
         
-        views.setTextViewText(R.id.gold_rate, "Gold: ₹" + goldRate);
-        views.setTextViewText(R.id.silver_rate, "Silver: ₹" + silverRate);
+        views.setTextViewText(R.id.gold_rate, "Gold 995 - ₹" + goldRate);
+        views.setTextViewText(R.id.silver_rate, "Silver 999 - ₹" + silverRate);
         
         // Set the colors
         views.setTextColor(R.id.gold_rate, Color.rgb(255, 215, 0)); // Gold color
