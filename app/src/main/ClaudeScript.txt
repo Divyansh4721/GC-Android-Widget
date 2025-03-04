@@ -1,0 +1,69 @@
+$FilePaths = @(
+"C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\AndroidManifest.xml"
+"C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\java\com\example\rateswidget\BootCompletedReceiver.java"
+"C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\java\com\example\rateswidget\MainActivity.java"
+"C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\java\com\example\rateswidget\RatesFetchTask.java"
+"C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\java\com\example\rateswidget\RatesWidgetProvider.java"
+"C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\java\com\example\rateswidget\SignInActivity.java"
+"C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\java\com\example\rateswidget\WidgetUpdateService.java"
+"C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\drawable\activity_sign_in.xml"
+"C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\drawable\ic_launcher_background.xml"
+"C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\drawable\ic_launcher_foreground.xml"
+"C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\drawable\ic_refresh.xml"
+"C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\drawable\widget_background.xml"
+"C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\drawable\widget_preview.xml"
+"C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\layout\activity_main.xml"
+"C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\layout\rates_widget.xml"
+"C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\mipmap-anydpi-v26\ic_launcher.xml"
+"C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\mipmap-anydpi-v26\ic_launcher_round.xml"
+"C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\values\colors.xml"
+"C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\values\strings.xml"
+"C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\values\styles.xml"
+"C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\values\themes.xml"
+"C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\values-night\themes.xml"
+"C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\xml\backup_rules.xml"
+"C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\xml\data_extraction_rules.xml"
+"C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\xml\rates_widget_info.xml"
+"C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\build.gradle.kts"
+"C:\Users\Cshek\AndroidStudioProjects\rateswidget\build.gradle.kts"
+"C:\Users\Cshek\AndroidStudioProjects\rateswidget\settings.gradle.kts"
+)
+
+$OutputFilePath = "C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\ClaudePrompt.txt"
+
+$OutputContent = ""
+
+foreach ($FilePath in $FilePaths) {
+    if (Test-Path -Path $FilePath -PathType Leaf) {
+        $AbsolutePath = (Resolve-Path $FilePath).Path
+        $FileContent = Get-Content -Path $FilePath -Raw
+        
+        $OutputContent += "Path: $AbsolutePath`r`n"
+        $OutputContent += "Content:`r`n$FileContent`r`n`r`n"
+    }
+    else {
+        Write-Warning "File not found: $FilePath"
+    }
+}
+
+Set-Content -Path $OutputFilePath -Value $OutputContent
+
+Write-Output "Successfully processed files to: $OutputFilePath"
+
+
+
+
+
+
+
+
+
+
+
+
+$currentPath = Get-Location
+$files = Get-ChildItem -File -Path $currentPath -Recurse
+foreach ($file in $files) {
+    $absolutePath = $file.FullName
+    Write-Output $absolutePath
+}

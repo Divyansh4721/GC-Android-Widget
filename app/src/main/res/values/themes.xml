@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Base.Theme.Rateswidget" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">#FFD700</item>
+        <item name="colorPrimaryDark">#DAA520</item>
+        <item name="colorAccent">#C0C0C0</item>
+        <item name="android:windowBackground">@android:color/black</item>
+    </style>
+
+    <style name="Theme.Rateswidget" parent="Base.Theme.Rateswidget" />
+</resources>
