@@ -1,8 +1,7 @@
 Path: C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\AndroidManifest.xml
 Content:
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.rateswidget">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -37,11 +36,18 @@ Content:
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
                 <action android:name="com.example.rateswidget.ACTION_REFRESH" />
-                <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/rates_widget_info" />
+        </receiver>
+
+        <receiver
+            android:name=".BootCompletedReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
         </receiver>
 
         <service
@@ -62,11 +68,16 @@ import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.util.Log;
 
 public class BootCompletedReceiver extends BroadcastReceiver {
+    private static final String TAG = "BootCompletedReceiver";
+
     @Override
     public void onReceive(Context context, Intent intent) {
         if (Intent.ACTION_BOOT_COMPLETED.equals(intent.getAction())) {
+            Log.d(TAG, "Boot completed received");
+            
             // Start the widget update service
             WidgetUpdateService.scheduleNextUpdate(context);
             
@@ -75,10 +86,15 @@ public class BootCompletedReceiver extends BroadcastReceiver {
             ComponentName thisWidget = new ComponentName(context, RatesWidgetProvider.class);
             int[] appWidgetIds = appWidgetManager.getAppWidgetIds(thisWidget);
             
-            Intent updateIntent = new Intent(context, RatesWidgetProvider.class);
-            updateIntent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
-            updateIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, appWidgetIds);
-            context.sendBroadcast(updateIntent);
+            if (appWidgetIds != null && appWidgetIds.length > 0) {
+                Intent updateIntent = new Intent(context, RatesWidgetProvider.class);
+                updateIntent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
+                updateIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, appWidgetIds);
+                context.sendBroadcast(updateIntent);
+                Log.d(TAG, "Widget update broadcast sent");
+            } else {
+                Log.d(TAG, "No widgets found to update");
+            }
         }
     }
 }
@@ -91,40 +107,165 @@ import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.PowerManager;
 import android.provider.Settings;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+
+import java.util.Calendar;
+
 public class MainActivity extends Activity {
+    
+    private Button batteryOptButton;
+    private Button logoutButton;
+    private TextView statusText;
+    private FirebaseAuth mAuth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         
+        // Initialize Firebase Auth
+        mAuth = FirebaseAuth.getInstance();
+        FirebaseUser currentUser = mAuth.getCurrentUser();
+
         TextView devMessage = findViewById(R.id.developer_message);
-        devMessage.setText("Hello Developer");
+        statusText = findViewById(R.id.status_text);
+
+        if (currentUser != null) {
+            String userName = currentUser.getDisplayName();
+            String greeting = getTimeBasedGreeting();
+            devMessage.setText(greeting + " " + (userName != null ? userName : "User"));
+        } else {
+            devMessage.setText(getTimeBasedGreeting() + " User");
+        }
         
-        // Request battery optimization exemption
-        Button batteryOptButton = findViewById(R.id.battery_opt_button);
-        batteryOptButton.setOnClickListener(new View.OnClickListener() {
+        // Find the battery optimization button
+        batteryOptButton = findViewById(R.id.battery_opt_button);
+        
+        // Set up logout button
+        logoutButton = findViewById(R.id.logout_button);
+        logoutButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                requestBatteryOptimizationExemption();
+                logout();
             }
         });
+        
+        // Check if we already have battery optimization exemption
+        if (isIgnoringBatteryOptimization()) {
+            // Already has permission, disable the button
+            batteryOptButton.setEnabled(false);
+            batteryOptButton.setText("Battery Optimization Disabled");
+            statusText.setText("Widget Status: Active (Battery Optimized)");
+            statusText.setTextColor(Color.parseColor("#8FFC8F"));
+        } else {
+            // Enable the button with click listener
+            batteryOptButton.setEnabled(true);
+            batteryOptButton.setText("Disable Battery Optimization");
+            statusText.setText("Widget Status: Limited (Battery Restricted)");
+            statusText.setTextColor(Color.parseColor("#FFA500"));
+            batteryOptButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    requestBatteryOptimizationExemption();
+                }
+            });
+        }
+    }
+    
+    // Method to get time-based greeting
+    private String getTimeBasedGreeting() {
+        Calendar calendar = Calendar.getInstance();
+        int hour = calendar.get(Calendar.HOUR_OF_DAY);
+
+        if (hour >= 5 && hour < 12) {
+            return "Good Morning";
+        } else if (hour >= 12 && hour < 17) {
+            return "Good Afternoon";
+        } else if (hour >= 17 && hour < 21) {
+            return "Good Evening";
+        } else {
+            return "Good Night";
+        }
+    }
+    
+    @Override
+    protected void onResume() {
+        super.onResume();
+        
+        // Check permissions again when returning to the activity
+        if (isIgnoringBatteryOptimization()) {
+            batteryOptButton.setEnabled(false);
+            batteryOptButton.setText("Battery Optimization Disabled");
+            statusText.setText("Widget Status: Active (Battery Optimized)");
+            statusText.setTextColor(Color.parseColor("#8FFC8F"));
+        } else {
+            batteryOptButton.setEnabled(true);
+            batteryOptButton.setText("Disable Battery Optimization");
+            statusText.setText("Widget Status: Limited (Battery Restricted)");
+            statusText.setTextColor(Color.parseColor("#FFA500"));
+        }
+    }
+    
+    private boolean isIgnoringBatteryOptimization() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
+            return powerManager.isIgnoringBatteryOptimizations(getPackageName());
+        }
+        return true; // For older Android versions, return true (no need for exemption)
     }
     
     private void requestBatteryOptimizationExemption() {
-        Intent intent = new Intent();
-        intent.setAction(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
-        intent.setData(Uri.parse("package:" + getPackageName()));
-        startActivity(intent);
-        Toast.makeText(this, "Please enable battery optimization exemption for reliable widget updates", 
-                Toast.LENGTH_LONG).show();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            Intent intent = new Intent();
+            intent.setAction(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+            intent.setData(Uri.parse("package:" + getPackageName()));
+            startActivity(intent);
+            Toast.makeText(this, "Please enable battery optimization exemption for reliable widget updates", 
+                    Toast.LENGTH_LONG).show();
+        }
+    }
+    
+    private void logout() {
+        // Sign out from Firebase
+        mAuth.signOut();
+        
+        // Sign out from GoogleSignIn as well
+        try {
+            GoogleSignInClient googleSignInClient = GoogleSignIn.getClient(this, 
+                new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                    .requestIdToken(getString(R.string.default_web_client_id))
+                    .requestEmail()
+                    .build());
+            
+            googleSignInClient.signOut().addOnCompleteListener(this, task -> {
+                // Return to the SignInActivity with flag to prevent auto-login
+                Intent intent = new Intent(MainActivity.this, SignInActivity.class);
+                intent.putExtra("fromLogout", true);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
+                finish();
+            });
+        } catch (Exception e) {
+            // Fallback if there's any issue with Google Sign-out
+            Intent intent = new Intent(MainActivity.this, SignInActivity.class);
+            intent.putExtra("fromLogout", true);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
+            finish();
+        }
     }
 }
 
@@ -136,6 +277,7 @@ import android.appwidget.AppWidgetManager;
 import android.content.Context;
 import android.graphics.Color;
 import android.os.AsyncTask;
+import android.util.Log;
 import android.widget.RemoteViews;
 
 import java.io.BufferedReader;
@@ -147,6 +289,7 @@ import java.util.Date;
 import java.util.Locale;
 
 public class RatesFetchTask extends AsyncTask<Void, Void, String[]> {
+    private static final String TAG = "RatesFetchTask";
     private static final String API_URL = "https://bcast.jmdpatil.com:7768/VOTSBroadcastStreaming/Services/xml/GetLiveRateByTemplateID/jmd";
     private static final int GOLD_ROW = 6;
     private static final int SILVER_ROW = 5;
@@ -156,6 +299,8 @@ public class RatesFetchTask extends AsyncTask<Void, Void, String[]> {
     private final RemoteViews views;
     private final AppWidgetManager appWidgetManager;
     private final int appWidgetId;
+    private boolean hasError = false;
+    private String errorMessage = "";
 
     public RatesFetchTask(Context context, RemoteViews views, AppWidgetManager appWidgetManager, int appWidgetId) {
         this.context = context;
@@ -183,6 +328,7 @@ public class RatesFetchTask extends AsyncTask<Void, Void, String[]> {
         String[] rates = new String[2]; // [gold, silver]
         
         try {
+            Log.d(TAG, "Making API request to: " + API_URL);
             URL url = new URL(API_URL);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
@@ -190,6 +336,8 @@ public class RatesFetchTask extends AsyncTask<Void, Void, String[]> {
             connection.setReadTimeout(5000);
             
             int responseCode = connection.getResponseCode();
+            Log.d(TAG, "API response code: " + responseCode);
+            
             if (responseCode == HttpURLConnection.HTTP_OK) {
                 BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
                 String line;
@@ -202,17 +350,25 @@ public class RatesFetchTask extends AsyncTask<Void, Void, String[]> {
                         if (columns.length > RATE_COLUMN) {
                             if (currentRow == GOLD_ROW) {
                                 rates[0] = columns[RATE_COLUMN].trim();
+                                Log.d(TAG, "Found gold rate: " + rates[0]);
                             } else {
                                 rates[1] = columns[RATE_COLUMN].trim();
+                                Log.d(TAG, "Found silver rate: " + rates[1]);
                             }
                         }
                     }
                 }
                 reader.close();
+            } else {
+                hasError = true;
+                errorMessage = "Server returned code: " + responseCode;
+                Log.e(TAG, errorMessage);
             }
             connection.disconnect();
         } catch (Exception e) {
-            e.printStackTrace();
+            hasError = true;
+            errorMessage = "Error: " + e.getMessage();
+            Log.e(TAG, "API request failed", e);
         }
         
         return rates;
@@ -220,16 +376,27 @@ public class RatesFetchTask extends AsyncTask<Void, Void, String[]> {
 
     @Override
     protected void onPostExecute(String[] rates) {
-        // Format and display the rates
-        String goldRate = rates[0] != null ? rates[0] : "N/A";
-        String silverRate = rates[1] != null ? rates[1] : "N/A";
-        
-        views.setTextViewText(R.id.gold_rate, "Gold 995 - ₹" + goldRate);
-        views.setTextViewText(R.id.silver_rate, "Silver 999 - ₹" + silverRate);
-        
-        // Set the colors
-        views.setTextColor(R.id.gold_rate, Color.rgb(255, 215, 0)); // Gold color
-        views.setTextColor(R.id.silver_rate, Color.rgb(192, 192, 192)); // Silver color
+        if (hasError) {
+            // Display error message
+            views.setTextViewText(R.id.gold_rate, "Error");
+            views.setTextViewText(R.id.silver_rate, "Check connection");
+            views.setTextColor(R.id.gold_rate, Color.RED);
+            views.setTextColor(R.id.silver_rate, Color.RED);
+            Log.e(TAG, "Failed to fetch rates: " + errorMessage);
+        } else {
+            // Format and display the rates
+            String goldRate = rates[0] != null ? rates[0] : "N/A";
+            String silverRate = rates[1] != null ? rates[1] : "N/A";
+            
+            views.setTextViewText(R.id.gold_rate, "Gold 995 - ₹" + goldRate);
+            views.setTextViewText(R.id.silver_rate, "Silver 999 - ₹" + silverRate);
+            
+            // Set the colors
+            views.setTextColor(R.id.gold_rate, Color.rgb(255, 215, 0)); // Gold color
+            views.setTextColor(R.id.silver_rate, Color.rgb(192, 192, 192)); // Silver color
+            
+            Log.d(TAG, "Widget updated with new gold rate: " + goldRate + " and silver rate: " + silverRate);
+        }
         
         // Update the widget
         appWidgetManager.updateAppWidget(appWidgetId, views);
@@ -247,22 +414,24 @@ import android.appwidget.AppWidgetProvider;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.net.Uri;
 import android.os.PowerManager;
+import android.util.Log;
 import android.widget.RemoteViews;
-import android.graphics.Color;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class RatesWidgetProvider extends AppWidgetProvider {
+    private static final String TAG = "RatesWidgetProvider";
     private static final String ACTION_REFRESH = "com.example.rateswidget.ACTION_REFRESH";
     private static final int REFRESH_INTERVAL_SECONDS = 10;
     private static ScheduledExecutorService scheduler;
 
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
+        Log.d(TAG, "onUpdate called for " + appWidgetIds.length + " widgets");
+        
         for (int appWidgetId : appWidgetIds) {
             updateAppWidget(context, appWidgetManager, appWidgetId);
         }
@@ -279,6 +448,7 @@ public class RatesWidgetProvider extends AppWidgetProvider {
         super.onReceive(context, intent);
 
         if (ACTION_REFRESH.equals(intent.getAction())) {
+            Log.d(TAG, "Refresh action received");
             AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
             ComponentName thisWidget = new ComponentName(context, RatesWidgetProvider.class);
             int[] appWidgetIds = appWidgetManager.getAppWidgetIds(thisWidget);
@@ -290,6 +460,7 @@ public class RatesWidgetProvider extends AppWidgetProvider {
     }
 
     private void updateAppWidget(Context context, AppWidgetManager appWidgetManager, int appWidgetId) {
+        Log.d(TAG, "Updating widget ID: " + appWidgetId);
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.rates_widget);
 
         // Set up refresh button click intent
@@ -308,6 +479,8 @@ public class RatesWidgetProvider extends AppWidgetProvider {
             return;
         }
 
+        Log.d(TAG, "Starting continuous refresh service");
+        
         // Acquire wake lock to keep the service running
         PowerManager powerManager = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
         PowerManager.WakeLock wakeLock = powerManager.newWakeLock(
@@ -343,6 +516,7 @@ public class RatesWidgetProvider extends AppWidgetProvider {
     @Override
     public void onDisabled(Context context) {
         super.onDisabled(context);
+        Log.d(TAG, "All widgets removed, cleaning up resources");
 
         // Clean up resources when last widget is removed
         if (scheduler != null && !scheduler.isShutdown()) {
@@ -364,9 +538,13 @@ Content:
 package com.example.rateswidget;
 
 import android.content.Intent;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.PowerManager;
+import android.provider.Settings;
+import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -388,7 +566,9 @@ import com.google.firebase.auth.GoogleAuthProvider;
 
 public class SignInActivity extends AppCompatActivity {
 
+    private static final String TAG = "SignInActivity";
     private static final int RC_SIGN_IN = 9001;
+    private static final int RC_BATTERY_OPTIMIZATION = 9002;
     private GoogleSignInClient mGoogleSignInClient;
     private FirebaseAuth mAuth;
 
@@ -402,9 +582,9 @@ public class SignInActivity extends AppCompatActivity {
 
         // Configure Google Sign In
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestIdToken("1040813539779-e2bm980dlnbra89pmsiscont0q4om6rp.apps.googleusercontent.com")
-                .requestEmail()
-                .build();
+        .requestIdToken(getString(R.string.default_web_client_id))
+        .requestEmail()
+        .build();
 
         mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
 
@@ -420,15 +600,22 @@ public class SignInActivity extends AppCompatActivity {
     @Override
     public void onStart() {
         super.onStart();
-        // Check if user is signed in (non-null) and update UI accordingly.
-        FirebaseUser currentUser = mAuth.getCurrentUser();
-        if (currentUser != null) {
-            // User is already signed in, proceed to MainActivity
-            startMainActivity();
+        // Check if we're coming from a logout
+        if (getIntent().getBooleanExtra("fromLogout", false)) {
+            // Do not auto-login, let the user choose to sign in again
+            Log.d(TAG, "User logged out, requiring manual sign-in");
+        } else {
+            // Normal app start - check if user is already signed in
+            FirebaseUser currentUser = mAuth.getCurrentUser();
+            if (currentUser != null) {
+                // User is already signed in, proceed to MainActivity
+                proceedToMainOrCheckBattery();
+            }
         }
     }
 
     private void signIn() {
+        Log.d(TAG, "Starting Google Sign-In process");
         Intent signInIntent = mGoogleSignInClient.getSignInIntent();
         startActivityForResult(signInIntent, RC_SIGN_IN);
     }
@@ -437,21 +624,44 @@ public class SignInActivity extends AppCompatActivity {
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        // Result returned from launching the Intent from GoogleSignInApi.getSignInIntent(...);
         if (requestCode == RC_SIGN_IN) {
+            // Handle Google Sign In result
             Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
             try {
                 // Google Sign In was successful, authenticate with Firebase
                 GoogleSignInAccount account = task.getResult(ApiException.class);
+                Log.d(TAG, "Google Sign-In successful, account: " + account.getEmail());
                 firebaseAuthWithGoogle(account.getIdToken());
             } catch (ApiException e) {
-                // Google Sign In failed
-                Toast.makeText(this, "Google sign in failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                // Google Sign In failed - provide detailed error information
+                String errorMessage;
+                switch (e.getStatusCode()) {
+                    case 12500: // SIGN_IN_CANCELLED
+                        errorMessage = "Sign-in was cancelled";
+                        break;
+                    case 12501: // SIGN_IN_CURRENTLY_IN_PROGRESS
+                        errorMessage = "Sign-in is already in progress";
+                        break;
+                    case 12502: // SIGN_IN_FAILED
+                        errorMessage = "Sign-in failed";
+                        break;
+                    case 10: // DEVELOPER_ERROR
+                        errorMessage = "Developer error: Check SHA-1 & package name in Firebase console";
+                        break;
+                    default:
+                        errorMessage = "Error code: " + e.getStatusCode();
+                }
+                Log.e(TAG, "Google sign-in failed: " + errorMessage, e);
+                Toast.makeText(this, errorMessage, Toast.LENGTH_LONG).show();
             }
+        } else if (requestCode == RC_BATTERY_OPTIMIZATION) {
+            // After returning from battery optimization settings, proceed to MainActivity
+            startMainActivity();
         }
     }
 
     private void firebaseAuthWithGoogle(String idToken) {
+        Log.d(TAG, "firebaseAuthWithGoogle: starting Firebase authentication");
         AuthCredential credential = GoogleAuthProvider.getCredential(idToken, null);
         mAuth.signInWithCredential(credential)
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
@@ -459,14 +669,35 @@ public class SignInActivity extends AppCompatActivity {
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
                             // Sign in success
+                            Log.d(TAG, "Firebase authentication successful");
                             FirebaseUser user = mAuth.getCurrentUser();
-                            startMainActivity();
+                            proceedToMainOrCheckBattery();
                         } else {
                             // Sign in fails
+                            Log.e(TAG, "Firebase authentication failed", task.getException());
                             Toast.makeText(SignInActivity.this, "Authentication Failed.", Toast.LENGTH_SHORT).show();
                         }
                     }
                 });
+    }
+
+    private void proceedToMainOrCheckBattery() {
+        // Check if we have battery optimization permission
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
+            if (!powerManager.isIgnoringBatteryOptimizations(getPackageName())) {
+                // Ask for battery optimization exemption
+                Intent intent = new Intent();
+                intent.setAction(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+                intent.setData(Uri.parse("package:" + getPackageName()));
+                startActivityForResult(intent, RC_BATTERY_OPTIMIZATION);
+                Toast.makeText(this, "Please enable battery optimization exemption for reliable widget updates", 
+                        Toast.LENGTH_LONG).show();
+                return;
+            }
+        }
+        // If we already have permission or it's handled, proceed to MainActivity
+        startMainActivity();
     }
 
     private void startMainActivity() {
@@ -476,30 +707,42 @@ public class SignInActivity extends AppCompatActivity {
     }
 }
 
-
 Path: C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\java\com\example\rateswidget\WidgetUpdateService.java
 Content:
 package com.example.rateswidget;
 
+import android.app.job.JobInfo;
 import android.app.job.JobParameters;
+import android.app.job.JobScheduler;
 import android.app.job.JobService;
 import android.appwidget.AppWidgetManager;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.util.Log;
 
 public class WidgetUpdateService extends JobService {
+    private static final String TAG = "WidgetUpdateService";
+    private static final int JOB_ID = 1001;
 
     @Override
     public boolean onStartJob(JobParameters params) {
+        Log.d(TAG, "onStartJob: Updating widgets");
+        
         // Update all widgets
         AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(this);
         ComponentName thisWidget = new ComponentName(this, RatesWidgetProvider.class);
         int[] appWidgetIds = appWidgetManager.getAppWidgetIds(thisWidget);
         
-        Intent updateIntent = new Intent(this, RatesWidgetProvider.class);
-        updateIntent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
-        updateIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, appWidgetIds);
-        sendBroadcast(updateIntent);
+        if (appWidgetIds != null && appWidgetIds.length > 0) {
+            Intent updateIntent = new Intent(this, RatesWidgetProvider.class);
+            updateIntent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
+            updateIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, appWidgetIds);
+            sendBroadcast(updateIntent);
+            Log.d(TAG, "Widget update broadcast sent for " + appWidgetIds.length + " widgets");
+        } else {
+            Log.d(TAG, "No widgets found to update");
+        }
         
         // Reschedule the job for continuous updates
         scheduleNextUpdate(this);
@@ -509,27 +752,33 @@ public class WidgetUpdateService extends JobService {
 
     @Override
     public boolean onStopJob(JobParameters params) {
+        Log.d(TAG, "onStopJob: Job was stopped, rescheduling");
         // Reschedule if job is killed
         return true;
     }
     
-    public static void scheduleNextUpdate(android.content.Context context) {
-        android.app.job.JobScheduler jobScheduler = 
-                (android.app.job.JobScheduler) context.getSystemService(android.content.Context.JOB_SCHEDULER_SERVICE);
+    public static void scheduleNextUpdate(Context context) {
+        JobScheduler jobScheduler = 
+                (JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
         
-        android.app.job.JobInfo.Builder builder = new android.app.job.JobInfo.Builder(
-                1,
+        JobInfo.Builder builder = new JobInfo.Builder(
+                JOB_ID,
                 new ComponentName(context, WidgetUpdateService.class))
                 .setMinimumLatency(10 * 1000) // 10 seconds
                 .setOverrideDeadline(15 * 1000) // Maximum delay of 15 seconds
-                .setRequiredNetworkType(android.app.job.JobInfo.NETWORK_TYPE_ANY)
+                .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
                 .setPersisted(true);
         
-        jobScheduler.schedule(builder.build());
+        int result = jobScheduler.schedule(builder.build());
+        if (result == JobScheduler.RESULT_SUCCESS) {
+            Log.d(TAG, "Job scheduled successfully");
+        } else {
+            Log.e(TAG, "Job scheduling failed");
+        }
     }
 }
 
-Path: C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\drawable\activity_sign_in.xml
+Path: C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\layout\activity_sign_in.xml
 Content:
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -538,34 +787,46 @@ Content:
     android:background="@android:color/black"
     android:padding="16dp">
 
-    <TextView
-        android:id="@+id/sign_in_title"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="60dp"
-        android:text="GC Jewellers Rates"
-        android:textColor="@android:color/white"
-        android:textSize="28sp"
-        android:textStyle="bold" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:layout_centerInParent="true">
 
-    <TextView
-        android:id="@+id/sign_in_subtitle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/sign_in_title"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="16dp"
-        android:text="Sign in to access gold and silver rates"
-        android:textColor="@android:color/white"
-        android:textSize="16sp" />
+        <ImageView
+            android:id="@+id/app_logo"
+            android:layout_width="200dp"
+            android:layout_height="200dp"
+            android:src="@drawable/gc_jewellers_logo"
+            android:contentDescription="GC Jewellers Logo" />
 
-    <com.google.android.gms.common.SignInButton
-        android:id="@+id/sign_in_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:layout_marginTop="32dp" />
+        <TextView
+            android:id="@+id/sign_in_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="GC Jewellers Rates"
+            android:textColor="@android:color/white"
+            android:textSize="28sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/sign_in_subtitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Sign in to access gold and silver rates"
+            android:textColor="@android:color/white"
+            android:textSize="16sp" />
+
+        <com.google.android.gms.common.SignInButton
+            android:id="@+id/sign_in_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="32dp" />
+
+    </LinearLayout>
 
     <TextView
         android:layout_width="wrap_content"
@@ -583,174 +844,78 @@ Content:
 Path: C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\drawable\ic_launcher_background.xml
 Content:
 <?xml version="1.0" encoding="utf-8"?>
-<vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="108dp"
+<vector
     android:height="108dp"
+    android:width="108dp"
+    android:viewportHeight="108"
     android:viewportWidth="108"
-    android:viewportHeight="108">
-    <path
-        android:fillColor="#3DDC84"
-        android:pathData="M0,0h108v108h-108z" />
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M9,0L9,108"
-        android:strokeWidth="0.8"
-        android:strokeColor="#33FFFFFF" />
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M19,0L19,108"
-        android:strokeWidth="0.8"
-        android:strokeColor="#33FFFFFF" />
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M29,0L29,108"
-        android:strokeWidth="0.8"
-        android:strokeColor="#33FFFFFF" />
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M39,0L39,108"
-        android:strokeWidth="0.8"
-        android:strokeColor="#33FFFFFF" />
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M49,0L49,108"
-        android:strokeWidth="0.8"
-        android:strokeColor="#33FFFFFF" />
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M59,0L59,108"
-        android:strokeWidth="0.8"
-        android:strokeColor="#33FFFFFF" />
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M69,0L69,108"
-        android:strokeWidth="0.8"
-        android:strokeColor="#33FFFFFF" />
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M79,0L79,108"
-        android:strokeWidth="0.8"
-        android:strokeColor="#33FFFFFF" />
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M89,0L89,108"
-        android:strokeWidth="0.8"
-        android:strokeColor="#33FFFFFF" />
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M99,0L99,108"
-        android:strokeWidth="0.8"
-        android:strokeColor="#33FFFFFF" />
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M0,9L108,9"
-        android:strokeWidth="0.8"
-        android:strokeColor="#33FFFFFF" />
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M0,19L108,19"
-        android:strokeWidth="0.8"
-        android:strokeColor="#33FFFFFF" />
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M0,29L108,29"
-        android:strokeWidth="0.8"
-        android:strokeColor="#33FFFFFF" />
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M0,39L108,39"
-        android:strokeWidth="0.8"
-        android:strokeColor="#33FFFFFF" />
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M0,49L108,49"
-        android:strokeWidth="0.8"
-        android:strokeColor="#33FFFFFF" />
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M0,59L108,59"
-        android:strokeWidth="0.8"
-        android:strokeColor="#33FFFFFF" />
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M0,69L108,69"
-        android:strokeWidth="0.8"
-        android:strokeColor="#33FFFFFF" />
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M0,79L108,79"
-        android:strokeWidth="0.8"
-        android:strokeColor="#33FFFFFF" />
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M0,89L108,89"
-        android:strokeWidth="0.8"
-        android:strokeColor="#33FFFFFF" />
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M0,99L108,99"
-        android:strokeWidth="0.8"
-        android:strokeColor="#33FFFFFF" />
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M19,29L89,29"
-        android:strokeWidth="0.8"
-        android:strokeColor="#33FFFFFF" />
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M19,39L89,39"
-        android:strokeWidth="0.8"
-        android:strokeColor="#33FFFFFF" />
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M19,49L89,49"
-        android:strokeWidth="0.8"
-        android:strokeColor="#33FFFFFF" />
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M19,59L89,59"
-        android:strokeWidth="0.8"
-        android:strokeColor="#33FFFFFF" />
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M19,69L89,69"
-        android:strokeWidth="0.8"
-        android:strokeColor="#33FFFFFF" />
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M19,79L89,79"
-        android:strokeWidth="0.8"
-        android:strokeColor="#33FFFFFF" />
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M29,19L29,89"
-        android:strokeWidth="0.8"
-        android:strokeColor="#33FFFFFF" />
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M39,19L39,89"
-        android:strokeWidth="0.8"
-        android:strokeColor="#33FFFFFF" />
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M49,19L49,89"
-        android:strokeWidth="0.8"
-        android:strokeColor="#33FFFFFF" />
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M59,19L59,89"
-        android:strokeWidth="0.8"
-        android:strokeColor="#33FFFFFF" />
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M69,19L69,89"
-        android:strokeWidth="0.8"
-        android:strokeColor="#33FFFFFF" />
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M79,19L79,89"
-        android:strokeWidth="0.8"
-        android:strokeColor="#33FFFFFF" />
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <path android:fillColor="#3DDC84"
+          android:pathData="M0,0h108v108h-108z"/>
+    <path android:fillColor="#00000000" android:pathData="M9,0L9,108"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M19,0L19,108"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M29,0L29,108"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M39,0L39,108"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M49,0L49,108"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M59,0L59,108"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M69,0L69,108"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M79,0L79,108"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M89,0L89,108"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M99,0L99,108"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M0,9L108,9"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M0,19L108,19"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M0,29L108,29"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M0,39L108,39"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M0,49L108,49"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M0,59L108,59"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M0,69L108,69"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M0,79L108,79"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M0,89L108,89"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M0,99L108,99"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M19,29L89,29"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M19,39L89,39"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M19,49L89,49"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M19,59L89,59"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M19,69L89,69"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M19,79L89,79"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M29,19L29,89"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M39,19L39,89"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M49,19L49,89"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M59,19L59,89"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M69,19L69,89"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M79,19L79,89"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
 </vector>
 
 
@@ -838,42 +1003,106 @@ Content:
 Path: C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\layout\activity_main.xml
 Content:
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@android:color/black"
+    android:orientation="vertical"
     android:padding="16dp">
 
     <TextView
-        android:id="@+id/developer_message"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:text="Hello Developer"
+        android:layout_margin="16dp"
+        android:gravity="center"
+        android:text="GC Jewellers Rates"
+        android:textColor="#FFD700"
+        android:textSize="24sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/developer_message"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:gravity="center"
+        android:text="Hello User"
         android:textColor="@android:color/white"
-        android:textSize="24sp" />
+        android:textSize="20sp" />
+
+    <TextView
+        android:id="@+id/status_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="24dp"
+        android:gravity="center"
+        android:text="Widget Status: Active"
+        android:textColor="#8FFC8F"
+        android:textSize="16sp" />
 
     <Button
         android:id="@+id/battery_opt_button"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/developer_message"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="24dp"
+        android:layout_margin="16dp"
         android:text="Disable Battery Optimization"
         android:textAllCaps="false" />
 
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_margin="8dp"
+        android:background="#444444" />
+
     <TextView
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="16dp"
+        android:layout_margin="16dp"
+        android:text="Widget Information"
+        android:textColor="@android:color/white"
+        android:textSize="18sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="24dp"
+        android:text="• Displayed rates: Gold 995 and Silver 999"
+        android:textColor="#C0C0C0"
+        android:textSize="14sp" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_margin="8dp"
+        android:background="#444444" />
+
+    <Button
+        android:id="@+id/logout_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:text="Sign Out"
+        android:textAllCaps="false" />
+
+    <View
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:gravity="center"
         android:text="Add widget to your home screen to view gold and silver rates"
         android:textColor="@android:color/white"
         android:textSize="14sp" />
 
-</RelativeLayout>
+</LinearLayout>
 
 Path: C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\layout\rates_widget.xml
 Content:
@@ -959,18 +1188,16 @@ Path: C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\mipmap-a
 Content:
 <?xml version="1.0" encoding="utf-8"?>
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
-    <background android:drawable="@drawable/ic_launcher_background" />
-    <foreground android:drawable="@drawable/ic_launcher_foreground" />
-    <monochrome android:drawable="@drawable/ic_launcher_foreground" />
+    <background android:drawable="@drawable/ic_launcher_background"/>
+    <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
 </adaptive-icon>
 
 Path: C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\mipmap-anydpi-v26\ic_launcher_round.xml
 Content:
 <?xml version="1.0" encoding="utf-8"?>
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
-    <background android:drawable="@drawable/ic_launcher_background" />
-    <foreground android:drawable="@drawable/ic_launcher_foreground" />
-    <monochrome android:drawable="@drawable/ic_launcher_foreground" />
+    <background android:drawable="@drawable/ic_launcher_background"/>
+    <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
 </adaptive-icon>
 
 Path: C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\values\colors.xml
@@ -992,12 +1219,21 @@ Path: C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\values\s
 Content:
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Base application theme -->
-    <style name="AppTheme" parent="android:Theme.Material">
-        <item name="android:colorPrimary">#FFD700</item>
-        <item name="android:colorPrimaryDark">#DAA520</item>
-        <item name="android:colorAccent">#C0C0C0</item>
-        <item name="android:windowBackground">@android:color/black</item>
+    <!-- Custom button styles using Material Components -->
+    <style name="Widget.App.Button" parent="Widget.MaterialComponents.Button">
+        <item name="backgroundTint">#333333</item>
+        <item name="android:textColor">#FFD700</item>
+        <item name="cornerRadius">8dp</item>
+        <item name="android:paddingStart">16dp</item>
+        <item name="android:paddingEnd">16dp</item>
+        <item name="android:paddingTop">8dp</item>
+        <item name="android:paddingBottom">8dp</item>
+    </style>
+    
+    <!-- For accent buttons -->
+    <style name="Widget.App.Button.Gold" parent="Widget.App.Button">
+        <item name="backgroundTint">#FFD700</item>
+        <item name="android:textColor">#000000</item>
     </style>
 </resources>
 
@@ -1005,12 +1241,13 @@ Path: C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\values\t
 Content:
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
-    <style name="Base.Theme.Rateswidget" parent="Theme.Material3.DayNight.NoActionBar">
+    <!-- Base application theme using Material Components -->
+    <style name="Base.Theme.Rateswidget" parent="Theme.MaterialComponents.NoActionBar">
         <item name="colorPrimary">#FFD700</item>
         <item name="colorPrimaryDark">#DAA520</item>
         <item name="colorAccent">#C0C0C0</item>
         <item name="android:windowBackground">@android:color/black</item>
+        <item name="materialButtonStyle">@style/Widget.MaterialComponents.Button</item>
     </style>
 
     <style name="Theme.Rateswidget" parent="Base.Theme.Rateswidget" />
@@ -1083,8 +1320,8 @@ Path: C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\build.gradle.kts
 Content:
 plugins {
     id("com.android.application")
-    id("org.jetbrains.kotlin.android")
     id("com.google.gms.google-services")
+    id("org.jetbrains.kotlin.android")
 }
 
 android {
@@ -1097,7 +1334,6 @@ android {
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
@@ -1121,22 +1357,21 @@ android {
 }
 
 dependencies {
-    // AndroidX and Material Design
-    implementation("androidx.core:core-ktx:1.12.0")
-    implementation("androidx.appcompat:appcompat:1.6.1")
-    implementation("com.google.android.material:material:1.11.0")
-    implementation("androidx.constraintlayout:constraintlayout:2.1.4")
-
     // Firebase Authentication
-    implementation("com.google.firebase:firebase-auth-ktx:22.3.1")
+    implementation("com.google.firebase:firebase-auth:22.3.1")
 
-    // Google Sign-In (changed to a stable, available version)
+    // Firebase Firestore
+    implementation("com.google.firebase:firebase-firestore:24.10.3")
+
+    // Google Sign-In
     implementation("com.google.android.gms:play-services-auth:20.7.0")
 
-    // Testing dependencies
-    testImplementation("junit:junit:4.13.2")
-    androidTestImplementation("androidx.test.ext:junit:1.1.5")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+    // AndroidX and Material Design
+    implementation("androidx.appcompat:appcompat:1.6.1")
+    implementation("com.google.android.material:material:1.11.0")
+
+    // Core Kotlin extensions
+    implementation("androidx.core:core-ktx:1.9.0")
 }
 
 Path: C:\Users\Cshek\AndroidStudioProjects\rateswidget\build.gradle.kts

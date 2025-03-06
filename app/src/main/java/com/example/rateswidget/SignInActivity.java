@@ -1,7 +1,11 @@
 package com.example.rateswidget;
 
 import android.content.Intent;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.PowerManager;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
@@ -27,6 +31,7 @@ public class SignInActivity extends AppCompatActivity {
 
     private static final String TAG = "SignInActivity";
     private static final int RC_SIGN_IN = 9001;
+    private static final int RC_BATTERY_OPTIMIZATION = 9002;
     private GoogleSignInClient mGoogleSignInClient;
     private FirebaseAuth mAuth;
 
@@ -58,11 +63,17 @@ public class SignInActivity extends AppCompatActivity {
     @Override
     public void onStart() {
         super.onStart();
-        // Check if user is signed in (non-null) and update UI accordingly.
-        FirebaseUser currentUser = mAuth.getCurrentUser();
-        if (currentUser != null) {
-            // User is already signed in, proceed to MainActivity
-            startMainActivity();
+        // Check if we're coming from a logout
+        if (getIntent().getBooleanExtra("fromLogout", false)) {
+            // Do not auto-login, let the user choose to sign in again
+            Log.d(TAG, "User logged out, requiring manual sign-in");
+        } else {
+            // Normal app start - check if user is already signed in
+            FirebaseUser currentUser = mAuth.getCurrentUser();
+            if (currentUser != null) {
+                // User is already signed in, proceed to MainActivity
+                proceedToMainOrCheckBattery();
+            }
         }
     }
 
@@ -76,8 +87,8 @@ public class SignInActivity extends AppCompatActivity {
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        // Result returned from launching the Intent from GoogleSignInApi.getSignInIntent(...);
         if (requestCode == RC_SIGN_IN) {
+            // Handle Google Sign In result
             Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
             try {
                 // Google Sign In was successful, authenticate with Firebase
@@ -106,6 +117,9 @@ public class SignInActivity extends AppCompatActivity {
                 Log.e(TAG, "Google sign-in failed: " + errorMessage, e);
                 Toast.makeText(this, errorMessage, Toast.LENGTH_LONG).show();
             }
+        } else if (requestCode == RC_BATTERY_OPTIMIZATION) {
+            // After returning from battery optimization settings, proceed to MainActivity
+            startMainActivity();
         }
     }
 
@@ -120,7 +134,7 @@ public class SignInActivity extends AppCompatActivity {
                             // Sign in success
                             Log.d(TAG, "Firebase authentication successful");
                             FirebaseUser user = mAuth.getCurrentUser();
-                            startMainActivity();
+                            proceedToMainOrCheckBattery();
                         } else {
                             // Sign in fails
                             Log.e(TAG, "Firebase authentication failed", task.getException());
@@ -128,6 +142,25 @@ public class SignInActivity extends AppCompatActivity {
                         }
                     }
                 });
+    }
+
+    private void proceedToMainOrCheckBattery() {
+        // Check if we have battery optimization permission
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
+            if (!powerManager.isIgnoringBatteryOptimizations(getPackageName())) {
+                // Ask for battery optimization exemption
+                Intent intent = new Intent();
+                intent.setAction(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+                intent.setData(Uri.parse("package:" + getPackageName()));
+                startActivityForResult(intent, RC_BATTERY_OPTIMIZATION);
+                Toast.makeText(this, "Please enable battery optimization exemption for reliable widget updates", 
+                        Toast.LENGTH_LONG).show();
+                return;
+            }
+        }
+        // If we already have permission or it's handled, proceed to MainActivity
+        startMainActivity();
     }
 
     private void startMainActivity() {

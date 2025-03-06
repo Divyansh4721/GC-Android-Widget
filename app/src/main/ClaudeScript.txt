@@ -6,7 +6,7 @@ $FilePaths = @(
 "C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\java\com\example\rateswidget\RatesWidgetProvider.java"
 "C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\java\com\example\rateswidget\SignInActivity.java"
 "C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\java\com\example\rateswidget\WidgetUpdateService.java"
-"C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\drawable\activity_sign_in.xml"
+"C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\layout\activity_sign_in.xml"
 "C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\drawable\ic_launcher_background.xml"
 "C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\drawable\ic_launcher_foreground.xml"
 "C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\drawable\ic_refresh.xml"
