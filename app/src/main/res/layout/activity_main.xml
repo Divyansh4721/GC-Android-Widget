@@ -1,10 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@android:color/black"
-    android:orientation="vertical"
-    android:padding="16dp">
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:layout_centerInParent="true">
+        
+
+    <ImageView
+        android:id="@+id/app_logo"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:src="@drawable/gc_jewellers_logo"
+        android:contentDescription="GC Jewellers Logo" />
+
+
+     
 
     <TextView
         android:layout_width="match_parent"
@@ -95,28 +106,10 @@
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
         android:gravity="center"
-        android:text="Thanks For using "
-        android:textColor="#C0C0C0"
-        android:textSize="15sp"
-        android:textStyle="bold" />
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="16dp"
-        android:gravity="center"
-        android:text="GC Jewellers"
-        android:textColor="#FFD700"
-        android:textSize="25sp"
-        android:textStyle="bold" />
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="16dp"
-        android:gravity="center"
         android:text="Add widget to your home screen to view gold and silver rates"
         android:textColor="@android:color/white"
         android:textSize="14sp" />
+
+        
 
 </LinearLayout>
