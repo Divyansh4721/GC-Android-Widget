@@ -61,6 +61,38 @@ public class MainActivity extends Activity {
         });
         
         // Check if we already have battery optimization exemption
+        updateBatteryOptimizationUI();
+        
+        // Automatically request battery optimization permission when the app starts
+        // if it's not already granted
+        if (!isIgnoringBatteryOptimization()) {
+            requestBatteryOptimizationExemption();
+        }
+    }
+    
+    // Method to get time-based greeting
+    private String getTimeBasedGreeting() {
+        Calendar calendar = Calendar.getInstance();
+        int hour = calendar.get(Calendar.HOUR_OF_DAY);
+
+        if (hour >= 5 && hour < 12) {
+            return "Good morning,";
+        } else if (hour >= 12 && hour < 17) {
+            return "Good afternoon,";
+        } else {
+            return "Good evening,";
+        } 
+    }
+    
+    @Override
+    protected void onResume() {
+        super.onResume();
+        
+        // Check permissions again when returning to the activity
+        updateBatteryOptimizationUI();
+    }
+    
+    private void updateBatteryOptimizationUI() {
         if (isIgnoringBatteryOptimization()) {
             // Already has permission, disable the button
             batteryOptButton.setEnabled(false);
@@ -79,39 +111,6 @@ public class MainActivity extends Activity {
                     requestBatteryOptimizationExemption();
                 }
             });
-        }
-    }
-    
-    // Method to get time-based greeting
-    private String getTimeBasedGreeting() {
-        Calendar calendar = Calendar.getInstance();
-        int hour = calendar.get(Calendar.HOUR_OF_DAY);
-
-        if (hour >= 5 && hour < 12) {
-            return "Good morning,";
-        } else if (hour >= 12 && hour < 17) {
-            return "Good afternoon,";
-        } else   {
-            return "Good evening,";
-        } 
-        
-    }
-    
-    @Override
-    protected void onResume() {
-        super.onResume();
-        
-        // Check permissions again when returning to the activity
-        if (isIgnoringBatteryOptimization()) {
-            batteryOptButton.setEnabled(false);
-            batteryOptButton.setText("Battery Optimization Disabled");
-            statusText.setText("Widget Status: Active (Battery Optimized)");
-            statusText.setTextColor(Color.parseColor("#8FFC8F"));
-        } else {
-            batteryOptButton.setEnabled(true);
-            batteryOptButton.setText("Disable Battery Optimization");
-            statusText.setText("Widget Status: Limited (Battery Restricted)");
-            statusText.setTextColor(Color.parseColor("#FFA500"));
         }
     }
     
