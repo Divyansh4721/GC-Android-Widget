@@ -89,13 +89,15 @@
         android:layout_height="0dp"
         android:layout_weight="1" />
 
+
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
-        android:text="Widget Information"
-        android:textColor="@android:color/white"
-        android:textSize="18sp"
+        android:gravity="center"
+        android:text="Thanks For using GC Jewellers"
+        android:textColor="#FFD700"
+        android:textSize="24sp"
         android:textStyle="bold" />
 
     <TextView
