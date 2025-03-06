@@ -71,8 +71,8 @@ public class MainActivity extends Activity {
             // Enable the button with click listener
             batteryOptButton.setEnabled(true);
             batteryOptButton.setText("Disable Battery Optimization");
-            statusText.setText("Widget Status: Limited (Battery Restricted)");
-            statusText.setTextColor(Color.parseColor("#FFA500"));
+            statusText.setText("Widget Status: Limited (Battery Restricted !)");
+            statusText.setTextColor(Color.parseColor("#FF0105"));
             batteryOptButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -88,14 +88,13 @@ public class MainActivity extends Activity {
         int hour = calendar.get(Calendar.HOUR_OF_DAY);
 
         if (hour >= 5 && hour < 12) {
-            return "Good Morning";
+            return "Good morning,";
         } else if (hour >= 12 && hour < 17) {
-            return "Good Afternoon";
-        } else if (hour >= 17 && hour < 21) {
-            return "Good Evening";
-        } else {
-            return "Good Night";
-        }
+            return "Good afternoon,";
+        } else   {
+            return "Good evening,";
+        } 
+        
     }
     
     @Override
