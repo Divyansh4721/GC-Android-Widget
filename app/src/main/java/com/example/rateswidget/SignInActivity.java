@@ -1,10 +1,10 @@
 package com.example.rateswidget;
 
+import android.appwidget.AppWidgetManager;
+import android.content.ComponentName;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
 import android.util.Log;
-import android.view.View;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -20,7 +20,6 @@ import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
-import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 public class SignInActivity extends AppCompatActivity {
@@ -58,6 +57,9 @@ public class SignInActivity extends AppCompatActivity {
         // Check if we're coming from a logout
         if (getIntent().getBooleanExtra("fromLogout", false)) {
             Log.d(TAG, "User logged out, requiring manual sign-in");
+            
+            // Clear widget when logged out
+            clearWidget();
             return;
         }
 
@@ -66,6 +68,18 @@ public class SignInActivity extends AppCompatActivity {
         if (currentUser != null) {
             checkUserAuthorization(currentUser);
         }
+    }
+
+    private void clearWidget() {
+        AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(this);
+        ComponentName thisWidget = new ComponentName(this, RatesWidgetProvider.class);
+        int[] appWidgetIds = appWidgetManager.getAppWidgetIds(thisWidget);
+
+        // Trigger update for all widgets to show sign-in message
+        Intent updateIntent = new Intent(this, RatesWidgetProvider.class);
+        updateIntent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
+        updateIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, appWidgetIds);
+        sendBroadcast(updateIntent);
     }
 
     private void signIn() {
@@ -178,10 +192,25 @@ public class SignInActivity extends AppCompatActivity {
             Toast.makeText(this, 
                 "You are not authorized to access this app", 
                 Toast.LENGTH_LONG).show();
+            
+            // Clear widget
+            clearWidget();
         });
     }
 
     private void proceedToMainActivity() {
+        // Update widgets to show rates
+        AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(this);
+        ComponentName thisWidget = new ComponentName(this, RatesWidgetProvider.class);
+        int[] appWidgetIds = appWidgetManager.getAppWidgetIds(thisWidget);
+
+        // Trigger update for all widgets to fetch rates
+        Intent updateIntent = new Intent(this, RatesWidgetProvider.class);
+        updateIntent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
+        updateIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, appWidgetIds);
+        sendBroadcast(updateIntent);
+
+        // Proceed to main activity
         Intent intent = new Intent(SignInActivity.this, MainActivity.class);
         startActivity(intent);
         finish();
