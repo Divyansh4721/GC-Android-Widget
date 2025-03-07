@@ -4,7 +4,6 @@
     android:layout_height="match_parent"
     android:background="@drawable/widget_background_improved"
     android:padding="12dp">
-
     <TextView
         android:id="@+id/widget_title"
         android:layout_width="wrap_content"
@@ -15,9 +14,20 @@
         android:textColor="@android:color/white"
         android:textSize="18sp"
         android:textStyle="bold" />
-
-    
-
+    <TextView
+        android:id="@+id/last_updated"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="3dp"
+        android:layout_marginEnd="2dp"
+        android:layout_toStartOf="@id/refresh_button"
+        android:layout_toEndOf="@id/widget_title"
+        android:gravity="end"
+        android:text="Updated: --:--"
+        android:textColor="#80FFFFFF"
+        android:textSize="15sp" />
     <ImageButton
         android:id="@+id/refresh_button"
         android:layout_width="28dp"
@@ -26,87 +36,102 @@
         android:layout_alignParentTop="true"
         android:background="@android:color/transparent"
         android:src="@drawable/ic_refresh" />
-<LinearLayout
-    android:id="@+id/rates_container"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:layout_below="@id/widget_title"
-    android:layout_marginTop="4dp"
-    android:orientation="horizontal"
-    android:gravity="center_vertical">
-
-    <!-- Gold section -->
     <LinearLayout
-        android:id="@+id/gold_container"
-        android:layout_width="0dp"
+        android:id="@+id/rates_container"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:orientation="vertical"
-        android:gravity="center">
-
-        <!-- Gold label -->
-        <TextView
-            android:id="@+id/gold_label"
-            android:layout_width="wrap_content"
+        android:layout_below="@id/widget_title"
+        android:layout_marginTop="4dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+        <!-- Gold section -->
+        <LinearLayout
+            android:id="@+id/gold_container"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="GOLD 995"
-            android:textColor="#80FFFFFF"
-            android:textSize="8sp" />
-
-        <!-- Gold rate -->
-        <TextView
-            android:id="@+id/gold_rate"
-            android:layout_width="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+            <!-- Gold label -->
+            <TextView
+                android:id="@+id/gold_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="GOLD 995"
+                android:textColor="#80FFFFFF"
+                android:textSize="8sp" />
+            <!-- Gold rate -->
+            <TextView
+                android:id="@+id/gold_rate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="₹0000"
+                android:textColor="#FFD700"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:layout_marginTop="4dp" />
+        </LinearLayout>
+        <!-- Silver section -->
+        <LinearLayout
+            android:id="@+id/silver_container"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="₹0000"
-            android:textColor="#FFD700"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:layout_marginTop="4dp" />
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+            <!-- Silver label -->
+            <TextView
+                android:id="@+id/silver_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="SILVER 999"
+                android:textColor="#80FFFFFF"
+                android:textSize="8sp" />
+            <!-- Silver rate -->
+            <TextView
+                android:id="@+id/silver_rate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="₹0000"
+                android:textColor="#C0C0C0"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:layout_marginTop="4dp" />
+        </LinearLayout>
     </LinearLayout>
-
-    <!-- Silver section -->
-    <LinearLayout
-        android:id="@+id/silver_container"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:orientation="vertical"
-        android:gravity="center">
-
-        <!-- Silver label -->
-        <TextView
-            android:id="@+id/silver_label"
-            android:layout_width="wrap_content"
+    
+    <!-- Grid container for icons - will automatically adapt to available space -->
+    <GridLayout
+        android:id="@+id/icon_grid"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/rates_container"
+        android:layout_marginTop="12dp"
+        android:columnCount="5"
+        android:useDefaultMargins="true">
+        
+        <!-- Icon items will be added programmatically or you can define placeholders here -->
+        <!-- Example icon item (repeat as needed) -->
+        <LinearLayout
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="SILVER 999"
-            android:textColor="#80FFFFFF"
-            android:textSize="8sp" />
-
-        <!-- Silver rate -->
-        <TextView
-            android:id="@+id/silver_rate"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="₹0000"
-            android:textColor="#C0C0C0"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:layout_marginTop="4dp" />
-    </LinearLayout>
-</LinearLayout>
-
-   <TextView
-    android:id="@+id/last_updated"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:layout_alignParentBottom="true"
-    android:layout_alignParentEnd="true"
-    android:layout_marginBottom="1dp"
-    android:layout_marginEnd="12dp"
-    android:text="Updated: --:--"
-    android:textColor="#80FFFFFF"
-    android:textSize="12sp" />
-
-
+            android:layout_columnWeight="1"
+            android:layout_gravity="fill_horizontal"
+            android:orientation="vertical"
+            android:gravity="center">
+            <ImageView
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:src="@drawable/ic_sample_icon"
+                android:contentDescription="Icon" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Icon 1"
+                android:textSize="12sp"
+                android:textColor="@android:color/white"
+                android:gravity="center"
+                android:layout_marginTop="4dp" />
+        </LinearLayout>
+    </GridLayout>
 </RelativeLayout>
