@@ -74,8 +74,8 @@ public class RatesWidgetProvider extends AppWidgetProvider {
         int minHeight = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 100);
         
         // Choose layout based on size - wider than 250dp AND taller than 100dp for the large layout
-        boolean isSmallWidget = !(minWidth > 240 && minHeight > 10);
-        boolean isMidWidget = !(minWidth > 250 && minHeight > 10);
+        boolean isSmallWidget = !(minWidth > 239 && minHeight > 80);
+        boolean isMidWidget = !(minWidth > 249 && minHeight > 80);
 
         // Choose layout based on size
         RemoteViews views;
@@ -99,8 +99,12 @@ public class RatesWidgetProvider extends AppWidgetProvider {
                 views.setTextColor(R.id.gold_rate, Color.WHITE);
             } else if (isMidWidget) {
                 // Mid widget
-                views.setTextViewText(R.id.gold_rate, "Please Sign In");
+                 views.setTextViewText(R.id.gold_rate, "Please😒");
                 views.setTextColor(R.id.gold_rate, Color.WHITE);
+                views.setTextViewText(R.id.silver_rate, "-");
+                views.setTextColor(R.id.silver_rate, Color.WHITE);
+                views.setTextViewText(R.id.silver_rate, "Sign In🤦‍♂️");
+                views.setTextColor(R.id.silver_rate, Color.WHITE);
             } else {
                 // Normal widget
                 views.setTextViewText(R.id.gold_rate, "Please😒");

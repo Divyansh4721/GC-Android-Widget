@@ -53,8 +53,8 @@ public class WidgetUpdateService extends JobService {
        JobInfo.Builder builder = new JobInfo.Builder(
                   JOB_ID,
                   new ComponentName(context, WidgetUpdateService.class))
-                      .setMinimumLatency(300 * 1000) // 5 minutes (changed from 10 seconds)
-                      .setOverrideDeadline(310 * 1000) // Maximum delay of 5 minutes + 10 seconds
+                      .setMinimumLatency(600 * 1000) // 5 minutes (changed from 10 seconds)
+                      .setOverrideDeadline(610 * 1000) // Maximum delay of 5 minutes + 10 seconds
                       .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
                         .setPersisted(true);
         

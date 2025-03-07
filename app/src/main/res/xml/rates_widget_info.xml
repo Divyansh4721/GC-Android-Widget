@@ -2,7 +2,7 @@
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     android:initialKeyguardLayout="@layout/rates_widget_small"
     android:initialLayout="@layout/rates_widget_small"
-    android:minWidth="170dp"
+    android:minWidth="180dp"
     android:minHeight="40dp"
     android:previewImage="@drawable/pw"
     android:resizeMode="horizontal"

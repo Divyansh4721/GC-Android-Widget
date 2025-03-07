@@ -13,8 +13,24 @@
         android:layout_alignParentTop="true"
         android:text="GC Jewellers"
         android:textColor="@android:color/white"
-        android:textSize="14sp"
+        android:textSize="17sp"
         android:textStyle="bold" />
+
+
+    <TextView
+        android:id="@+id/last_updated"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_marginStart="-3dp"
+        android:layout_marginTop="3dp"
+        android:layout_marginEnd="2dp"
+        android:layout_toStartOf="@id/refresh_button"
+        android:layout_toEndOf="@id/widget_title"
+        android:gravity="end"
+        android:text="--:--"
+        android:textColor="@android:color/white"
+        android:textSize="13sp" />
 
     <ImageButton
         android:id="@+id/refresh_button"
@@ -26,47 +42,44 @@
         android:src="@drawable/ic_refresh" />
 
     <!-- Gold section - side by side layout -->
-<LinearLayout
-    android:id="@+id/gold_container"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:layout_below="@id/widget_title"
-    android:layout_marginTop="4dp"
-    android:layout_centerHorizontal="true"
-    android:orientation="horizontal"
-    android:gravity="center_vertical">
-
-    <!-- Gold label -->
-    <TextView
-        android:id="@+id/gold_label"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:id="@+id/rates_container"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="GOLD 995"
-        android:textColor="#80FFFFFF"
-        android:textSize="15sp"
-        android:layout_marginEnd="8dp" />
+        android:layout_below="@id/widget_title"
+        android:layout_marginTop="4dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+        <!-- Gold section -->
+        <LinearLayout
+            android:id="@+id/gold_container"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
 
-    <!-- Gold rate -->
-    <TextView
-        android:id="@+id/gold_rate"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="₹0000"
-        android:textColor="#FFD700"
-        android:textSize="18sp"
-        android:textStyle="bold" />
-</LinearLayout>
-
+            <!-- Gold label -->
             <TextView
-    android:id="@+id/last_updated"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:layout_alignParentBottom="true"  
-    android:layout_alignParentEnd="true"
-    android:layout_marginBottom="8dp"
-    android:layout_marginEnd="12dp"
-    android:text="Updated: --:--"
-    android:textColor="#80FFFFFF"
-    android:textSize="12sp" />
+                android:id="@+id/gold_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="GOLD 995"
+                android:textColor="#FFD700"
+                android:textSize="16sp" />
+
+            <!-- Gold rate -->
+            <TextView
+                android:id="@+id/gold_rate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="₹0000"
+                android:textColor="#FFD700"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:layout_marginTop="4dp" />
+        </LinearLayout>
+
+    </LinearLayout>
 
 </RelativeLayout>
