@@ -60,13 +60,34 @@ public class MainActivity extends Activity {
             }
         });
         
+        // Setup battery optimization button
+        setupBatteryOptimizationButton();
+    }
+    
+    private void setupBatteryOptimizationButton() {
         // Check if we already have battery optimization exemption
-        updateBatteryOptimizationUI();
-        
-        // Automatically request battery optimization permission when the app starts
-        // if it's not already granted
-        if (!isIgnoringBatteryOptimization()) {
-            requestBatteryOptimizationExemption();
+        if (isIgnoringBatteryOptimization()) {
+            // Already has permission, set button to disable optimization
+            batteryOptButton.setText("Enable Battery Optimization");
+            batteryOptButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    enableBatteryOptimization();
+                }
+            });
+            statusText.setText("Widget Status: Limited (Battery Optimized)");
+            statusText.setTextColor(Color.parseColor("#FFA500"));
+        } else {
+            // No exemption, set button to request exemption
+            batteryOptButton.setText("Disable Battery Optimization");
+            batteryOptButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    requestBatteryOptimizationExemption();
+                }
+            });
+            statusText.setText("Widget Status: Active (Battery Unrestricted)");
+            statusText.setTextColor(Color.parseColor("#8FFC8F"));
         }
     }
     
@@ -81,37 +102,15 @@ public class MainActivity extends Activity {
             return "Good afternoon,";
         } else {
             return "Good evening,";
-        } 
+        }
     }
     
     @Override
     protected void onResume() {
         super.onResume();
         
-        // Check permissions again when returning to the activity
-        updateBatteryOptimizationUI();
-    }
-    
-    private void updateBatteryOptimizationUI() {
-        if (isIgnoringBatteryOptimization()) {
-            // Already has permission, disable the button
-            batteryOptButton.setEnabled(false);
-            batteryOptButton.setText("Battery Optimization Disabled");
-            statusText.setText("Widget Status: Active (Battery Optimized)");
-            statusText.setTextColor(Color.parseColor("#8FFC8F"));
-        } else {
-            // Enable the button with click listener
-            batteryOptButton.setEnabled(true);
-            batteryOptButton.setText("Disable Battery Optimization");
-            statusText.setText("Widget Status: Limited (Battery Restricted !)");
-            statusText.setTextColor(Color.parseColor("#FF0105"));
-            batteryOptButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    requestBatteryOptimizationExemption();
-                }
-            });
-        }
+        // Recheck battery optimization status
+        setupBatteryOptimizationButton();
     }
     
     private boolean isIgnoringBatteryOptimization() {
@@ -129,6 +128,16 @@ public class MainActivity extends Activity {
             intent.setData(Uri.parse("package:" + getPackageName()));
             startActivity(intent);
             Toast.makeText(this, "Please enable battery optimization exemption for reliable widget updates", 
+                    Toast.LENGTH_LONG).show();
+        }
+    }
+    
+    private void enableBatteryOptimization() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            Intent intent = new Intent();
+            intent.setAction(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
+            startActivity(intent);
+            Toast.makeText(this, "Please disable battery optimization for this app in settings", 
                     Toast.LENGTH_LONG).show();
         }
     }
