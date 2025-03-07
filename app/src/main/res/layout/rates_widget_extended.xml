@@ -22,14 +22,14 @@
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
         android:layout_marginStart="10dp"
-        android:layout_marginTop="7dp"
+        android:layout_marginTop="3dp"
         android:layout_marginEnd="2dp"
         android:layout_toStartOf="@id/refresh_button"
         android:layout_toEndOf="@id/widget_title"
         android:gravity="end"
         android:text="Updated: --:--"
         android:textColor="#80FFFFFF"
-        android:textSize="10sp" />
+        android:textSize="15sp" />
 
     <ImageButton
         android:id="@+id/refresh_button"
@@ -39,8 +39,6 @@
         android:layout_alignParentTop="true"
         android:background="@android:color/transparent"
         android:src="@drawable/ic_refresh" />
-
- <!-- Combined gold and silver container in single line -->
 <LinearLayout
     android:id="@+id/rates_container"
     android:layout_width="match_parent"
@@ -56,7 +54,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:orientation="horizontal"
+        android:orientation="vertical"
         android:gravity="center">
 
         <!-- Gold label -->
@@ -66,8 +64,7 @@
             android:layout_height="wrap_content"
             android:text="GOLD 995"
             android:textColor="#80FFFFFF"
-            android:textSize="10sp"
-            android:layout_marginEnd="8dp" />
+            android:textSize="10sp" />
 
         <!-- Gold rate -->
         <TextView
@@ -76,8 +73,9 @@
             android:layout_height="wrap_content"
             android:text="₹0000"
             android:textColor="#FFD700"
-            android:textSize="15sp"
-            android:textStyle="bold" />
+            android:textSize="21sp"
+            android:textStyle="bold"
+            android:layout_marginTop="4dp" />
     </LinearLayout>
 
     <!-- Silver section -->
@@ -86,7 +84,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:orientation="horizontal"
+        android:orientation="vertical"
         android:gravity="center">
 
         <!-- Silver label -->
@@ -96,8 +94,7 @@
             android:layout_height="wrap_content"
             android:text="SILVER 999"
             android:textColor="#80FFFFFF"
-            android:textSize="10sp"
-            android:layout_marginEnd="8dp" />
+            android:textSize="10sp" />
 
         <!-- Silver rate -->
         <TextView
@@ -106,10 +103,10 @@
             android:layout_height="wrap_content"
             android:text="₹0000"
             android:textColor="#C0C0C0"
-            android:textSize="15sp"
-            android:textStyle="bold" />
+            android:textSize="21sp"
+            android:textStyle="bold"
+            android:layout_marginTop="4dp" />
     </LinearLayout>
 </LinearLayout>
-
 
 </RelativeLayout>
