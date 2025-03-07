@@ -74,7 +74,7 @@ public class RatesWidgetProvider extends AppWidgetProvider {
         int minHeight = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 100);
         
         // Choose layout based on size - wider than 250dp AND taller than 100dp for the large layout
-        boolean isSmallWidget = !(minWidth > 150 && minHeight > 10);
+        boolean isSmallWidget = !(minWidth > 240 && minHeight > 10);
         boolean isMidWidget = !(minWidth > 250 && minHeight > 10);
 
         // Choose layout based on size
