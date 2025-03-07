@@ -84,6 +84,8 @@ public class RatesWidgetProvider extends AppWidgetProvider {
         views = new RemoteViews(context.getPackageName(), R.layout.rates_widget);
     }
 
+    
+
     // Rest of your method remains the same
     // ...
 

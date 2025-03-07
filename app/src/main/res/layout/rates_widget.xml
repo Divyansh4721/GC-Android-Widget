@@ -16,6 +16,21 @@
         android:textSize="18sp"
         android:textStyle="bold" />
 
+    <TextView
+        android:id="@+id/last_updated"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="7dp"
+        android:layout_marginEnd="2dp"
+        android:layout_toStartOf="@id/refresh_button"
+        android:layout_toEndOf="@id/widget_title"
+        android:gravity="end"
+        android:text="Updated: --:--"
+        android:textColor="#80FFFFFF"
+        android:textSize="11sp" />
+
     <ImageButton
         android:id="@+id/refresh_button"
         android:layout_width="28dp"
@@ -76,16 +91,5 @@
         android:textColor="#C0C0C0"
         android:textSize="20sp"
         android:textStyle="bold" />
-
-    <TextView
-        android:id="@+id/last_updated"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/gold_rate"
-        android:layout_marginTop="12dp"
-        android:layout_alignParentEnd="true"
-        android:text="Updated: --:--"
-        android:textColor="#80FFFFFF"
-        android:textSize="11sp" />
 
 </RelativeLayout>
