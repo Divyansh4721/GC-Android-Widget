@@ -50,13 +50,13 @@ public class WidgetUpdateService extends JobService {
         JobScheduler jobScheduler = 
                 (JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
         
-        JobInfo.Builder builder = new JobInfo.Builder(
-                JOB_ID,
-                new ComponentName(context, WidgetUpdateService.class))
-                .setMinimumLatency(10 * 1000) // 10 seconds
-                .setOverrideDeadline(15 * 1000) // Maximum delay of 15 seconds
-                .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-                .setPersisted(true);
+       JobInfo.Builder builder = new JobInfo.Builder(
+                  JOB_ID,
+                  new ComponentName(context, WidgetUpdateService.class))
+                      .setMinimumLatency(300 * 1000) // 5 minutes (changed from 10 seconds)
+                      .setOverrideDeadline(310 * 1000) // Maximum delay of 5 minutes + 10 seconds
+                      .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+                        .setPersisted(true);
         
         int result = jobScheduler.schedule(builder.build());
         if (result == JobScheduler.RESULT_SUCCESS) {

@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/widget_background_improved"
-    android:padding="12dp">
+    android:padding="8dp">
 
     <TextView
         android:id="@+id/widget_title"
@@ -13,68 +13,41 @@
         android:layout_alignParentTop="true"
         android:text="GC Jewellers"
         android:textColor="@android:color/white"
-        android:textSize="18sp"
+        android:textSize="14sp"
         android:textStyle="bold" />
 
     <ImageButton
         android:id="@+id/refresh_button"
-        android:layout_width="28dp"
-        android:layout_height="28dp"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
         android:layout_alignParentEnd="true"
         android:layout_alignParentTop="true"
         android:background="@android:color/transparent"
         android:src="@drawable/ic_refresh" />
 
-    <!-- Gold label - positioned on left side -->
+    <!-- Gold label -->
     <TextView
         android:id="@+id/gold_label"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@id/widget_title"
-        android:layout_marginTop="20dp"
-        android:layout_alignParentStart="true"
-        android:layout_marginStart="45dp"
+        android:layout_marginTop="4dp"
+        android:layout_centerHorizontal="true"
         android:text="GOLD 995"
         android:textColor="#80FFFFFF"
         android:textSize="12sp" />
 
-    <!-- Gold rate - positioned below gold label -->
+    <!-- Gold rate -->
     <TextView
         android:id="@+id/gold_rate"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@id/gold_label"
-        android:layout_marginTop="4dp"
-        android:layout_alignStart="@id/gold_label"
+        android:layout_marginTop="2dp"
+        android:layout_centerHorizontal="true"
         android:text="₹0000"
         android:textColor="#FFD700"
-        android:textSize="20sp"
-        android:textStyle="bold" />
-
-    <!-- Silver label - positioned on right side -->
-    <TextView
-        android:id="@+id/silver_label"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/widget_title"
-        android:layout_marginTop="20dp"
-        android:layout_alignParentEnd="true"
-        android:layout_marginEnd="45dp"
-        android:text="SILVER 999"
-        android:textColor="#80FFFFFF"
-        android:textSize="12sp" />
-
-    <!-- Silver rate - positioned below silver label -->
-    <TextView
-        android:id="@+id/silver_rate"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/silver_label"
-        android:layout_marginTop="4dp"
-        android:layout_alignStart="@id/silver_label"
-        android:text="₹0000"
-        android:textColor="#C0C0C0"
-        android:textSize="20sp"
+        android:textSize="18sp"
         android:textStyle="bold" />
 
     <TextView
@@ -82,10 +55,10 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@id/gold_rate"
-        android:layout_marginTop="12dp"
+        android:layout_marginTop="4dp"
         android:layout_alignParentEnd="true"
         android:text="Updated: --:--"
         android:textColor="#80FFFFFF"
-        android:textSize="11sp" />
+        android:textSize="9sp" />
 
 </RelativeLayout>

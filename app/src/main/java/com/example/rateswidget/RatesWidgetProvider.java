@@ -8,6 +8,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
+import android.os.Bundle; // Add this import
 import android.os.PowerManager;
 import android.util.Log;
 import android.widget.RemoteViews;
@@ -22,7 +23,7 @@ import java.util.concurrent.TimeUnit;
 public class RatesWidgetProvider extends AppWidgetProvider {
     private static final String TAG = "RatesWidgetProvider";
     private static final String ACTION_REFRESH = "com.example.rateswidget.ACTION_REFRESH";
-    private static final int REFRESH_INTERVAL_SECONDS = 10;
+    private static final int REFRESH_INTERVAL_SECONDS = 300; // Changed from 10 to 300 (5 minutes)
     private static ScheduledExecutorService scheduler;
 
     @Override
@@ -38,6 +39,14 @@ public class RatesWidgetProvider extends AppWidgetProvider {
 
         // Schedule widget updates through JobScheduler
         WidgetUpdateService.scheduleNextUpdate(context);
+    }
+
+    @Override
+    public void onAppWidgetOptionsChanged(Context context, AppWidgetManager appWidgetManager,
+                                      int appWidgetId, Bundle newOptions) {
+        // Widget size has changed, update the widget
+        updateAppWidget(context, appWidgetManager, appWidgetId);
+        super.onAppWidgetOptionsChanged(context, appWidgetManager, appWidgetId, newOptions);
     }
 
     @Override
@@ -57,18 +66,47 @@ public class RatesWidgetProvider extends AppWidgetProvider {
     }
 
     private void updateAppWidget(Context context, AppWidgetManager appWidgetManager, int appWidgetId) {
-        Log.d(TAG, "Updating widget ID: " + appWidgetId);
-        RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.rates_widget);
+    Log.d(TAG, "Updating widget ID: " + appWidgetId);
+    
+    // Get the widget size
+    Bundle options = appWidgetManager.getAppWidgetOptions(appWidgetId);
+    int minWidth = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 180);
+    int minHeight = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 40);
+    
+    // Choose layout based on size - wider than 250dp AND taller than 100dp for the large layout
+    boolean isSmallWidget = !(minWidth > 250 && minHeight > 100);
+    
+    // Choose layout based on size
+    RemoteViews views;
+    if (isSmallWidget) {
+        views = new RemoteViews(context.getPackageName(), R.layout.rates_widget_small);
+    } else {
+        views = new RemoteViews(context.getPackageName(), R.layout.rates_widget);
+    }
+
+    // Rest of your method remains the same
+    // ...
 
         // Check if user is authenticated
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         if (currentUser == null) {
             // User not logged in, show sign-in message
             views.setTextViewText(R.id.widget_title, "GC Jewellers");
-            views.setTextViewText(R.id.gold_rate, "Please");
-            views.setTextColor(R.id.gold_rate, Color.WHITE);
-            views.setTextViewText(R.id.silver_rate, "Sign In");
-            views.setTextColor(R.id.silver_rate, Color.WHITE);
+            
+            if (isSmallWidget) {
+                // Small widget
+                views.setTextViewText(R.id.gold_rate, "Please Sign In");
+                views.setTextColor(R.id.gold_rate, Color.WHITE);
+            } else {
+                // Normal widget
+                views.setTextViewText(R.id.gold_rate, "Please😒");
+                views.setTextColor(R.id.gold_rate, Color.WHITE);
+                views.setTextViewText(R.id.silver_rate, "-");
+                views.setTextColor(R.id.silver_rate, Color.WHITE);
+                views.setTextViewText(R.id.silver_rate, "Sign In🤦‍♂️");
+                views.setTextColor(R.id.silver_rate, Color.WHITE);
+            }
+            
             views.setTextViewText(R.id.last_updated, "");
             
             // Disable refresh button when not logged in
@@ -100,7 +138,7 @@ public class RatesWidgetProvider extends AppWidgetProvider {
         PowerManager powerManager = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
         PowerManager.WakeLock wakeLock = powerManager.newWakeLock(
                 PowerManager.PARTIAL_WAKE_LOCK, "RatesWidget:WakeLock");
-        wakeLock.acquire(10 * 60 * 1000); // 10 minutes max
+        wakeLock.acquire(15 * 60 * 1000);
 
         // Schedule periodic refresh
         scheduler = Executors.newSingleThreadScheduledExecutor();

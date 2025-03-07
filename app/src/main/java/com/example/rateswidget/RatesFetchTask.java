@@ -4,6 +4,7 @@ import android.appwidget.AppWidgetManager;
 import android.content.Context;
 import android.graphics.Color;
 import android.os.AsyncTask;
+import android.os.Bundle;
 import android.util.Log;
 import android.widget.RemoteViews;
 
@@ -28,12 +29,23 @@ public class RatesFetchTask extends AsyncTask<Void, Void, String[]> {
     private final int appWidgetId;
     private boolean hasError = false;
     private String errorMessage = "";
+    private boolean isSmallWidget = false;
 
     public RatesFetchTask(Context context, RemoteViews views, AppWidgetManager appWidgetManager, int appWidgetId) {
         this.context = context;
         this.views = views;
         this.appWidgetManager = appWidgetManager;
         this.appWidgetId = appWidgetId;
+        
+        // Check if this is the small widget by checking if silver_rate view exists
+        try {
+            // If this doesn't throw an exception, it's the normal widget
+            views.getLayoutId();
+            this.isSmallWidget = views.getLayoutId() == R.layout.rates_widget_small;
+        } catch (Exception e) {
+            // Default to false
+            this.isSmallWidget = false;
+        }
     }
 
     @Override
@@ -45,7 +57,9 @@ public class RatesFetchTask extends AsyncTask<Void, Void, String[]> {
         
         // Show loading indicator
         views.setTextViewText(R.id.gold_rate, "Loading...");
-        views.setTextViewText(R.id.silver_rate, "Loading...");
+        if (!isSmallWidget) {
+            views.setTextViewText(R.id.silver_rate, "Loading...");
+        }
         
         appWidgetManager.updateAppWidget(appWidgetId, views);
     }
@@ -106,23 +120,34 @@ public class RatesFetchTask extends AsyncTask<Void, Void, String[]> {
         if (hasError) {
             // Display error message
             views.setTextViewText(R.id.gold_rate, "Error");
-            views.setTextViewText(R.id.silver_rate, "Check connection");
             views.setTextColor(R.id.gold_rate, Color.RED);
-            views.setTextColor(R.id.silver_rate, Color.RED);
+            
+            if (!isSmallWidget) {
+                views.setTextViewText(R.id.silver_rate, "Check connection");
+                views.setTextColor(R.id.silver_rate, Color.RED);
+            }
+            
             Log.e(TAG, "Failed to fetch rates: " + errorMessage);
         } else {
             // Format and display the rates
             String goldRate = rates[0] != null ? rates[0] : "N/A";
             String silverRate = rates[1] != null ? rates[1] : "N/A";
             
-            views.setTextViewText(R.id.gold_rate, "Gold 995 - ₹" + goldRate);
-            views.setTextViewText(R.id.silver_rate, "Silver 999 - ₹" + silverRate);
+            // For small widget, only show gold rate
+            if (isSmallWidget) {
+                views.setTextViewText(R.id.gold_rate, "₹" + goldRate);
+                views.setTextColor(R.id.gold_rate, Color.rgb(255, 215, 0)); // Gold color
+            } else {
+                // For normal widget, show both gold and silver rates
+                views.setTextViewText(R.id.gold_rate, "₹" + goldRate);
+                views.setTextViewText(R.id.silver_rate, "₹" + silverRate);
+                
+                // Set the colors
+                views.setTextColor(R.id.gold_rate, Color.rgb(255, 215, 0)); // Gold color
+                views.setTextColor(R.id.silver_rate, Color.rgb(192, 192, 192)); // Silver color
+            }
             
-            // Set the colors
-            views.setTextColor(R.id.gold_rate, Color.rgb(255, 215, 0)); // Gold color
-            views.setTextColor(R.id.silver_rate, Color.rgb(192, 192, 192)); // Silver color
-            
-            Log.d(TAG, "Widget updated with new gold rate: " + goldRate + " and silver rate: " + silverRate);
+            Log.d(TAG, "Widget updated with new rates");
         }
         
         // Update the widget
