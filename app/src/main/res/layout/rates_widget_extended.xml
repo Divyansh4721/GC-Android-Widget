@@ -5,93 +5,111 @@
     android:background="@drawable/widget_background_improved"
     android:padding="12dp">
 
-    <!-- Title on the left -->
     <TextView
         android:id="@+id/widget_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
-        android:layout_centerVertical="true"
+        android:layout_alignParentTop="true"
         android:text="GC Jewellers"
         android:textColor="@android:color/white"
         android:textSize="18sp"
         android:textStyle="bold" />
 
-    <!-- Last updated time in the center -->
     <TextView
         android:id="@+id/last_updated"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="7dp"
+        android:layout_marginEnd="2dp"
+        android:layout_toStartOf="@id/refresh_button"
+        android:layout_toEndOf="@id/widget_title"
+        android:gravity="end"
         android:text="Updated: --:--"
         android:textColor="#80FFFFFF"
-        android:textSize="12sp" />
+        android:textSize="10sp" />
 
-    <!-- Refresh button on the right -->
     <ImageButton
         android:id="@+id/refresh_button"
         android:layout_width="28dp"
         android:layout_height="28dp"
         android:layout_alignParentEnd="true"
-        android:layout_centerVertical="true"
+        android:layout_alignParentTop="true"
         android:background="@android:color/transparent"
         android:src="@drawable/ic_refresh" />
 
-    <!-- Gold section - left side of the center -->
-    <LinearLayout
-        android:id="@+id/gold_section"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerVertical="true"
-        android:layout_marginEnd="20dp"
-        android:layout_toStartOf="@id/last_updated"
-        android:gravity="center"
-        android:orientation="vertical">
+ <!-- Combined gold and silver container in single line -->
+<LinearLayout
+    android:id="@+id/rates_container"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_below="@id/widget_title"
+    android:layout_marginTop="4dp"
+    android:orientation="horizontal"
+    android:gravity="center_vertical">
 
+    <!-- Gold section -->
+    <LinearLayout
+        android:id="@+id/gold_container"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="horizontal"
+        android:gravity="center">
+
+        <!-- Gold label -->
         <TextView
             android:id="@+id/gold_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="GOLD 995"
             android:textColor="#80FFFFFF"
-            android:textSize="12sp" />
+            android:textSize="10sp"
+            android:layout_marginEnd="8dp" />
 
+        <!-- Gold rate -->
         <TextView
             android:id="@+id/gold_rate"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="₹0000"
             android:textColor="#FFD700"
-            android:textSize="18sp"
+            android:textSize="15sp"
             android:textStyle="bold" />
     </LinearLayout>
 
-    <!-- Silver section - right side of the center -->
+    <!-- Silver section -->
     <LinearLayout
-        android:id="@+id/silver_section"
-        android:layout_width="wrap_content"
+        android:id="@+id/silver_container"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_centerVertical="true"
-        android:layout_marginStart="20dp"
-        android:layout_toEndOf="@id/last_updated"
-        android:gravity="center"
-        android:orientation="vertical">
+        android:layout_weight="1"
+        android:orientation="horizontal"
+        android:gravity="center">
 
+        <!-- Silver label -->
         <TextView
             android:id="@+id/silver_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="SILVER 999"
             android:textColor="#80FFFFFF"
-            android:textSize="12sp" />
+            android:textSize="10sp"
+            android:layout_marginEnd="8dp" />
 
+        <!-- Silver rate -->
         <TextView
             android:id="@+id/silver_rate"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="₹0000"
             android:textColor="#C0C0C0"
-            android:textSize="18sp"
+            android:textSize="15sp"
             android:textStyle="bold" />
     </LinearLayout>
+</LinearLayout>
+
+
 </RelativeLayout>

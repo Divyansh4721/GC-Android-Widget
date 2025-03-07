@@ -8,7 +8,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
-import android.os.Bundle; // Add this import
+import android.os.Bundle;
 import android.os.PowerManager;
 import android.util.Log;
 import android.widget.RemoteViews;
@@ -66,28 +66,26 @@ public class RatesWidgetProvider extends AppWidgetProvider {
     }
 
     private void updateAppWidget(Context context, AppWidgetManager appWidgetManager, int appWidgetId) {
-    Log.d(TAG, "Updating widget ID: " + appWidgetId);
-    
-    // Get the widget size
-    Bundle options = appWidgetManager.getAppWidgetOptions(appWidgetId);
-    int minWidth = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 180);
-    int minHeight = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 40);
-    
-    // Choose layout based on size - wider than 250dp AND taller than 100dp for the large layout
-    boolean isSmallWidget = !(minWidth > 250 && minHeight > 100);
-    
-    // Choose layout based on size
-    RemoteViews views;
-    if (isSmallWidget) {
-        views = new RemoteViews(context.getPackageName(), R.layout.rates_widget_small);
-    } else {
-        views = new RemoteViews(context.getPackageName(), R.layout.rates_widget);
-    }
+        Log.d(TAG, "Updating widget ID: " + appWidgetId);
+        
+        // Get the widget size
+        Bundle options = appWidgetManager.getAppWidgetOptions(appWidgetId);
+        int minWidth = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 400);
+        int minHeight = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 100);
+        
+        // Choose layout based on size - wider than 250dp AND taller than 100dp for the large layout
+        boolean isSmallWidget = !(minWidth > 250 && minHeight > 40);
+        boolean isMidWidget = !(minWidth > 350 && minHeight > 40);
 
-    
-
-    // Rest of your method remains the same
-    // ...
+        // Choose layout based on size
+        RemoteViews views;
+        if (isSmallWidget) {
+            views = new RemoteViews(context.getPackageName(), R.layout.rates_widget_small);
+        } else if (isMidWidget) { 
+            views = new RemoteViews(context.getPackageName(), R.layout.rates_widget_extended);
+        } else {
+            views = new RemoteViews(context.getPackageName(), R.layout.rates_widget);
+        }
 
         // Check if user is authenticated
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
@@ -97,6 +95,10 @@ public class RatesWidgetProvider extends AppWidgetProvider {
             
             if (isSmallWidget) {
                 // Small widget
+                views.setTextViewText(R.id.gold_rate, "Please Sign In");
+                views.setTextColor(R.id.gold_rate, Color.WHITE);
+            } else if (isMidWidget) {
+                // Mid widget
                 views.setTextViewText(R.id.gold_rate, "Please Sign In");
                 views.setTextColor(R.id.gold_rate, Color.WHITE);
             } else {
