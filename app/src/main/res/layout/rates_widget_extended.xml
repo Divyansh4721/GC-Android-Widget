@@ -17,7 +17,7 @@
         android:textStyle="bold" />
 
     <TextView
-        android:id="@+id/last_updated"
+        android:id="@+id/lastUpdated"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
@@ -106,6 +106,15 @@
                 android:textColor="#C0C0C0"
                 android:textSize="26sp"
                 android:textStyle="bold"
+                android:layout_marginTop="2dp" />
+
+                <TextView
+                android:id="@+id/silver_rate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="₹0000"
+                android:textColor="#C0C0C0"
+                android:textSize="15sp"
                 android:layout_marginTop="2dp" />
         </LinearLayout>
     </LinearLayout>

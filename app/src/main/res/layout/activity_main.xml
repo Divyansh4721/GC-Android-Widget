@@ -32,7 +32,7 @@
                     android:layout_width="64dp"
                     android:layout_height="64dp"
                     android:src="@drawable/ic_default_profile"
-                    android:layout_marginEnd="16dp"/>
+                    android:layout_marginEnd="16dp" />
 
                 <LinearLayout
                     android:layout_width="0dp"
@@ -47,7 +47,7 @@
                         android:text="John Doe"
                         android:textColor="?attr/colorPrimary"
                         android:textSize="18sp"
-                        android:textStyle="bold"/>
+                        android:textStyle="bold" />
 
                     <TextView
                         android:id="@+id/user_email"
@@ -55,7 +55,7 @@
                         android:layout_height="wrap_content"
                         android:text="johndoe@example.com"
                         android:textColor="?attr/colorOnBackground"
-                        android:textSize="14sp"/>
+                        android:textSize="14sp" />
                 </LinearLayout>
             </LinearLayout>
         </androidx.cardview.widget.CardView>
@@ -82,7 +82,7 @@
                     android:textColor="?attr/colorPrimary"
                     android:textSize="18sp"
                     android:textStyle="bold"
-                    android:layout_marginBottom="16dp"/>
+                    android:layout_marginBottom="16dp" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -94,15 +94,17 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="Gold 995"
-                        android:textColor="?attr/colorPrimary"
-                        android:textSize="16sp"/>
+                        android:textColor="#FFD700"
+                        android:textSize="18sp" />
                     <TextView
-                        android:id="@+id/gold_price"
+                        android:id="@+id/gold_rate"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="₹6,250/10g"
-                        android:textColor="?attr/colorOnBackground"
-                        android:textSize="16sp"/>
+                        android:text="₹0000"
+                        android:textColor="#FFD700"
+                        android:textSize="26sp"
+                        android:textStyle="bold"
+                        android:layout_marginTop="2dp" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -114,15 +116,15 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="Silver 999"
-                        android:textColor="?attr/colorSecondary"
-                        android:textSize="16sp"/>
+                        android:textColor="#C0C0C0"
+                        android:textSize="18sp" />
                     <TextView
                         android:id="@+id/silver_price"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="₹75/10g"
-                        android:textColor="?attr/colorOnBackground"
-                        android:textSize="16sp"/>
+                        android:text="₹0000"
+                        android:textColor="#C0C0C0"
+                        android:textSize="26sp" />
                 </LinearLayout>
             </LinearLayout>
         </androidx.cardview.widget.CardView>
@@ -156,12 +158,12 @@
                         android:layout_weight="1"
                         android:text="Battery Optimization"
                         android:textColor="?attr/colorOnBackground"
-                        android:textSize="16sp"/>
+                        android:textSize="16sp" />
 
                     <com.google.android.material.switchmaterial.SwitchMaterial
                         android:id="@+id/battery_optimization_switch"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"/>
+                        android:layout_height="wrap_content" />
                 </LinearLayout>
 
                 <!-- Widget Refresh -->
@@ -177,12 +179,12 @@
                         android:layout_weight="1"
                         android:text="Widget Refresh"
                         android:textColor="?attr/colorOnBackground"
-                        android:textSize="16sp"/>
+                        android:textSize="16sp" />
 
                     <com.google.android.material.switchmaterial.SwitchMaterial
                         android:id="@+id/widget_refresh_switch"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"/>
+                        android:layout_height="wrap_content" />
                 </LinearLayout>
             </LinearLayout>
         </androidx.cardview.widget.CardView>
@@ -195,7 +197,7 @@
             android:layout_height="wrap_content"
             android:text="Sign Out"
             android:textAllCaps="false"
-            android:layout_marginBottom="16dp"/>
+            android:layout_marginBottom="16dp" />
 
         <!-- Footer -->
         <TextView
@@ -204,6 +206,6 @@
             android:gravity="center"
             android:text="Add widget to home screen to view rates"
             android:textColor="?attr/colorOnBackground"
-            android:textSize="14sp"/>
+            android:textSize="14sp" />
     </LinearLayout>
 </ScrollView>
