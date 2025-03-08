@@ -2,30 +2,36 @@ package com.example.rateswidget;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.graphics.Color;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.PowerManager;
 import android.provider.Settings;
-import android.view.View;
-import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-
-import java.util.Calendar;
+import com.squareup.picasso.Picasso;
 
 public class MainActivity extends Activity {
     
-    private Button batteryOptButton;
-    private Button logoutButton;
-    private TextView statusText;
+    private SwitchMaterial batteryOptSwitch;
+    private SwitchMaterial widgetRefreshSwitch;
+    private MaterialButton logoutButton;
+    private TextView userName;
+    private TextView userEmail;
+    private ImageView userProfileImage;
+    private TextView goldPriceText;
+    private TextView silverPriceText;
+    
     private FirebaseAuth mAuth;
 
     @Override
@@ -37,80 +43,106 @@ public class MainActivity extends Activity {
         mAuth = FirebaseAuth.getInstance();
         FirebaseUser currentUser = mAuth.getCurrentUser();
 
-        TextView devMessage = findViewById(R.id.developer_message);
-        statusText = findViewById(R.id.status_text);
-
-        if (currentUser != null) {
-            String userName = currentUser.getDisplayName();
-            String greeting = getTimeBasedGreeting();
-            devMessage.setText(greeting + " " + (userName != null ? userName : "User"));
-        } else {
-            devMessage.setText(getTimeBasedGreeting() + " User");
-        }
+        // Initialize views
+        initializeViews();
         
-        // Find the battery optimization button
-        batteryOptButton = findViewById(R.id.battery_opt_button);
+        // Setup user profile
+        setupUserProfile(currentUser);
         
-        // Set up logout button
+        // Setup battery optimization switch
+        setupBatteryOptimizationSwitch();
+        
+        // Setup widget refresh switch
+        setupWidgetRefreshSwitch();
+        
+        // Setup logout button
+        setupLogoutButton();
+        
+        // Fetch and display current rates
+        fetchCurrentRates();
+    }
+    
+    private void initializeViews() {
+        batteryOptSwitch = findViewById(R.id.battery_optimization_switch);
+        widgetRefreshSwitch = findViewById(R.id.widget_refresh_switch);
         logoutButton = findViewById(R.id.logout_button);
-        logoutButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                logout();
+        userName = findViewById(R.id.user_name);
+        userEmail = findViewById(R.id.user_email);
+        userProfileImage = findViewById(R.id.user_profile_image);
+        goldPriceText = findViewById(R.id.gold_price);
+        silverPriceText = findViewById(R.id.silver_price);
+    }
+    
+    private void setupUserProfile(FirebaseUser user) {
+        if (user != null) {
+            // Set user name
+            String displayName = user.getDisplayName() != null ? user.getDisplayName() : "User";
+            userName.setText(displayName);
+            
+            // Set user email
+            String email = user.getEmail() != null ? user.getEmail() : "No email";
+            userEmail.setText(email);
+            
+            // Generate profile image from name or use photo URL
+            if (user.getPhotoUrl() != null) {
+                // Use Firebase photo URL if available
+                Picasso.get()
+                    .load(user.getPhotoUrl())
+                    .placeholder(R.drawable.ic_default_profile)
+                    .error(R.drawable.ic_default_profile)
+                    .into(userProfileImage);
+            } else {
+                // Generate profile image from name
+                Bitmap profileBitmap = ProfileImageGenerator.generateCircularProfileImage(
+                    displayName, 
+                    userProfileImage.getWidth(), 
+                    userProfileImage.getHeight()
+                );
+                userProfileImage.setImageBitmap(profileBitmap);
+            }
+        }
+    }
+
+    
+    private void setupBatteryOptimizationSwitch() {
+        // Check current battery optimization status
+        boolean isIgnoringBatteryOptimizations = isIgnoringBatteryOptimization();
+        batteryOptSwitch.setChecked(isIgnoringBatteryOptimizations);
+        
+        batteryOptSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (isChecked) {
+                // Request to disable battery optimization
+                requestBatteryOptimizationExemption();
+            } else {
+                // Enable battery optimization
+                enableBatteryOptimization();
             }
         });
+    }
+    
+    private void setupWidgetRefreshSwitch() {
+        // Default to on
+        widgetRefreshSwitch.setChecked(true);
         
-        // Setup battery optimization button
-        setupBatteryOptimizationButton();
+        widgetRefreshSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            // Send broadcast to widget provider to start/stop updates
+            Intent intent = new Intent(this, RatesWidgetProvider.class);
+            intent.setAction(isChecked ? 
+                "com.example.rateswidget.ACTION_START_UPDATES" : 
+                "com.example.rateswidget.ACTION_STOP_UPDATES");
+            sendBroadcast(intent);
+        });
     }
     
-    private void setupBatteryOptimizationButton() {
-        // Check if we already have battery optimization exemption
-        if (isIgnoringBatteryOptimization()) {
-            // Already has permission, set button to disable optimization
-            batteryOptButton.setText("Enable Battery Optimization");
-            batteryOptButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    enableBatteryOptimization();
-                }
-            });
-            statusText.setText("Widget Status: Limited (Battery Optimized)");
-            statusText.setTextColor(Color.parseColor("#FFA500"));
-        } else {
-            // No exemption, set button to request exemption
-            batteryOptButton.setText("Disable Battery Optimization");
-            batteryOptButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    requestBatteryOptimizationExemption();
-                }
-            });
-            statusText.setText("Widget Status: Active (Battery Unrestricted)");
-            statusText.setTextColor(Color.parseColor("#8FFC8F"));
-        }
+    private void setupLogoutButton() {
+        logoutButton.setOnClickListener(v -> logout());
     }
     
-    // Method to get time-based greeting
-    private String getTimeBasedGreeting() {
-        Calendar calendar = Calendar.getInstance();
-        int hour = calendar.get(Calendar.HOUR_OF_DAY);
-
-        if (hour >= 5 && hour < 12) {
-            return "Good morning,";
-        } else if (hour >= 12 && hour < 17) {
-            return "Good afternoon,";
-        } else {
-            return "Good evening,";
-        }
-    }
-    
-    @Override
-    protected void onResume() {
-        super.onResume();
-        
-        // Recheck battery optimization status
-        setupBatteryOptimizationButton();
+    private void fetchCurrentRates() {
+        // TODO: Implement actual rate fetching logic
+        // For now, using placeholder values
+        goldPriceText.setText("₹6,250/10g");
+        silverPriceText.setText("₹75/10g");
     }
     
     private boolean isIgnoringBatteryOptimization() {
@@ -118,7 +150,7 @@ public class MainActivity extends Activity {
             PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
             return powerManager.isIgnoringBatteryOptimizations(getPackageName());
         }
-        return true; // For older Android versions, return true (no need for exemption)
+        return true;
     }
     
     private void requestBatteryOptimizationExemption() {
@@ -127,8 +159,6 @@ public class MainActivity extends Activity {
             intent.setAction(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
             intent.setData(Uri.parse("package:" + getPackageName()));
             startActivity(intent);
-            Toast.makeText(this, "Please enable battery optimization exemption for reliable widget updates", 
-                    Toast.LENGTH_LONG).show();
         }
     }
     
@@ -137,8 +167,6 @@ public class MainActivity extends Activity {
             Intent intent = new Intent();
             intent.setAction(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
             startActivity(intent);
-            Toast.makeText(this, "Please disable battery optimization for this app in settings", 
-                    Toast.LENGTH_LONG).show();
         }
     }
     
@@ -169,6 +197,15 @@ public class MainActivity extends Activity {
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(intent);
             finish();
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Recheck battery optimization status when returning to the activity
+        if (batteryOptSwitch != null) {
+            batteryOptSwitch.setChecked(isIgnoringBatteryOptimization());
         }
     }
 }

@@ -23,7 +23,7 @@ import java.util.concurrent.TimeUnit;
 public class RatesWidgetProvider extends AppWidgetProvider {
     private static final String TAG = "RatesWidgetProvider";
     private static final String ACTION_REFRESH = "com.example.rateswidget.ACTION_REFRESH";
-    private static final int REFRESH_INTERVAL_SECONDS = 300; // Changed from 10 to 300 (5 minutes)
+    private static final int REFRESH_INTERVAL_SECONDS = 600; // Changed from 10 to 300 (5 minutes)
     private static ScheduledExecutorService scheduler;
 
     @Override

@@ -1,0 +1,45 @@
+$FilePaths = @(
+"C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\AndroidManifest.xml"
+"C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\java\com\example\rateswidget\MainActivity.java"
+"C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\java\com\example\rateswidget\SignInActivity.java"
+"C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\layout\activity_sign_in.xml"
+"C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\layout\activity_main.xml"
+"C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\values\colors.xml"
+"C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\values\strings.xml"
+"C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\values\styles.xml"
+"C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\values\themes.xml"
+"C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\values-night\themes.xml"
+"C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\xml\backup_rules.xml"
+"C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\xml\data_extraction_rules.xml"
+"C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\build.gradle.kts"
+"C:\Users\Cshek\AndroidStudioProjects\rateswidget\build.gradle.kts"
+"C:\Users\Cshek\AndroidStudioProjects\rateswidget\settings.gradle.kts"
+)
+
+$OutputFilePath = "C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\Main.txt"
+
+$OutputContent = ""
+
+foreach ($FilePath in $FilePaths) {
+    if (Test-Path -Path $FilePath -PathType Leaf) {
+        $AbsolutePath = (Resolve-Path $FilePath).Path
+        $FileContent = Get-Content -Path $FilePath -Raw
+        
+        $OutputContent += "Path: $AbsolutePath`r`n"
+        $OutputContent += "Content:`r`n$FileContent`r`n`r`n"
+    }
+    else {
+        Write-Warning "File not found: $FilePath"
+    }
+}
+
+Set-Content -Path $OutputFilePath -Value $OutputContent
+
+Write-Output "Successfully processed files to: $OutputFilePath"
+
+
+
+
+
+
+

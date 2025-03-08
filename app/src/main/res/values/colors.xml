@@ -1,5 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Theme Colors -->
+    <color name="gold_primary">#FFD700</color>
+    <color name="gold_dark">#DAA520</color>
+    <color name="gold_light">#FAFAD2</color>
+    
+    <color name="silver_secondary">#C0C0C0</color>
+    <color name="silver_light">#E0E0E0</color>
+    <color name="silver_dark">#808080</color>
+    
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 </resources>
