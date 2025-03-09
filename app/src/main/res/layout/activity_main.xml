@@ -3,20 +3,20 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/black">
+    android:background="?attr/android:windowBackground">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="24dp">
+        android:padding="16dp">
 
         <!-- Profile Card -->
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:cardBackgroundColor="#1E1E1E"
-            app:cardElevation="4dp"
+            app:cardBackgroundColor="?attr/colorSurface"
+            app:cardElevation="2dp"
             app:cardCornerRadius="16dp"
             android:layout_marginBottom="16dp">
 
@@ -66,7 +66,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Monday, March 11, 2024 | 02:45 PM"
-            android:textColor="#AAAAAA"
+            android:textColor="?attr/colorOnBackground"
             android:textSize="16sp"
             android:gravity="center"
             android:layout_marginBottom="16dp" />
@@ -76,7 +76,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:cardBackgroundColor="?attr/colorSurface"
-            app:cardElevation="4dp"
+            app:cardElevation="2dp"
             app:cardCornerRadius="16dp"
             android:layout_marginBottom="16dp">
 
@@ -107,7 +107,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Updated at 02:45 PM"
-                        android:textColor="#888888"
+                        android:textColor="?attr/colorOnBackground"
                         android:textSize="14sp" />
                 </LinearLayout>
 
@@ -156,83 +156,118 @@
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
-        <!-- Widget Controls Card -->
-        <androidx.cardview.widget.CardView
+    <!-- Widget Controls Card -->
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:cardBackgroundColor="?attr/colorSurface"
+        app:cardElevation="2dp"
+        app:cardCornerRadius="16dp"
+        android:layout_marginBottom="24dp">
+
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:cardBackgroundColor="?attr/colorSurface"
-            app:cardElevation="4dp"
-            app:cardCornerRadius="16dp"
-            android:layout_marginBottom="16dp">
+            android:orientation="vertical"
+            android:padding="20dp">
 
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Widget Settings"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="12dp" />
+
+            <!-- Battery Optimization -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="16dp">
 
-                <!-- Battery Optimization -->
                 <LinearLayout
-                    android:layout_width="match_parent"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:layout_marginBottom="16dp">
+                    android:layout_weight="1"
+                    android:orientation="vertical">
 
                     <TextView
-                        android:layout_width="0dp"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
                         android:text="Battery Optimization"
-                        android:textColor="?attr/colorOnBackground"
+                        android:textColor="?attr/colorOnSurface"
                         android:textSize="16sp" />
-
-                    <com.google.android.material.switchmaterial.SwitchMaterial
-                        android:id="@+id/battery_optimization_switch"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
-                </LinearLayout>
-
-                <!-- Widget Refresh -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical">
 
                     <TextView
-                        android:layout_width="0dp"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Widget Refresh"
+                        android:text="Allow app to run in background"
                         android:textColor="?attr/colorOnBackground"
+                        android:textSize="14sp" />
+                </LinearLayout>
+
+                <com.google.android.material.switchmaterial.SwitchMaterial
+                    android:id="@+id/battery_optimization_switch"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <!-- Widget Refresh -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Auto Refresh Widget"
+                        android:textColor="?attr/colorOnSurface"
                         android:textSize="16sp" />
 
-                    <com.google.android.material.switchmaterial.SwitchMaterial
-                        android:id="@+id/widget_refresh_switch"
+                    <TextView
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
+                        android:layout_height="wrap_content"
+                        android:text="Periodically update rates"
+                        android:textColor="?attr/colorOnBackground"
+                        android:textSize="14sp" />
                 </LinearLayout>
+
+                <com.google.android.material.switchmaterial.SwitchMaterial
+                    android:id="@+id/widget_refresh_switch"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
             </LinearLayout>
-        </androidx.cardview.widget.CardView>
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
 
-        <!-- Sign Out Button -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/logout_button"
-            style="@style/Widget.App.Button.Gold"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Sign Out"
-            android:textAllCaps="false"
-            android:layout_marginBottom="16dp" />
+    <!-- Sign Out Button -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/logout_button"
+        style="@style/Widget.App.Button.Gold"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Sign Out"
+        android:textAllCaps="false"
+        android:layout_marginBottom="16dp" />
 
-        <!-- Footer -->
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:text="Add widget to home screen to view rates"
-            android:textColor="?attr/colorOnBackground"
-            android:textSize="14sp" />
+    <!-- Footer -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="Add widget to home screen to view rates"
+        android:textColor="?attr/colorOnBackground"
+        android:textSize="14sp" />
     </LinearLayout>
 </ScrollView>

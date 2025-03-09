@@ -11,4 +11,22 @@
     
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    
+    <!-- Light theme specific colors -->
+    <color name="light_background">#F5F5F5</color>
+    <color name="card_background_light">#FFFFFF</color>
+    <color name="card_stroke_light">#E0E0E0</color>
+    
+    <!-- Text colors -->
+    <color name="dark_text">#212121</color>
+    <color name="medium_text">#757575</color>
+    <color name="light_text">#BDBDBD</color>
+    
+    <!-- Accent colors -->
+    <color name="gold_accent">#F2D66F</color>
+    <color name="silver_accent">#A9A9A9</color>
+
+    <color name="dark_background">#101010</color>
+    <color name="black.1">#202020</color>
+
 </resources>
