@@ -123,10 +123,10 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.PowerManager;
 import android.provider.Settings;
+import android.util.Log;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.ImageButton;
 
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
@@ -136,6 +136,10 @@ import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.squareup.picasso.Picasso;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 public class MainActivity extends Activity {
 
@@ -147,6 +151,8 @@ public class MainActivity extends Activity {
     private ImageView userProfileImage;
     private TextView goldRateText;
     private TextView silverPriceText;
+    private TextView dateTimeText;
+    private TextView ratesUpdatedTimeText;
 
     private FirebaseAuth mAuth;
 
@@ -161,6 +167,9 @@ public class MainActivity extends Activity {
 
         // Initialize views
         initializeViews();
+
+        // Setup current date and time
+        setupDateAndTime();
 
         // Setup user profile
         setupUserProfile(currentUser);
@@ -189,9 +198,22 @@ public class MainActivity extends Activity {
         userEmail = findViewById(R.id.user_email);
         userProfileImage = findViewById(R.id.user_profile_image);
         
-        // Use the correct IDs from your layout file
+        // New views for date and rates update time
+        dateTimeText = findViewById(R.id.date_time_text);
+        ratesUpdatedTimeText = findViewById(R.id.rates_updated_time);
+        
+        // Rates views
         goldRateText = findViewById(R.id.gold_rate);
         silverPriceText = findViewById(R.id.silver_price);
+    }
+
+    private void setupDateAndTime() {
+        // Get current date and time
+        SimpleDateFormat dateFormat = new SimpleDateFormat("EEEE, MMMM d, yyyy | hh:mm a", Locale.getDefault());
+        String currentDateTime = dateFormat.format(new Date());
+        
+        // Set date and time in the TextView
+        dateTimeText.setText(currentDateTime);
     }
 
     private void setupUserProfile(FirebaseUser user) {
@@ -241,16 +263,24 @@ public class MainActivity extends Activity {
     }
 
     private void setupWidgetRefreshSwitch() {
-        // Default to on
-        widgetRefreshSwitch.setChecked(true);
+        // Check current auto-refresh state from RatesWidgetProvider preferences
+        boolean isAutoRefreshEnabled = RatesWidgetProvider.isAutoRefreshEnabled(this);
+        widgetRefreshSwitch.setChecked(isAutoRefreshEnabled);
 
         widgetRefreshSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
             // Send broadcast to widget provider to start/stop updates
             Intent intent = new Intent(this, RatesWidgetProvider.class);
             intent.setAction(isChecked
-                    ? "com.example.rateswidget.ACTION_START_UPDATES"
-                    : "com.example.rateswidget.ACTION_STOP_UPDATES");
+                    ? RatesWidgetProvider.ACTION_START_UPDATES
+                    : RatesWidgetProvider.ACTION_STOP_UPDATES);
+            
+            Log.d("MainActivity", "Sending " + intent.getAction() + " broadcast");
             sendBroadcast(intent);
+            
+            // Show confirmation toast
+            Toast.makeText(this, 
+                    isChecked ? "Widget auto-refresh enabled" : "Widget auto-refresh disabled", 
+                    Toast.LENGTH_SHORT).show();
         });
     }
 
@@ -269,10 +299,10 @@ public class MainActivity extends Activity {
             public void onRatesFetched(String goldRate, String silverRate, String lastUpdated) {
                 // Update the UI with fetched rates
                 goldRateText.setText("₹" + goldRate);
-                
-                // Include update time with silver rate since we don't have a dedicated timestamp TextView
                 silverPriceText.setText("₹" + silverRate);
                 
+                // Update the rates updated time
+                ratesUpdatedTimeText.setText("Updated at " + lastUpdated);
             }
             
             @Override
@@ -280,6 +310,7 @@ public class MainActivity extends Activity {
                 // Handle error
                 goldRateText.setText("Error");
                 silverPriceText.setText("Check connection");
+                ratesUpdatedTimeText.setText("Update Failed");
                 Toast.makeText(MainActivity.this, errorMessage, Toast.LENGTH_SHORT).show();
             }
         });
@@ -347,6 +378,9 @@ public class MainActivity extends Activity {
         if (batteryOptSwitch != null) {
             batteryOptSwitch.setChecked(isIgnoringBatteryOptimization());
         }
+        
+        // Refresh date and time
+        setupDateAndTime();
         
         // Refresh rates when returning to the activity
         fetchCurrentRates();
@@ -523,6 +557,7 @@ import android.appwidget.AppWidgetProvider;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.PowerManager;
@@ -539,8 +574,14 @@ import java.util.concurrent.TimeUnit;
 public class RatesWidgetProvider extends AppWidgetProvider {
     private static final String TAG = "RatesWidgetProvider";
     private static final String ACTION_REFRESH = "com.example.rateswidget.ACTION_REFRESH";
-    private static final int REFRESH_INTERVAL_SECONDS = 600; // Changed from 10 to 300 (5 minutes)
+    private static final int REFRESH_INTERVAL_SECONDS = 600; // Changed from 10 to 600 (10 minutes)
     private static ScheduledExecutorService scheduler;
+    
+    // Add constants for preferences and actions
+    public static final String PREFS_NAME = "com.example.rateswidget.preferences";
+    public static final String PREF_AUTO_REFRESH_ENABLED = "auto_refresh_enabled";
+    public static final String ACTION_START_UPDATES = "com.example.rateswidget.ACTION_START_UPDATES";
+    public static final String ACTION_STOP_UPDATES = "com.example.rateswidget.ACTION_STOP_UPDATES";
 
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
@@ -568,8 +609,11 @@ public class RatesWidgetProvider extends AppWidgetProvider {
     @Override
     public void onReceive(Context context, Intent intent) {
         super.onReceive(context, intent);
+        String action = intent.getAction();
+        
+        Log.d(TAG, "Received action: " + action);
 
-        if (ACTION_REFRESH.equals(intent.getAction())) {
+        if (ACTION_REFRESH.equals(action)) {
             Log.d(TAG, "Refresh action received");
             AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
             ComponentName thisWidget = new ComponentName(context, RatesWidgetProvider.class);
@@ -578,6 +622,28 @@ public class RatesWidgetProvider extends AppWidgetProvider {
             for (int appWidgetId : appWidgetIds) {
                 updateAppWidget(context, appWidgetManager, appWidgetId);
             }
+        } else if (ACTION_START_UPDATES.equals(action)) {
+            Log.d(TAG, "Start updates action received");
+            // Save preference
+            SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+            prefs.edit().putBoolean(PREF_AUTO_REFRESH_ENABLED, true).apply();
+            
+            // Start automatic updates
+            startContinuousRefresh(context);
+            
+            // Schedule widget updates through JobScheduler
+            WidgetUpdateService.scheduleNextUpdate(context);
+        } else if (ACTION_STOP_UPDATES.equals(action)) {
+            Log.d(TAG, "Stop updates action received");
+            // Save preference
+            SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+            prefs.edit().putBoolean(PREF_AUTO_REFRESH_ENABLED, false).apply();
+            
+            // Stop automatic updates
+            stopContinuousRefresh(context);
+            
+            // Cancel any pending JobScheduler updates
+            WidgetUpdateService.cancelUpdates(context);
         }
     }
 
@@ -653,6 +719,15 @@ public class RatesWidgetProvider extends AppWidgetProvider {
 
     private void startContinuousRefresh(Context context) {
         if (scheduler != null && !scheduler.isShutdown()) {
+            scheduler.shutdownNow();
+        }
+        
+        // Check if auto-refresh is enabled
+        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        boolean autoRefreshEnabled = prefs.getBoolean(PREF_AUTO_REFRESH_ENABLED, true);
+        
+        if (!autoRefreshEnabled) {
+            Log.d(TAG, "Auto-refresh is disabled, not starting scheduler");
             return;
         }
 
@@ -680,7 +755,7 @@ public class RatesWidgetProvider extends AppWidgetProvider {
             }
         }, 0, REFRESH_INTERVAL_SECONDS, TimeUnit.SECONDS);
 
-        // Set up alarm as backup for refresh
+        // Set up alarm as backup for refresh only if auto-refresh is enabled
         AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         Intent alarmIntent = new Intent(context, RatesWidgetProvider.class);
         alarmIntent.setAction(ACTION_REFRESH);
@@ -692,6 +767,23 @@ public class RatesWidgetProvider extends AppWidgetProvider {
                 System.currentTimeMillis(),
                 REFRESH_INTERVAL_SECONDS * 1000L,
                 pendingIntent);
+    }
+
+    private void stopContinuousRefresh(Context context) {
+        Log.d(TAG, "Stopping continuous refresh service");
+        
+        // Shutdown the scheduler if it's running
+        if (scheduler != null && !scheduler.isShutdown()) {
+            scheduler.shutdownNow();
+        }
+        
+        // Cancel the alarm
+        AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+        Intent intent = new Intent(context, RatesWidgetProvider.class);
+        intent.setAction(ACTION_REFRESH);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(
+                context, 0, intent, PendingIntent.FLAG_IMMUTABLE);
+        alarmManager.cancel(pendingIntent);
     }
 
     @Override
@@ -711,6 +803,12 @@ public class RatesWidgetProvider extends AppWidgetProvider {
         PendingIntent pendingIntent = PendingIntent.getBroadcast(
                 context, 0, intent, PendingIntent.FLAG_IMMUTABLE);
         alarmManager.cancel(pendingIntent);
+    }
+    
+    // Utility method to check if auto-refresh is enabled
+    public static boolean isAutoRefreshEnabled(Context context) {
+        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        return prefs.getBoolean(PREF_AUTO_REFRESH_ENABLED, true); // Default to true
     }
 }
 
@@ -947,6 +1045,7 @@ import android.appwidget.AppWidgetManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.util.Log;
 
 public class WidgetUpdateService extends JobService {
@@ -956,6 +1055,15 @@ public class WidgetUpdateService extends JobService {
     @Override
     public boolean onStartJob(JobParameters params) {
         Log.d(TAG, "onStartJob: Updating widgets");
+        
+        // Check if auto-refresh is enabled before updating
+        SharedPreferences prefs = getSharedPreferences(RatesWidgetProvider.PREFS_NAME, Context.MODE_PRIVATE);
+        boolean autoRefreshEnabled = prefs.getBoolean(RatesWidgetProvider.PREF_AUTO_REFRESH_ENABLED, true);
+        
+        if (!autoRefreshEnabled) {
+            Log.d(TAG, "Auto-refresh is disabled, skipping update");
+            return false;
+        }
         
         // Update all widgets
         AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(this);
@@ -972,8 +1080,10 @@ public class WidgetUpdateService extends JobService {
             Log.d(TAG, "No widgets found to update");
         }
         
-        // Reschedule the job for continuous updates
-        scheduleNextUpdate(this);
+        // Reschedule the job for continuous updates only if auto-refresh is enabled
+        if (autoRefreshEnabled) {
+            scheduleNextUpdate(this);
+        }
         
         return false; // Job is done, no more work needed in background
     }
@@ -981,21 +1091,34 @@ public class WidgetUpdateService extends JobService {
     @Override
     public boolean onStopJob(JobParameters params) {
         Log.d(TAG, "onStopJob: Job was stopped, rescheduling");
-        // Reschedule if job is killed
-        return true;
+        // Check if auto-refresh is enabled before rescheduling
+        SharedPreferences prefs = getSharedPreferences(RatesWidgetProvider.PREFS_NAME, Context.MODE_PRIVATE);
+        boolean autoRefreshEnabled = prefs.getBoolean(RatesWidgetProvider.PREF_AUTO_REFRESH_ENABLED, true);
+        
+        // Only reschedule if auto-refresh is enabled
+        return autoRefreshEnabled;
     }
     
     public static void scheduleNextUpdate(Context context) {
+        // Check if auto-refresh is enabled before scheduling
+        SharedPreferences prefs = context.getSharedPreferences(RatesWidgetProvider.PREFS_NAME, Context.MODE_PRIVATE);
+        boolean autoRefreshEnabled = prefs.getBoolean(RatesWidgetProvider.PREF_AUTO_REFRESH_ENABLED, true);
+        
+        if (!autoRefreshEnabled) {
+            Log.d(TAG, "Auto-refresh is disabled, not scheduling next update");
+            return;
+        }
+        
         JobScheduler jobScheduler = 
                 (JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
         
-       JobInfo.Builder builder = new JobInfo.Builder(
-                  JOB_ID,
-                  new ComponentName(context, WidgetUpdateService.class))
-                      .setMinimumLatency(600 * 1000) // 5 minutes (changed from 10 seconds)
-                      .setOverrideDeadline(610 * 1000) // Maximum delay of 5 minutes + 10 seconds
-                      .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-                        .setPersisted(true);
+        JobInfo.Builder builder = new JobInfo.Builder(
+                JOB_ID,
+                new ComponentName(context, WidgetUpdateService.class))
+                .setMinimumLatency(600 * 1000) // 10 minutes
+                .setOverrideDeadline(610 * 1000) // Maximum delay of 10 minutes + 10 seconds
+                .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+                .setPersisted(true);
         
         int result = jobScheduler.schedule(builder.build());
         if (result == JobScheduler.RESULT_SUCCESS) {
@@ -1003,6 +1126,14 @@ public class WidgetUpdateService extends JobService {
         } else {
             Log.e(TAG, "Job scheduling failed");
         }
+    }
+    
+    // Add a new method to cancel scheduled updates
+    public static void cancelUpdates(Context context) {
+        Log.d(TAG, "Cancelling scheduled updates");
+        JobScheduler jobScheduler = 
+                (JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
+        jobScheduler.cancel(JOB_ID);
     }
 }
 
@@ -1235,20 +1366,20 @@ Content:
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/black">
+    android:background="?attr/android:windowBackground">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="24dp">
+        android:padding="16dp">
 
         <!-- Profile Card -->
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:cardBackgroundColor="#1E1E1E"
-            app:cardElevation="4dp"
+            app:cardBackgroundColor="?attr/colorSurface"
+            app:cardElevation="2dp"
             app:cardCornerRadius="16dp"
             android:layout_marginBottom="16dp">
 
@@ -1292,12 +1423,23 @@ Content:
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
+        <!-- Date and Time -->
+        <TextView
+            android:id="@+id/date_time_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Monday, March 11, 2024 | 02:45 PM"
+            android:textColor="?attr/colorOnBackground"
+            android:textSize="16sp"
+            android:gravity="center"
+            android:layout_marginBottom="16dp" />
+
         <!-- Rates Card -->
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:cardBackgroundColor="?attr/colorSurface"
-            app:cardElevation="4dp"
+            app:cardElevation="2dp"
             app:cardCornerRadius="16dp"
             android:layout_marginBottom="16dp">
 
@@ -1307,14 +1449,30 @@ Content:
                 android:orientation="vertical"
                 android:padding="16dp">
 
-                <TextView
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Today's Rates"
-                    android:textColor="?attr/colorPrimary"
-                    android:textSize="18sp"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="16dp" />
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="8dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Today's Rates"
+                        android:textColor="?attr/colorPrimary"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/rates_updated_time"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Updated at 02:45 PM"
+                        android:textColor="?attr/colorOnBackground"
+                        android:textSize="14sp" />
+                </LinearLayout>
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -1361,84 +1519,119 @@ Content:
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
-        <!-- Widget Controls Card -->
-        <androidx.cardview.widget.CardView
+    <!-- Widget Controls Card -->
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:cardBackgroundColor="?attr/colorSurface"
+        app:cardElevation="2dp"
+        app:cardCornerRadius="16dp"
+        android:layout_marginBottom="24dp">
+
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:cardBackgroundColor="?attr/colorSurface"
-            app:cardElevation="4dp"
-            app:cardCornerRadius="16dp"
-            android:layout_marginBottom="16dp">
+            android:orientation="vertical"
+            android:padding="20dp">
 
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Widget Settings"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="12dp" />
+
+            <!-- Battery Optimization -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="16dp">
 
-                <!-- Battery Optimization -->
                 <LinearLayout
-                    android:layout_width="match_parent"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:layout_marginBottom="16dp">
+                    android:layout_weight="1"
+                    android:orientation="vertical">
 
                     <TextView
-                        android:layout_width="0dp"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
                         android:text="Battery Optimization"
-                        android:textColor="?attr/colorOnBackground"
+                        android:textColor="?attr/colorOnSurface"
                         android:textSize="16sp" />
-
-                    <com.google.android.material.switchmaterial.SwitchMaterial
-                        android:id="@+id/battery_optimization_switch"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
-                </LinearLayout>
-
-                <!-- Widget Refresh -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical">
 
                     <TextView
-                        android:layout_width="0dp"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Widget Refresh"
+                        android:text="Allow app to run in background"
                         android:textColor="?attr/colorOnBackground"
+                        android:textSize="14sp" />
+                </LinearLayout>
+
+                <com.google.android.material.switchmaterial.SwitchMaterial
+                    android:id="@+id/battery_optimization_switch"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <!-- Widget Refresh -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Auto Refresh Widget"
+                        android:textColor="?attr/colorOnSurface"
                         android:textSize="16sp" />
 
-                    <com.google.android.material.switchmaterial.SwitchMaterial
-                        android:id="@+id/widget_refresh_switch"
+                    <TextView
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
+                        android:layout_height="wrap_content"
+                        android:text="Periodically update rates"
+                        android:textColor="?attr/colorOnBackground"
+                        android:textSize="14sp" />
                 </LinearLayout>
+
+                <com.google.android.material.switchmaterial.SwitchMaterial
+                    android:id="@+id/widget_refresh_switch"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
             </LinearLayout>
-        </androidx.cardview.widget.CardView>
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
 
-        <!-- Sign Out Button -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/logout_button"
-            style="@style/Widget.App.Button.Gold"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Sign Out"
-            android:textAllCaps="false"
-            android:layout_marginBottom="16dp" />
+    <!-- Sign Out Button -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/logout_button"
+        style="@style/Widget.App.Button.Gold"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Sign Out"
+        android:textAllCaps="false"
+        android:layout_marginBottom="16dp" />
 
-        <!-- Footer -->
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:text="Add widget to home screen to view rates"
-            android:textColor="?attr/colorOnBackground"
-            android:textSize="14sp" />
+    <!-- Footer -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="Add widget to home screen to view rates"
+        android:textColor="?attr/colorOnBackground"
+        android:textSize="14sp" />
     </LinearLayout>
 </ScrollView>
 
@@ -1588,7 +1781,26 @@ Content:
     
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    
+    <!-- Light theme specific colors -->
+    <color name="light_background">#F5F5F5</color>
+    <color name="card_background_light">#FFFFFF</color>
+    <color name="card_stroke_light">#E0E0E0</color>
+    
+    <!-- Text colors -->
+    <color name="dark_text">#212121</color>
+    <color name="medium_text">#757575</color>
+    <color name="light_text">#BDBDBD</color>
+    
+    <!-- Accent colors -->
+    <color name="gold_accent">#F2D66F</color>
+    <color name="silver_accent">#A9A9A9</color>
+
+    <color name="dark_background">#101010</color>
+    <color name="black.1">#202020</color>
+
 </resources>
+
 
 Path: C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\values\strings.xml
 Content:
@@ -1602,7 +1814,7 @@ Content:
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme -->
-    <style name="Base.Theme.Rateswidget" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+    <style name="Base.Theme.Rateswidget" parent="Theme.MaterialComponents.Light.NoActionBar">
         <!-- Primary colors -->
         <item name="colorPrimary">@color/gold_primary</item>
         <item name="colorPrimaryVariant">@color/gold_dark</item>
@@ -1610,13 +1822,17 @@ Content:
         
         <!-- Secondary colors -->
         <item name="colorSecondary">@color/silver_secondary</item>
-        <item name="colorSecondaryVariant">@color/silver_light</item>
+        <item name="colorSecondaryVariant">@color/silver_dark</item>
         <item name="colorOnSecondary">@android:color/black</item>
         
         <!-- Background colors -->
-        <item name="android:windowBackground">?attr/colorSurface</item>
-        <item name="colorSurface">@android:color/black</item>
-        <item name="colorOnSurface">@android:color/white</item>
+        <item name="android:windowBackground">@color/light_background</item>
+        <item name="colorSurface">@color/white</item>
+        <item name="colorOnSurface">@color/dark_text</item>
+        <item name="colorOnBackground">@color/medium_text</item>
+        
+        <!-- Status bar color -->
+        <item name="android:statusBarColor">@color/gold_dark</item>
         
         <!-- Button styles -->
         <item name="materialButtonStyle">@style/Widget.App.Button</item>
@@ -1641,6 +1857,13 @@ Content:
         <item name="backgroundTint">@color/gold_primary</item>
         <item name="android:textColor">@android:color/black</item>
     </style>
+    
+    <!-- Card Style for Light Mode -->
+    <style name="Widget.App.CardView" parent="Widget.MaterialComponents.CardView">
+        <item name="cardBackgroundColor">@color/white</item>
+        <item name="cardElevation">4dp</item>
+        <item name="cardCornerRadius">16dp</item>
+    </style>
 </resources>
 
 Path: C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\values-night\themes.xml
@@ -1648,8 +1871,44 @@ Content:
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
     <style name="Base.Theme.Rateswidget" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your dark theme here. -->
-        <!-- <item name="colorPrimary">@color/my_dark_primary</item> -->
+        <!-- Primary colors -->
+        <item name="colorPrimary">@color/gold_primary</item>
+        <item name="colorPrimaryVariant">@color/gold_dark</item>
+        <item name="colorOnPrimary">@android:color/black</item>
+        
+        <!-- Secondary colors -->
+        <item name="colorSecondary">@color/silver_secondary</item>
+        <item name="colorSecondaryVariant">@color/silver_light</item>
+        <item name="colorOnSecondary">@android:color/black</item>
+        
+        <!-- Background colors -->
+        <item name="android:windowBackground">@color/black</item>
+        <item name="colorSurface">@color/black.1</item>
+        <item name="colorOnSurface">@android:color/white</item>
+        
+        <!-- Button styles -->
+        <item name="materialButtonStyle">@style/Widget.App.Button</item>
+    </style>
+
+    <!-- Application theme -->
+    <style name="Theme.Rateswidget" parent="Base.Theme.Rateswidget" />
+
+    <!-- Custom Button Styles -->
+    <style name="Widget.App.Button" parent="Widget.MaterialComponents.Button">
+        <item name="backgroundTint">?attr/colorSecondary</item>
+        <item name="android:textColor">?attr/colorOnSecondary</item>
+        <item name="cornerRadius">8dp</item>
+        <item name="android:paddingStart">16dp</item>
+        <item name="android:paddingEnd">16dp</item>
+        <item name="android:paddingTop">8dp</item>
+        <item name="android:paddingBottom">8dp</item>
+    </style>
+
+    <!-- Gold Button Style -->
+    <style name="Widget.App.Button.Gold" parent="Widget.App.Button">
+        <item name="backgroundTint">@color/gold_primary</item>
+        <item name="android:textColor">@android:color/black</item>
+    
     </style>
 </resources>
 

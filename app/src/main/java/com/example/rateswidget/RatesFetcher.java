@@ -95,7 +95,7 @@ public class RatesFetcher {
             }
             
             // Get the current time for last updated
-            SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
+            SimpleDateFormat dateFormat = new SimpleDateFormat("hh:mm a", Locale.getDefault());
             String currentTime = dateFormat.format(new Date());
             
             // Final variables to use in lambda

@@ -27,19 +27,6 @@
         <activity
             android:name=".MainActivity"
             android:exported="true" />
-
-        <receiver
-            android:name=".RatesWidgetProvider"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-                <action android:name="com.example.rateswidget.ACTION_REFRESH" />
-            </intent-filter>
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/rates_widget_info" />
-        </receiver>
-
         <receiver
             android:name=".BootCompletedReceiver"
             android:exported="true">

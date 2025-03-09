@@ -51,9 +51,13 @@ public class RatesFetchTask extends AsyncTask<Void, Void, String[]> {
     @Override
     protected void onPreExecute() {
         // Update the last updated time in 24-hour format (HH:mm)
-        SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
+        SimpleDateFormat dateFormat = new SimpleDateFormat("hh:mm ", Locale.getDefault());
         String currentTime = dateFormat.format(new Date());
-        views.setTextViewText(R.id.last_updated,  currentTime);
+        views.setTextViewText(R.id.last_updated, currentTime);
+
+       
+        
+        
         
         // Show loading indicator
         views.setTextViewText(R.id.gold_rate, "Loading...");

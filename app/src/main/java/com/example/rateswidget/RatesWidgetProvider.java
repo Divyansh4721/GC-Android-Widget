@@ -13,6 +13,8 @@ import android.os.Bundle;
 import android.os.PowerManager;
 import android.util.Log;
 import android.widget.RemoteViews;
+import android.util.TypedValue;
+import android.view.View;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -103,19 +105,20 @@ public class RatesWidgetProvider extends AppWidgetProvider {
         // Get the widget size
         Bundle options = appWidgetManager.getAppWidgetOptions(appWidgetId);
         int minWidth = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 400);
-        int minHeight = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 100);
         
-        // Choose layout based on size - wider than 250dp AND taller than 100dp for the large layout
-        boolean isSmallWidget = !(minWidth > 239 && minHeight > 80);
-        boolean isMidWidget = !(minWidth > 249 && minHeight > 80);
-
-        // Choose layout based on size
+        // Determine widget layout based primarily on width
         RemoteViews views;
-        if (isSmallWidget) {
-            views = new RemoteViews(context.getPackageName(), R.layout.rates_widget_small);
-        } else if (isMidWidget) { 
-            views = new RemoteViews(context.getPackageName(), R.layout.rates_widget_extended);
+        if (minWidth <= 220) {
+            // 3x1 widget (smallest)
+            views = new RemoteViews(context.getPackageName(), R.layout.rates_widget_3x1);
+        } else if (minWidth <= 250) {
+            // 4x1 widget
+            views = new RemoteViews(context.getPackageName(), R.layout.rates_widget_4x1);
+        } else if (minWidth <= 350) {
+            // 5x1 widget
+            views = new RemoteViews(context.getPackageName(), R.layout.rates_widget_5x1);
         } else {
+            // Wide widget
             views = new RemoteViews(context.getPackageName(), R.layout.rates_widget);
         }
 
@@ -124,32 +127,10 @@ public class RatesWidgetProvider extends AppWidgetProvider {
         if (currentUser == null) {
             // User not logged in, show sign-in message
             views.setTextViewText(R.id.widget_title, "GC Jewellers");
-            
-            if (isSmallWidget) {
-                // Small widget
-                views.setTextViewText(R.id.gold_rate, "Please Sign In");
-                views.setTextColor(R.id.gold_rate, Color.WHITE);
-            } else if (isMidWidget) {
-                // Mid widget
-                 views.setTextViewText(R.id.gold_rate, "Please😒");
-                views.setTextColor(R.id.gold_rate, Color.WHITE);
-                views.setTextViewText(R.id.silver_rate, "-");
-                views.setTextColor(R.id.silver_rate, Color.WHITE);
-                views.setTextViewText(R.id.silver_rate, "Sign In🤦‍♂️");
-                views.setTextColor(R.id.silver_rate, Color.WHITE);
-            } else {
-                // Normal widget
-                views.setTextViewText(R.id.gold_rate, "Please😒");
-                views.setTextColor(R.id.gold_rate, Color.WHITE);
-                views.setTextViewText(R.id.silver_rate, "-");
-                views.setTextColor(R.id.silver_rate, Color.WHITE);
-                views.setTextViewText(R.id.silver_rate, "Sign In🤦‍♂️");
-                views.setTextColor(R.id.silver_rate, Color.WHITE);
-            }
+            views.setTextViewText(R.id.gold_rate, "Sign In");
+            views.setTextColor(R.id.gold_rate, Color.WHITE);
             
             views.setTextViewText(R.id.last_updated, "");
-            
-            // Disable refresh button when not logged in
             views.setOnClickPendingIntent(R.id.refresh_button, null);
         } else {
             // Set up refresh button click intent
@@ -158,11 +139,11 @@ public class RatesWidgetProvider extends AppWidgetProvider {
             PendingIntent refreshPendingIntent = PendingIntent.getBroadcast(
                     context, 0, refreshIntent, PendingIntent.FLAG_IMMUTABLE);
             views.setOnClickPendingIntent(R.id.refresh_button, refreshPendingIntent);
-
+    
             // Start API fetch
             new RatesFetchTask(context, views, appWidgetManager, appWidgetId).execute();
         }
-
+    
         // Update the widget
         appWidgetManager.updateAppWidget(appWidgetId, views);
     }
