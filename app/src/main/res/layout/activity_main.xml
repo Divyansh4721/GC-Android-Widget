@@ -60,6 +60,17 @@
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
+        <!-- Date and Time -->
+        <TextView
+            android:id="@+id/date_time_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Monday, March 11, 2024 | 02:45 PM"
+            android:textColor="#AAAAAA"
+            android:textSize="16sp"
+            android:gravity="center"
+            android:layout_marginBottom="16dp" />
+
         <!-- Rates Card -->
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
@@ -75,14 +86,30 @@
                 android:orientation="vertical"
                 android:padding="16dp">
 
-                <TextView
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Today's Rates"
-                    android:textColor="?attr/colorPrimary"
-                    android:textSize="18sp"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="16dp" />
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="8dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Today's Rates"
+                        android:textColor="?attr/colorPrimary"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/rates_updated_time"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Updated at 02:45 PM"
+                        android:textColor="#888888"
+                        android:textSize="14sp" />
+                </LinearLayout>
 
                 <LinearLayout
                     android:layout_width="match_parent"

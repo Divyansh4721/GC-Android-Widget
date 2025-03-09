@@ -27,6 +27,8 @@ $FilePaths = @(
 "C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\build.gradle.kts"
 "C:\Users\Cshek\AndroidStudioProjects\rateswidget\build.gradle.kts"
 "C:\Users\Cshek\AndroidStudioProjects\rateswidget\settings.gradle.kts"
+"C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\java\com\example\rateswidget\RatesFetcher.java"
+"C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\java\com\example\rateswidget\ProfileImageGenerator.java"
 )
 
 $OutputFilePath = "C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\ClaudePrompt.txt"

@@ -8,10 +8,10 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.PowerManager;
 import android.provider.Settings;
+import android.util.Log;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.ImageButton;
 
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
@@ -21,6 +21,10 @@ import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.squareup.picasso.Picasso;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 public class MainActivity extends Activity {
 
@@ -32,6 +36,8 @@ public class MainActivity extends Activity {
     private ImageView userProfileImage;
     private TextView goldRateText;
     private TextView silverPriceText;
+    private TextView dateTimeText;
+    private TextView ratesUpdatedTimeText;
 
     private FirebaseAuth mAuth;
 
@@ -46,6 +52,9 @@ public class MainActivity extends Activity {
 
         // Initialize views
         initializeViews();
+
+        // Setup current date and time
+        setupDateAndTime();
 
         // Setup user profile
         setupUserProfile(currentUser);
@@ -74,9 +83,22 @@ public class MainActivity extends Activity {
         userEmail = findViewById(R.id.user_email);
         userProfileImage = findViewById(R.id.user_profile_image);
         
-        // Use the correct IDs from your layout file
+        // New views for date and rates update time
+        dateTimeText = findViewById(R.id.date_time_text);
+        ratesUpdatedTimeText = findViewById(R.id.rates_updated_time);
+        
+        // Rates views
         goldRateText = findViewById(R.id.gold_rate);
         silverPriceText = findViewById(R.id.silver_price);
+    }
+
+    private void setupDateAndTime() {
+        // Get current date and time
+        SimpleDateFormat dateFormat = new SimpleDateFormat("EEEE, MMMM d, yyyy | hh:mm a", Locale.getDefault());
+        String currentDateTime = dateFormat.format(new Date());
+        
+        // Set date and time in the TextView
+        dateTimeText.setText(currentDateTime);
     }
 
     private void setupUserProfile(FirebaseUser user) {
@@ -126,16 +148,24 @@ public class MainActivity extends Activity {
     }
 
     private void setupWidgetRefreshSwitch() {
-        // Default to on
-        widgetRefreshSwitch.setChecked(true);
+        // Check current auto-refresh state from RatesWidgetProvider preferences
+        boolean isAutoRefreshEnabled = RatesWidgetProvider.isAutoRefreshEnabled(this);
+        widgetRefreshSwitch.setChecked(isAutoRefreshEnabled);
 
         widgetRefreshSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
             // Send broadcast to widget provider to start/stop updates
             Intent intent = new Intent(this, RatesWidgetProvider.class);
             intent.setAction(isChecked
-                    ? "com.example.rateswidget.ACTION_START_UPDATES"
-                    : "com.example.rateswidget.ACTION_STOP_UPDATES");
+                    ? RatesWidgetProvider.ACTION_START_UPDATES
+                    : RatesWidgetProvider.ACTION_STOP_UPDATES);
+            
+            Log.d("MainActivity", "Sending " + intent.getAction() + " broadcast");
             sendBroadcast(intent);
+            
+            // Show confirmation toast
+            Toast.makeText(this, 
+                    isChecked ? "Widget auto-refresh enabled" : "Widget auto-refresh disabled", 
+                    Toast.LENGTH_SHORT).show();
         });
     }
 
@@ -154,10 +184,10 @@ public class MainActivity extends Activity {
             public void onRatesFetched(String goldRate, String silverRate, String lastUpdated) {
                 // Update the UI with fetched rates
                 goldRateText.setText("₹" + goldRate);
-                
-                // Include update time with silver rate since we don't have a dedicated timestamp TextView
                 silverPriceText.setText("₹" + silverRate);
                 
+                // Update the rates updated time
+                ratesUpdatedTimeText.setText("Updated at " + lastUpdated);
             }
             
             @Override
@@ -165,6 +195,7 @@ public class MainActivity extends Activity {
                 // Handle error
                 goldRateText.setText("Error");
                 silverPriceText.setText("Check connection");
+                ratesUpdatedTimeText.setText("Update Failed");
                 Toast.makeText(MainActivity.this, errorMessage, Toast.LENGTH_SHORT).show();
             }
         });
@@ -232,6 +263,9 @@ public class MainActivity extends Activity {
         if (batteryOptSwitch != null) {
             batteryOptSwitch.setChecked(isIgnoringBatteryOptimization());
         }
+        
+        // Refresh date and time
+        setupDateAndTime();
         
         // Refresh rates when returning to the activity
         fetchCurrentRates();
