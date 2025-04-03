@@ -18,8 +18,8 @@ Content:
         android:theme="@style/Theme.Rateswidget">
 
         <activity
-            android:name=".SignInActivity"
-            android:exported="true">
+        android:name=".SignInActivity"
+        android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -30,17 +30,9 @@ Content:
             android:name=".MainActivity"
             android:exported="true" />
 
-        <receiver
-            android:name=".RatesWidgetProvider"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-                <action android:name="com.example.rateswidget.ACTION_REFRESH" />
-            </intent-filter>
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/rates_widget_info" />
-        </receiver>
+        <activity
+            android:name=".CalculatorActivity"
+            android:exported="false" />
 
         <receiver
             android:name=".BootCompletedReceiver"
@@ -146,6 +138,7 @@ public class MainActivity extends Activity {
     private SwitchMaterial batteryOptSwitch;
     private SwitchMaterial widgetRefreshSwitch;
     private MaterialButton logoutButton;
+    private MaterialButton calculatorButton;
     private TextView userName;
     private TextView userEmail;
     private ImageView userProfileImage;
@@ -183,6 +176,9 @@ public class MainActivity extends Activity {
         // Setup logout button
         setupLogoutButton();
 
+        // Setup calculator button
+        setupCalculatorButton();
+
         // Fetch and display current rates
         fetchCurrentRates();
 
@@ -194,6 +190,7 @@ public class MainActivity extends Activity {
         batteryOptSwitch = findViewById(R.id.battery_optimization_switch);
         widgetRefreshSwitch = findViewById(R.id.widget_refresh_switch);
         logoutButton = findViewById(R.id.logout_button);
+        calculatorButton = findViewById(R.id.calculator_button);
         userName = findViewById(R.id.user_name);
         userEmail = findViewById(R.id.user_email);
         userProfileImage = findViewById(R.id.user_profile_image);
@@ -286,6 +283,13 @@ public class MainActivity extends Activity {
 
     private void setupLogoutButton() {
         logoutButton.setOnClickListener(v -> logout());
+    }
+
+    private void setupCalculatorButton() {
+        calculatorButton.setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, CalculatorActivity.class);
+            startActivity(intent);
+        });
     }
 
     private void fetchCurrentRates() {
@@ -442,9 +446,13 @@ public class RatesFetchTask extends AsyncTask<Void, Void, String[]> {
     @Override
     protected void onPreExecute() {
         // Update the last updated time in 24-hour format (HH:mm)
-        SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
+        SimpleDateFormat dateFormat = new SimpleDateFormat("hh:mm ", Locale.getDefault());
         String currentTime = dateFormat.format(new Date());
-        views.setTextViewText(R.id.last_updated,  currentTime);
+        views.setTextViewText(R.id.last_updated, currentTime);
+
+       
+        
+        
         
         // Show loading indicator
         views.setTextViewText(R.id.gold_rate, "Loading...");
@@ -563,6 +571,8 @@ import android.os.Bundle;
 import android.os.PowerManager;
 import android.util.Log;
 import android.widget.RemoteViews;
+import android.util.TypedValue;
+import android.view.View;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -653,19 +663,20 @@ public class RatesWidgetProvider extends AppWidgetProvider {
         // Get the widget size
         Bundle options = appWidgetManager.getAppWidgetOptions(appWidgetId);
         int minWidth = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 400);
-        int minHeight = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 100);
         
-        // Choose layout based on size - wider than 250dp AND taller than 100dp for the large layout
-        boolean isSmallWidget = !(minWidth > 239 && minHeight > 80);
-        boolean isMidWidget = !(minWidth > 249 && minHeight > 80);
-
-        // Choose layout based on size
+        // Determine widget layout based primarily on width
         RemoteViews views;
-        if (isSmallWidget) {
-            views = new RemoteViews(context.getPackageName(), R.layout.rates_widget_small);
-        } else if (isMidWidget) { 
-            views = new RemoteViews(context.getPackageName(), R.layout.rates_widget_extended);
+        if (minWidth <= 220) {
+            // 3x1 widget (smallest)
+            views = new RemoteViews(context.getPackageName(), R.layout.rates_widget_3x1);
+        } else if (minWidth <= 250) {
+            // 4x1 widget
+            views = new RemoteViews(context.getPackageName(), R.layout.rates_widget_4x1);
+        } else if (minWidth <= 350) {
+            // 5x1 widget
+            views = new RemoteViews(context.getPackageName(), R.layout.rates_widget_5x1);
         } else {
+            // Wide widget
             views = new RemoteViews(context.getPackageName(), R.layout.rates_widget);
         }
 
@@ -674,32 +685,10 @@ public class RatesWidgetProvider extends AppWidgetProvider {
         if (currentUser == null) {
             // User not logged in, show sign-in message
             views.setTextViewText(R.id.widget_title, "GC Jewellers");
-            
-            if (isSmallWidget) {
-                // Small widget
-                views.setTextViewText(R.id.gold_rate, "Please Sign In");
-                views.setTextColor(R.id.gold_rate, Color.WHITE);
-            } else if (isMidWidget) {
-                // Mid widget
-                 views.setTextViewText(R.id.gold_rate, "Please😒");
-                views.setTextColor(R.id.gold_rate, Color.WHITE);
-                views.setTextViewText(R.id.silver_rate, "-");
-                views.setTextColor(R.id.silver_rate, Color.WHITE);
-                views.setTextViewText(R.id.silver_rate, "Sign In🤦‍♂️");
-                views.setTextColor(R.id.silver_rate, Color.WHITE);
-            } else {
-                // Normal widget
-                views.setTextViewText(R.id.gold_rate, "Please😒");
-                views.setTextColor(R.id.gold_rate, Color.WHITE);
-                views.setTextViewText(R.id.silver_rate, "-");
-                views.setTextColor(R.id.silver_rate, Color.WHITE);
-                views.setTextViewText(R.id.silver_rate, "Sign In🤦‍♂️");
-                views.setTextColor(R.id.silver_rate, Color.WHITE);
-            }
+            views.setTextViewText(R.id.gold_rate, "Sign In");
+            views.setTextColor(R.id.gold_rate, Color.WHITE);
             
             views.setTextViewText(R.id.last_updated, "");
-            
-            // Disable refresh button when not logged in
             views.setOnClickPendingIntent(R.id.refresh_button, null);
         } else {
             // Set up refresh button click intent
@@ -708,11 +697,11 @@ public class RatesWidgetProvider extends AppWidgetProvider {
             PendingIntent refreshPendingIntent = PendingIntent.getBroadcast(
                     context, 0, refreshIntent, PendingIntent.FLAG_IMMUTABLE);
             views.setOnClickPendingIntent(R.id.refresh_button, refreshPendingIntent);
-
+    
             // Start API fetch
             new RatesFetchTask(context, views, appWidgetManager, appWidgetId).execute();
         }
-
+    
         // Update the widget
         appWidgetManager.updateAppWidget(appWidgetId, views);
     }
@@ -1469,7 +1458,7 @@ Content:
                         android:id="@+id/rates_updated_time"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Updated at 02:45 PM"
+                        android:text="Updated at02:45 PM"
                         android:textColor="?attr/colorOnBackground"
                         android:textSize="14sp" />
                 </LinearLayout>
@@ -1519,119 +1508,131 @@ Content:
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
-    <!-- Widget Controls Card -->
-    <androidx.cardview.widget.CardView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:cardBackgroundColor="?attr/colorSurface"
-        app:cardElevation="2dp"
-        app:cardCornerRadius="16dp"
-        android:layout_marginBottom="24dp">
-
-        <LinearLayout
+        <!-- Widget Controls Card -->
+        <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="20dp">
+            app:cardBackgroundColor="?attr/colorSurface"
+            app:cardElevation="2dp"
+            app:cardCornerRadius="16dp"
+            android:layout_marginBottom="24dp">
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Widget Settings"
-                android:textColor="?attr/colorOnSurface"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:layout_marginBottom="12dp" />
-
-            <!-- Battery Optimization -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:layout_marginBottom="16dp">
+                android:orientation="vertical"
+                android:padding="20dp">
 
-                <LinearLayout
-                    android:layout_width="0dp"
+                <TextView
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
+                    android:text="Widget Settings"
+                    android:textColor="?attr/colorOnSurface"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="12dp" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Battery Optimization"
-                        android:textColor="?attr/colorOnSurface"
-                        android:textSize="16sp" />
+                <!-- Battery Optimization -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="16dp">
 
-                    <TextView
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="Allow app to run in background"
-                        android:textColor="?attr/colorOnBackground"
-                        android:textSize="14sp" />
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Battery Optimization"
+                            android:textColor="?attr/colorOnSurface"
+                            android:textSize="16sp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Allow app to run in background"
+                            android:textColor="?attr/colorOnBackground"
+                            android:textSize="14sp" />
+                    </LinearLayout>
+
+                    <com.google.android.material.switchmaterial.SwitchMaterial
+                        android:id="@+id/battery_optimization_switch"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
                 </LinearLayout>
 
-                <com.google.android.material.switchmaterial.SwitchMaterial
-                    android:id="@+id/battery_optimization_switch"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
-            </LinearLayout>
-
-            <!-- Widget Refresh -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
-
+                <!-- Widget Refresh -->
                 <LinearLayout
-                    android:layout_width="0dp"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
 
-                    <TextView
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="Auto Refresh Widget"
-                        android:textColor="?attr/colorOnSurface"
-                        android:textSize="16sp" />
+                        android:layout_weight="1"
+                        android:orientation="vertical">
 
-                    <TextView
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Auto Refresh Widget"
+                            android:textColor="?attr/colorOnSurface"
+                            android:textSize="16sp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Periodically update rates"
+                            android:textColor="?attr/colorOnBackground"
+                            android:textSize="14sp" />
+                    </LinearLayout>
+
+                    <com.google.android.material.switchmaterial.SwitchMaterial
+                        android:id="@+id/widget_refresh_switch"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Periodically update rates"
-                        android:textColor="?attr/colorOnBackground"
-                        android:textSize="14sp" />
+                        android:layout_height="wrap_content" />
                 </LinearLayout>
-
-                <com.google.android.material.switchmaterial.SwitchMaterial
-                    android:id="@+id/widget_refresh_switch"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
             </LinearLayout>
-        </LinearLayout>
-    </androidx.cardview.widget.CardView>
+        </androidx.cardview.widget.CardView>
 
-    <!-- Sign Out Button -->
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/logout_button"
-        style="@style/Widget.App.Button.Gold"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Sign Out"
-        android:textAllCaps="false"
-        android:layout_marginBottom="16dp" />
+        <!-- Price Calculator Button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/calculator_button"
+            style="@style/Widget.App.Button.Gold"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Price Calculator"
+            android:textAllCaps="false"
+            android:layout_marginBottom="16dp"
+            android:drawableStart="@android:drawable/ic_menu_add"
+            android:drawablePadding="8dp" />
 
-    <!-- Footer -->
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:text="Add widget to home screen to view rates"
-        android:textColor="?attr/colorOnBackground"
-        android:textSize="14sp" />
+        <!-- Sign Out Button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/logout_button"
+            style="@style/Widget.App.Button.Gold"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Sign Out"
+            android:textAllCaps="false"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Footer -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="Add widget to home screen to view rates"
+            android:textColor="?attr/colorOnBackground"
+            android:textSize="14sp" />
     </LinearLayout>
 </ScrollView>
 
@@ -1642,7 +1643,7 @@ Content:
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/widget_background_improved"
-    android:padding="12dp">
+    android:padding="6dp">
 
     <TextView
         android:id="@+id/widget_title"
@@ -1652,102 +1653,99 @@ Content:
         android:layout_alignParentTop="true"
         android:text="GC Jewellers"
         android:textColor="@android:color/white"
-        android:textSize="18sp"
-        android:textStyle="bold" />
+        android:textStyle="bold"
+        android:textSize="14sp" />
 
     <TextView
         android:id="@+id/last_updated"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
-        android:layout_marginStart="10dp"
-        android:layout_marginTop="3dp"
-        android:layout_marginEnd="2dp"
         android:layout_toStartOf="@id/refresh_button"
         android:layout_toEndOf="@id/widget_title"
         android:gravity="end"
-        android:text="Updated: --:--"
+        android:text="--:--"
         android:textColor="@android:color/white"
-        android:textSize="15sp" />
+        android:textSize="13sp" />
 
     <ImageButton
         android:id="@+id/refresh_button"
-        android:layout_width="28dp"
-        android:layout_height="28dp"
+        android:layout_width="22dp"
+        android:layout_height="22dp"
         android:layout_alignParentEnd="true"
         android:layout_alignParentTop="true"
         android:background="@android:color/transparent"
         android:src="@drawable/ic_refresh" />
-<LinearLayout
-    android:id="@+id/rates_container"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:layout_below="@id/widget_title"
-    android:layout_marginTop="2dp"
-    android:orientation="horizontal"
-    android:gravity="center_vertical">
 
-    <!-- Gold section -->
     <LinearLayout
-        android:id="@+id/gold_container"
-        android:layout_width="0dp"
+        android:id="@+id/rates_container"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:orientation="vertical"
-        android:gravity="center">
+        android:layout_below="@id/widget_title"
+        android:layout_marginTop="2dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
 
-        <!-- Gold label -->
-        <TextView
-            android:id="@+id/gold_label"
-            android:layout_width="wrap_content"
+        <!-- Gold section -->
+        <LinearLayout
+            android:id="@+id/gold_container"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="GOLD 995"
-            android:textColor="#FFD700"
-            android:textSize="16sp" />
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
 
-        <!-- Gold rate -->
-        <TextView
-            android:id="@+id/gold_rate"
-            android:layout_width="wrap_content"
+            <!-- Gold label -->
+            <TextView
+                android:id="@+id/gold_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="GOLD"
+                android:textColor="#FFD700"
+                android:textSize="12sp" />
+
+            <!-- Gold rate -->
+            <TextView
+                android:id="@+id/gold_rate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="₹0000"
+                android:textColor="#FFD700"
+                android:textStyle="bold"
+                android:textSize="22sp"
+                android:layout_marginTop="1dp" />
+        </LinearLayout>
+
+        <!-- Silver section -->
+        <LinearLayout
+            android:id="@+id/silver_container"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="₹0000"
-            android:textColor="#FFD700"
-            android:textSize="26sp"
-            android:textStyle="bold"
-            android:layout_marginTop="2dp" />
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <!-- Silver label -->
+            <TextView
+                android:id="@+id/silver_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="SILVER"
+                android:textColor="#C0C0C0"
+                android:textSize="12sp" />
+
+            <!-- Silver rate -->
+            <TextView
+                android:id="@+id/silver_rate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="₹0000"
+                android:textColor="#C0C0C0"
+                android:textStyle="bold"
+                android:textSize="22sp"
+                android:layout_marginTop="1dp" />
+        </LinearLayout>
     </LinearLayout>
-
-    <!-- Silver section -->
-    <LinearLayout
-        android:id="@+id/silver_container"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:orientation="vertical"
-        android:gravity="center">
-
-        <!-- Silver label -->
-        <TextView
-            android:id="@+id/silver_label"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="SILVER 999"
-            android:textColor="#C0C0C0"
-            android:textSize="16sp" />
-
-        <!-- Silver rate -->
-        <TextView
-            android:id="@+id/silver_rate"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="₹0000"
-            android:textColor="#C0C0C0"
-            android:textSize="26sp"
-            android:textStyle="bold"
-            android:layout_marginTop="2dp" />
-    </LinearLayout>
-</LinearLayout>
-
 </RelativeLayout>
 
 Path: C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\mipmap-anydpi-v26\ic_launcher.xml
@@ -1857,6 +1855,13 @@ Content:
         <item name="backgroundTint">@color/gold_primary</item>
         <item name="android:textColor">@android:color/black</item>
     </style>
+
+    <style name="Widget.App.Button." parent="Widget.App.Button">
+        <item name="backgroundTint">@color/gold_primary</item>
+        <item name="android:textColor">@android:color/black</item>
+    </style>
+
+
     
     <!-- Card Style for Light Mode -->
     <style name="Widget.App.CardView" parent="Widget.MaterialComponents.CardView">
@@ -1911,44 +1916,6 @@ Content:
     
     </style>
 </resources>
-
-Path: C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\xml\backup_rules.xml
-Content:
-<?xml version="1.0" encoding="utf-8"?><!--
-   Sample backup rules file; uncomment and customize as necessary.
-   See https://developer.android.com/guide/topics/data/autobackup
-   for details.
-   Note: This file is ignored for devices older that API 31
-   See https://developer.android.com/about/versions/12/backup-restore
--->
-<full-backup-content>
-    <!--
-   <include domain="sharedpref" path="."/>
-   <exclude domain="sharedpref" path="device.xml"/>
--->
-</full-backup-content>
-
-Path: C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\xml\data_extraction_rules.xml
-Content:
-<?xml version="1.0" encoding="utf-8"?><!--
-   Sample data extraction rules file; uncomment and customize as necessary.
-   See https://developer.android.com/about/versions/12/backup-restore#xml-changes
-   for details.
--->
-<data-extraction-rules>
-    <cloud-backup>
-        <!-- TODO: Use <include> and <exclude> to control what is backed up.
-        <include .../>
-        <exclude .../>
-        -->
-    </cloud-backup>
-    <!--
-    <device-transfer>
-        <include .../>
-        <exclude .../>
-    </device-transfer>
-    -->
-</data-extraction-rules>
 
 Path: C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\xml\rates_widget_info.xml
 Content:
@@ -2184,7 +2151,7 @@ public class RatesFetcher {
             }
             
             // Get the current time for last updated
-            SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
+            SimpleDateFormat dateFormat = new SimpleDateFormat("hh:mm a", Locale.getDefault());
             String currentTime = dateFormat.format(new Date());
             
             // Final variables to use in lambda

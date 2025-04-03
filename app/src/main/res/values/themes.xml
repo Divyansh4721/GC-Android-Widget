@@ -44,6 +44,13 @@
         <item name="backgroundTint">@color/gold_primary</item>
         <item name="android:textColor">@android:color/black</item>
     </style>
+
+    <style name="Widget.App.Button." parent="Widget.App.Button">
+        <item name="backgroundTint">@color/gold_primary</item>
+        <item name="android:textColor">@android:color/black</item>
+    </style>
+
+
     
     <!-- Card Style for Light Mode -->
     <style name="Widget.App.CardView" parent="Widget.MaterialComponents.CardView">

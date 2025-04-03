@@ -65,6 +65,10 @@ dependencies {
 
      implementation("org.jsoup:jsoup:1.15.3")
     implementation("com.squareup.okhttp3:okhttp:4.10.0")
+
+    implementation("com.google.android.gms:play-services-auth:21.0.0")
+    implementation("com.google.firebase:firebase-auth:22.3.1")
+    implementation("com.google.firebase:firebase-firestore:24.10.3")
 }
 
 // Explicitly disable all test tasks

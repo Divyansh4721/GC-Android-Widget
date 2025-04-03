@@ -16,8 +16,8 @@
         android:theme="@style/Theme.Rateswidget">
 
         <activity
-            android:name=".SignInActivity"
-            android:exported="true">
+        android:name=".SignInActivity"
+        android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -27,6 +27,11 @@
         <activity
             android:name=".MainActivity"
             android:exported="true" />
+
+        <activity
+            android:name=".CalculatorActivity"
+            android:exported="false" />
+
         <receiver
             android:name=".BootCompletedReceiver"
             android:exported="true">

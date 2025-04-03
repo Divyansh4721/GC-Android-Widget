@@ -31,6 +31,7 @@ public class MainActivity extends Activity {
     private SwitchMaterial batteryOptSwitch;
     private SwitchMaterial widgetRefreshSwitch;
     private MaterialButton logoutButton;
+    private MaterialButton calculatorButton;
     private TextView userName;
     private TextView userEmail;
     private ImageView userProfileImage;
@@ -68,6 +69,9 @@ public class MainActivity extends Activity {
         // Setup logout button
         setupLogoutButton();
 
+        // Setup calculator button
+        setupCalculatorButton();
+
         // Fetch and display current rates
         fetchCurrentRates();
 
@@ -79,6 +83,7 @@ public class MainActivity extends Activity {
         batteryOptSwitch = findViewById(R.id.battery_optimization_switch);
         widgetRefreshSwitch = findViewById(R.id.widget_refresh_switch);
         logoutButton = findViewById(R.id.logout_button);
+        calculatorButton = findViewById(R.id.calculator_button);
         userName = findViewById(R.id.user_name);
         userEmail = findViewById(R.id.user_email);
         userProfileImage = findViewById(R.id.user_profile_image);
@@ -106,11 +111,11 @@ public class MainActivity extends Activity {
             // Set user name
             String displayName = user.getDisplayName() != null ? user.getDisplayName() : "User";
             userName.setText(displayName);
-
+    
             // Set user email
             String email = user.getEmail() != null ? user.getEmail() : "No email";
             userEmail.setText(email);
-
+    
             // Generate profile image from name or use photo URL
             if (user.getPhotoUrl() != null) {
                 // Use Firebase photo URL if available
@@ -121,10 +126,18 @@ public class MainActivity extends Activity {
                         .into(userProfileImage);
             } else {
                 // Generate profile image from name
+                // Add a null check and use default dimensions
+                int width = userProfileImage.getWidth();
+                int height = userProfileImage.getHeight();
+                
+                // Ensure non-zero dimensions
+                if (width <= 0) width = 100;
+                if (height <= 0) height = 100;
+    
                 Bitmap profileBitmap = ProfileImageGenerator.generateCircularProfileImage(
                         displayName,
-                        userProfileImage.getWidth(),
-                        userProfileImage.getHeight()
+                        width,
+                        height
                 );
                 userProfileImage.setImageBitmap(profileBitmap);
             }
@@ -171,6 +184,13 @@ public class MainActivity extends Activity {
 
     private void setupLogoutButton() {
         logoutButton.setOnClickListener(v -> logout());
+    }
+
+    private void setupCalculatorButton() {
+        calculatorButton.setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, CalculatorActivity.class);
+            startActivity(intent);
+        });
     }
 
     private void fetchCurrentRates() {

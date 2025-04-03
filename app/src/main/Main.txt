@@ -18,8 +18,8 @@ Content:
         android:theme="@style/Theme.Rateswidget">
 
         <activity
-            android:name=".SignInActivity"
-            android:exported="true">
+        android:name=".SignInActivity"
+        android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -30,17 +30,9 @@ Content:
             android:name=".MainActivity"
             android:exported="true" />
 
-        <receiver
-            android:name=".RatesWidgetProvider"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-                <action android:name="com.example.rateswidget.ACTION_REFRESH" />
-            </intent-filter>
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/rates_widget_info" />
-        </receiver>
+        <activity
+            android:name=".CalculatorActivity"
+            android:exported="false" />
 
         <receiver
             android:name=".BootCompletedReceiver"
@@ -106,6 +98,7 @@ public class MainActivity extends Activity {
     private SwitchMaterial batteryOptSwitch;
     private SwitchMaterial widgetRefreshSwitch;
     private MaterialButton logoutButton;
+    private MaterialButton calculatorButton;
     private TextView userName;
     private TextView userEmail;
     private ImageView userProfileImage;
@@ -143,6 +136,9 @@ public class MainActivity extends Activity {
         // Setup logout button
         setupLogoutButton();
 
+        // Setup calculator button
+        setupCalculatorButton();
+
         // Fetch and display current rates
         fetchCurrentRates();
 
@@ -154,6 +150,7 @@ public class MainActivity extends Activity {
         batteryOptSwitch = findViewById(R.id.battery_optimization_switch);
         widgetRefreshSwitch = findViewById(R.id.widget_refresh_switch);
         logoutButton = findViewById(R.id.logout_button);
+        calculatorButton = findViewById(R.id.calculator_button);
         userName = findViewById(R.id.user_name);
         userEmail = findViewById(R.id.user_email);
         userProfileImage = findViewById(R.id.user_profile_image);
@@ -246,6 +243,13 @@ public class MainActivity extends Activity {
 
     private void setupLogoutButton() {
         logoutButton.setOnClickListener(v -> logout());
+    }
+
+    private void setupCalculatorButton() {
+        calculatorButton.setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, CalculatorActivity.class);
+            startActivity(intent);
+        });
     }
 
     private void fetchCurrentRates() {
@@ -638,20 +642,20 @@ Content:
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/black">
+    android:background="?attr/android:windowBackground">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="24dp">
+        android:padding="16dp">
 
         <!-- Profile Card -->
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:cardBackgroundColor="#1E1E1E"
-            app:cardElevation="4dp"
+            app:cardBackgroundColor="?attr/colorSurface"
+            app:cardElevation="2dp"
             app:cardCornerRadius="16dp"
             android:layout_marginBottom="16dp">
 
@@ -701,7 +705,7 @@ Content:
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Monday, March 11, 2024 | 02:45 PM"
-            android:textColor="#AAAAAA"
+            android:textColor="?attr/colorOnBackground"
             android:textSize="16sp"
             android:gravity="center"
             android:layout_marginBottom="16dp" />
@@ -711,7 +715,7 @@ Content:
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:cardBackgroundColor="?attr/colorSurface"
-            app:cardElevation="4dp"
+            app:cardElevation="2dp"
             app:cardCornerRadius="16dp"
             android:layout_marginBottom="16dp">
 
@@ -741,8 +745,8 @@ Content:
                         android:id="@+id/rates_updated_time"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Updated at 02:45 PM"
-                        android:textColor="#888888"
+                        android:text="Updated at02:45 PM"
+                        android:textColor="?attr/colorOnBackground"
                         android:textSize="14sp" />
                 </LinearLayout>
 
@@ -796,15 +800,24 @@ Content:
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:cardBackgroundColor="?attr/colorSurface"
-            app:cardElevation="4dp"
+            app:cardElevation="2dp"
             app:cardCornerRadius="16dp"
-            android:layout_marginBottom="16dp">
+            android:layout_marginBottom="24dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="20dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Widget Settings"
+                    android:textColor="?attr/colorOnSurface"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="12dp" />
 
                 <!-- Battery Optimization -->
                 <LinearLayout
@@ -814,13 +827,26 @@ Content:
                     android:gravity="center_vertical"
                     android:layout_marginBottom="16dp">
 
-                    <TextView
+                    <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Battery Optimization"
-                        android:textColor="?attr/colorOnBackground"
-                        android:textSize="16sp" />
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Battery Optimization"
+                            android:textColor="?attr/colorOnSurface"
+                            android:textSize="16sp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Allow app to run in background"
+                            android:textColor="?attr/colorOnBackground"
+                            android:textSize="14sp" />
+                    </LinearLayout>
 
                     <com.google.android.material.switchmaterial.SwitchMaterial
                         android:id="@+id/battery_optimization_switch"
@@ -835,13 +861,26 @@ Content:
                     android:orientation="horizontal"
                     android:gravity="center_vertical">
 
-                    <TextView
+                    <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Widget Refresh"
-                        android:textColor="?attr/colorOnBackground"
-                        android:textSize="16sp" />
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Auto Refresh Widget"
+                            android:textColor="?attr/colorOnSurface"
+                            android:textSize="16sp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Periodically update rates"
+                            android:textColor="?attr/colorOnBackground"
+                            android:textSize="14sp" />
+                    </LinearLayout>
 
                     <com.google.android.material.switchmaterial.SwitchMaterial
                         android:id="@+id/widget_refresh_switch"
@@ -850,6 +889,18 @@ Content:
                 </LinearLayout>
             </LinearLayout>
         </androidx.cardview.widget.CardView>
+
+        <!-- Price Calculator Button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/calculator_button"
+            style="@style/Widget.App.Button.Gold"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Price Calculator"
+            android:textAllCaps="false"
+            android:layout_marginBottom="16dp"
+            android:drawableStart="@android:drawable/ic_menu_add"
+            android:drawablePadding="8dp" />
 
         <!-- Sign Out Button -->
         <com.google.android.material.button.MaterialButton
@@ -887,7 +938,26 @@ Content:
     
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    
+    <!-- Light theme specific colors -->
+    <color name="light_background">#F5F5F5</color>
+    <color name="card_background_light">#FFFFFF</color>
+    <color name="card_stroke_light">#E0E0E0</color>
+    
+    <!-- Text colors -->
+    <color name="dark_text">#212121</color>
+    <color name="medium_text">#757575</color>
+    <color name="light_text">#BDBDBD</color>
+    
+    <!-- Accent colors -->
+    <color name="gold_accent">#F2D66F</color>
+    <color name="silver_accent">#A9A9A9</color>
+
+    <color name="dark_background">#101010</color>
+    <color name="black.1">#202020</color>
+
 </resources>
+
 
 Path: C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\values\strings.xml
 Content:
@@ -901,7 +971,7 @@ Content:
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme -->
-    <style name="Base.Theme.Rateswidget" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+    <style name="Base.Theme.Rateswidget" parent="Theme.MaterialComponents.Light.NoActionBar">
         <!-- Primary colors -->
         <item name="colorPrimary">@color/gold_primary</item>
         <item name="colorPrimaryVariant">@color/gold_dark</item>
@@ -909,13 +979,17 @@ Content:
         
         <!-- Secondary colors -->
         <item name="colorSecondary">@color/silver_secondary</item>
-        <item name="colorSecondaryVariant">@color/silver_light</item>
+        <item name="colorSecondaryVariant">@color/silver_dark</item>
         <item name="colorOnSecondary">@android:color/black</item>
         
         <!-- Background colors -->
-        <item name="android:windowBackground">?attr/colorSurface</item>
-        <item name="colorSurface">@android:color/black</item>
-        <item name="colorOnSurface">@android:color/white</item>
+        <item name="android:windowBackground">@color/light_background</item>
+        <item name="colorSurface">@color/white</item>
+        <item name="colorOnSurface">@color/dark_text</item>
+        <item name="colorOnBackground">@color/medium_text</item>
+        
+        <!-- Status bar color -->
+        <item name="android:statusBarColor">@color/gold_dark</item>
         
         <!-- Button styles -->
         <item name="materialButtonStyle">@style/Widget.App.Button</item>
@@ -940,6 +1014,20 @@ Content:
         <item name="backgroundTint">@color/gold_primary</item>
         <item name="android:textColor">@android:color/black</item>
     </style>
+
+    <style name="Widget.App.Button." parent="Widget.App.Button">
+        <item name="backgroundTint">@color/gold_primary</item>
+        <item name="android:textColor">@android:color/black</item>
+    </style>
+
+
+    
+    <!-- Card Style for Light Mode -->
+    <style name="Widget.App.CardView" parent="Widget.MaterialComponents.CardView">
+        <item name="cardBackgroundColor">@color/white</item>
+        <item name="cardElevation">4dp</item>
+        <item name="cardCornerRadius">16dp</item>
+    </style>
 </resources>
 
 Path: C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\values-night\themes.xml
@@ -947,9 +1035,7 @@ Content:
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
     <style name="Base.Theme.Rateswidget" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your dark theme here. -->
-        <!-- <item name="colorPrimary">@color/my_dark_primary</item> -->
-      <!-- Primary colors -->
+        <!-- Primary colors -->
         <item name="colorPrimary">@color/gold_primary</item>
         <item name="colorPrimaryVariant">@color/gold_dark</item>
         <item name="colorOnPrimary">@android:color/black</item>
@@ -960,8 +1046,8 @@ Content:
         <item name="colorOnSecondary">@android:color/black</item>
         
         <!-- Background colors -->
-        <item name="android:windowBackground">?attr/colorSurface</item>
-        <item name="colorSurface">@android:color/black</item>
+        <item name="android:windowBackground">@color/black</item>
+        <item name="colorSurface">@color/black.1</item>
         <item name="colorOnSurface">@android:color/white</item>
         
         <!-- Button styles -->
@@ -989,44 +1075,6 @@ Content:
     
     </style>
 </resources>
-
-Path: C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\xml\backup_rules.xml
-Content:
-<?xml version="1.0" encoding="utf-8"?><!--
-   Sample backup rules file; uncomment and customize as necessary.
-   See https://developer.android.com/guide/topics/data/autobackup
-   for details.
-   Note: This file is ignored for devices older that API 31
-   See https://developer.android.com/about/versions/12/backup-restore
--->
-<full-backup-content>
-    <!--
-   <include domain="sharedpref" path="."/>
-   <exclude domain="sharedpref" path="device.xml"/>
--->
-</full-backup-content>
-
-Path: C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\xml\data_extraction_rules.xml
-Content:
-<?xml version="1.0" encoding="utf-8"?><!--
-   Sample data extraction rules file; uncomment and customize as necessary.
-   See https://developer.android.com/about/versions/12/backup-restore#xml-changes
-   for details.
--->
-<data-extraction-rules>
-    <cloud-backup>
-        <!-- TODO: Use <include> and <exclude> to control what is backed up.
-        <include .../>
-        <exclude .../>
-        -->
-    </cloud-backup>
-    <!--
-    <device-transfer>
-        <include .../>
-        <exclude .../>
-    </device-transfer>
-    -->
-</data-extraction-rules>
 
 Path: C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\build.gradle.kts
 Content:
@@ -1248,7 +1296,7 @@ public class RatesFetcher {
             }
             
             // Get the current time for last updated
-            SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
+            SimpleDateFormat dateFormat = new SimpleDateFormat("hh:mm a", Locale.getDefault());
             String currentTime = dateFormat.format(new Date());
             
             // Final variables to use in lambda

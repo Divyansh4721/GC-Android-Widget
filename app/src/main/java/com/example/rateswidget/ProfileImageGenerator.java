@@ -10,6 +10,10 @@ import android.graphics.Typeface;
 public class ProfileImageGenerator {
     
     public static Bitmap generateCircularProfileImage(String name, int width, int height) {
+        // Ensure non-zero dimensions
+        if (width <= 0) width = 100;
+        if (height <= 0) height = 100;
+        
         Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(bitmap);
         

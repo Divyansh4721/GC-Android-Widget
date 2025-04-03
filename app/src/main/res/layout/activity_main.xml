@@ -106,7 +106,7 @@
                         android:id="@+id/rates_updated_time"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Updated at 02:45 PM"
+                        android:text="Updated at02:45 PM"
                         android:textColor="?attr/colorOnBackground"
                         android:textSize="14sp" />
                 </LinearLayout>
@@ -156,118 +156,130 @@
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
-    <!-- Widget Controls Card -->
-    <androidx.cardview.widget.CardView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:cardBackgroundColor="?attr/colorSurface"
-        app:cardElevation="2dp"
-        app:cardCornerRadius="16dp"
-        android:layout_marginBottom="24dp">
-
-        <LinearLayout
+        <!-- Widget Controls Card -->
+        <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="20dp">
+            app:cardBackgroundColor="?attr/colorSurface"
+            app:cardElevation="2dp"
+            app:cardCornerRadius="16dp"
+            android:layout_marginBottom="24dp">
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Widget Settings"
-                android:textColor="?attr/colorOnSurface"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:layout_marginBottom="12dp" />
-
-            <!-- Battery Optimization -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:layout_marginBottom="16dp">
+                android:orientation="vertical"
+                android:padding="20dp">
 
-                <LinearLayout
-                    android:layout_width="0dp"
+                <TextView
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
+                    android:text="Widget Settings"
+                    android:textColor="?attr/colorOnSurface"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="12dp" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Battery Optimization"
-                        android:textColor="?attr/colorOnSurface"
-                        android:textSize="16sp" />
+                <!-- Battery Optimization -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="16dp">
 
-                    <TextView
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="Allow app to run in background"
-                        android:textColor="?attr/colorOnBackground"
-                        android:textSize="14sp" />
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Battery Optimization"
+                            android:textColor="?attr/colorOnSurface"
+                            android:textSize="16sp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Allow app to run in background"
+                            android:textColor="?attr/colorOnBackground"
+                            android:textSize="14sp" />
+                    </LinearLayout>
+
+                    <com.google.android.material.switchmaterial.SwitchMaterial
+                        android:id="@+id/battery_optimization_switch"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
                 </LinearLayout>
 
-                <com.google.android.material.switchmaterial.SwitchMaterial
-                    android:id="@+id/battery_optimization_switch"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
-            </LinearLayout>
-
-            <!-- Widget Refresh -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
-
+                <!-- Widget Refresh -->
                 <LinearLayout
-                    android:layout_width="0dp"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
 
-                    <TextView
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="Auto Refresh Widget"
-                        android:textColor="?attr/colorOnSurface"
-                        android:textSize="16sp" />
+                        android:layout_weight="1"
+                        android:orientation="vertical">
 
-                    <TextView
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Auto Refresh Widget"
+                            android:textColor="?attr/colorOnSurface"
+                            android:textSize="16sp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Periodically update rates"
+                            android:textColor="?attr/colorOnBackground"
+                            android:textSize="14sp" />
+                    </LinearLayout>
+
+                    <com.google.android.material.switchmaterial.SwitchMaterial
+                        android:id="@+id/widget_refresh_switch"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Periodically update rates"
-                        android:textColor="?attr/colorOnBackground"
-                        android:textSize="14sp" />
+                        android:layout_height="wrap_content" />
                 </LinearLayout>
-
-                <com.google.android.material.switchmaterial.SwitchMaterial
-                    android:id="@+id/widget_refresh_switch"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
             </LinearLayout>
-        </LinearLayout>
-    </androidx.cardview.widget.CardView>
+        </androidx.cardview.widget.CardView>
 
-    <!-- Sign Out Button -->
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/logout_button"
-        style="@style/Widget.App.Button.Gold"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Sign Out"
-        android:textAllCaps="false"
-        android:layout_marginBottom="16dp" />
+        <!-- Price Calculator Button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/calculator_button"
+            style="@style/Widget.App.Button.Gold"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Price Calculator"
+            android:textAllCaps="false"
+            android:layout_marginBottom="16dp"
+            android:drawableStart="@android:drawable/ic_menu_add"
+            android:drawablePadding="8dp" />
 
-    <!-- Footer -->
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:text="Add widget to home screen to view rates"
-        android:textColor="?attr/colorOnBackground"
-        android:textSize="14sp" />
+        <!-- Sign Out Button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/logout_button"
+            style="@style/Widget.App.Button.Gold"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Sign Out"
+            android:textAllCaps="false"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Footer -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="Add widget to home screen to view rates"
+            android:textColor="?attr/colorOnBackground"
+            android:textSize="14sp" />
     </LinearLayout>
 </ScrollView>
