@@ -20,6 +20,7 @@ import com.google.android.material.button.MaterialButton;
 import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 
 import java.text.SimpleDateFormat;
@@ -27,11 +28,11 @@ import java.util.Date;
 import java.util.Locale;
 
 public class MainActivity extends Activity {
+    private static final String TAG = "MainActivity";
 
     private SwitchMaterial batteryOptSwitch;
     private SwitchMaterial widgetRefreshSwitch;
     private MaterialButton logoutButton;
-    private MaterialButton calculatorButton;
     private TextView userName;
     private TextView userEmail;
     private ImageView userProfileImage;
@@ -45,50 +46,71 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        
+        try {
+            setContentView(R.layout.activity_main);
 
-        // Initialize Firebase Auth
-        mAuth = FirebaseAuth.getInstance();
-        FirebaseUser currentUser = mAuth.getCurrentUser();
+            // Initialize Firebase Auth
+            mAuth = FirebaseAuth.getInstance();
+            FirebaseUser currentUser = mAuth.getCurrentUser();
 
-        // Initialize views
-        initializeViews();
+            // Verify user is logged in
+            if (currentUser == null) {
+                Log.d(TAG, "No user logged in, redirecting to SignInActivity");
+                Intent intent = new Intent(this, SignInActivity.class);
+                startActivity(intent);
+                finish();
+                return;
+            }
 
-        // Setup current date and time
-        setupDateAndTime();
+            // Initialize views
+            initializeViews();
 
-        // Setup user profile
-        setupUserProfile(currentUser);
+            // Setup current date and time
+            setupDateAndTime();
 
-        // Setup battery optimization switch
-        setupBatteryOptimizationSwitch();
+            // Setup user profile
+            setupUserProfile(currentUser);
 
-        // Setup widget refresh switch
-        setupWidgetRefreshSwitch();
+            // Setup battery optimization switch
+            setupBatteryOptimizationSwitch();
 
-        // Setup logout button
-        setupLogoutButton();
+            // Setup widget refresh switch
+            setupWidgetRefreshSwitch();
 
-        // Setup calculator button
-        setupCalculatorButton();
+            // Setup logout button
+            setupLogoutButton();
 
-        // Fetch and display current rates
-        fetchCurrentRates();
+            // Fetch and display current rates
+            fetchCurrentRates();
 
-        // Schedule widget updates to ensure widgets stay current
-        WidgetUpdateService.scheduleNextUpdate(this);
+            // Schedule widget updates to ensure widgets stay current
+            WidgetUpdateService.scheduleNextUpdate(this);
+
+        } catch (Exception e) {
+            Log.e(TAG, "Critical error in MainActivity onCreate", e);
+            Toast.makeText(this, "An error occurred. Please restart the app.", Toast.LENGTH_LONG).show();
+            
+            // Force logout and redirect to sign-in
+            if (mAuth != null) {
+                mAuth.signOut();
+            }
+            Intent intent = new Intent(this, SignInActivity.class);
+            startActivity(intent);
+            finish();
+        }
     }
 
     private void initializeViews() {
         batteryOptSwitch = findViewById(R.id.battery_optimization_switch);
         widgetRefreshSwitch = findViewById(R.id.widget_refresh_switch);
         logoutButton = findViewById(R.id.logout_button);
-        calculatorButton = findViewById(R.id.calculator_button);
+        
         userName = findViewById(R.id.user_name);
         userEmail = findViewById(R.id.user_email);
         userProfileImage = findViewById(R.id.user_profile_image);
         
-        // New views for date and rates update time
+        // Date and rates views
         dateTimeText = findViewById(R.id.date_time_text);
         ratesUpdatedTimeText = findViewById(R.id.rates_updated_time);
         
@@ -111,36 +133,63 @@ public class MainActivity extends Activity {
             // Set user name
             String displayName = user.getDisplayName() != null ? user.getDisplayName() : "User";
             userName.setText(displayName);
-    
+
             // Set user email
             String email = user.getEmail() != null ? user.getEmail() : "No email";
             userEmail.setText(email);
-    
-            // Generate profile image from name or use photo URL
+
+            // Handle profile image
             if (user.getPhotoUrl() != null) {
-                // Use Firebase photo URL if available
-                Picasso.get()
+                // Attempt to load photo from Google account
+                try {
+                    Picasso.get()
                         .load(user.getPhotoUrl())
                         .placeholder(R.drawable.ic_default_profile)
                         .error(R.drawable.ic_default_profile)
-                        .into(userProfileImage);
+                        .into(userProfileImage, new Callback() {
+                            @Override
+                            public void onSuccess() {
+                                Log.d(TAG, "Profile image loaded successfully");
+                            }
+
+                            @Override
+                            public void onError(Exception e) {
+                                Log.e(TAG, "Error loading profile image", e);
+                                // Fallback to generated profile image
+                                generateProfileImage(displayName);
+                            }
+                        });
+                } catch (Exception e) {
+                    Log.e(TAG, "Exception loading profile image", e);
+                    // Fallback to generated profile image
+                    generateProfileImage(displayName);
+                }
             } else {
-                // Generate profile image from name
-                // Add a null check and use default dimensions
-                int width = userProfileImage.getWidth();
-                int height = userProfileImage.getHeight();
-                
-                // Ensure non-zero dimensions
-                if (width <= 0) width = 100;
-                if (height <= 0) height = 100;
-    
-                Bitmap profileBitmap = ProfileImageGenerator.generateCircularProfileImage(
-                        displayName,
-                        width,
-                        height
-                );
-                userProfileImage.setImageBitmap(profileBitmap);
+                // No photo URL, generate profile image
+                generateProfileImage(displayName);
             }
+        }
+    }
+
+    private void generateProfileImage(String displayName) {
+        try {
+            // Ensure non-zero dimensions
+            int width = userProfileImage.getWidth();
+            int height = userProfileImage.getHeight();
+            
+            if (width <= 0) width = 100;
+            if (height <= 0) height = 100;
+
+            Bitmap profileBitmap = ProfileImageGenerator.generateCircularProfileImage(
+                    displayName,
+                    width,
+                    height
+            );
+            userProfileImage.setImageBitmap(profileBitmap);
+        } catch (Exception e) {
+            Log.e(TAG, "Error generating profile image", e);
+            // Fallback to default drawable
+            userProfileImage.setImageResource(R.drawable.ic_default_profile);
         }
     }
 
@@ -172,7 +221,7 @@ public class MainActivity extends Activity {
                     ? RatesWidgetProvider.ACTION_START_UPDATES
                     : RatesWidgetProvider.ACTION_STOP_UPDATES);
             
-            Log.d("MainActivity", "Sending " + intent.getAction() + " broadcast");
+            Log.d(TAG, "Sending " + intent.getAction() + " broadcast");
             sendBroadcast(intent);
             
             // Show confirmation toast
@@ -184,13 +233,6 @@ public class MainActivity extends Activity {
 
     private void setupLogoutButton() {
         logoutButton.setOnClickListener(v -> logout());
-    }
-
-    private void setupCalculatorButton() {
-        calculatorButton.setOnClickListener(v -> {
-            Intent intent = new Intent(MainActivity.this, CalculatorActivity.class);
-            startActivity(intent);
-        });
     }
 
     private void fetchCurrentRates() {

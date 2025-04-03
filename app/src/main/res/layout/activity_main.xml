@@ -251,17 +251,7 @@
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
-        <!-- Price Calculator Button -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/calculator_button"
-            style="@style/Widget.App.Button.Gold"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Price Calculator"
-            android:textAllCaps="false"
-            android:layout_marginBottom="16dp"
-            android:drawableStart="@android:drawable/ic_menu_add"
-            android:drawablePadding="8dp" />
+       
 
         <!-- Sign Out Button -->
         <com.google.android.material.button.MaterialButton
