@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.rateswidget"
+    namespace = "com.gcjewellers.rateswidget"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.example.rateswidget"
+        applicationId = "com.gcjewellers.rateswidget"
         minSdk = 24
         targetSdk = 34
         versionCode = 1
@@ -60,15 +60,11 @@ dependencies {
     // Core Kotlin extensions
     implementation("androidx.core:core-ktx:1.9.0")
 
-       implementation("com.squareup.picasso:picasso:2.8")
+    implementation("com.squareup.picasso:picasso:2.8")
     implementation("de.hdodenhof:circleimageview:3.1.0")
 
-     implementation("org.jsoup:jsoup:1.15.3")
+    implementation("org.jsoup:jsoup:1.15.3")
     implementation("com.squareup.okhttp3:okhttp:4.10.0")
-
-    implementation("com.google.android.gms:play-services-auth:21.0.0")
-    implementation("com.google.firebase:firebase-auth:22.3.1")
-    implementation("com.google.firebase:firebase-firestore:24.10.3")
 }
 
 // Explicitly disable all test tasks

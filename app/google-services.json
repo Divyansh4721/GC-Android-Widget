@@ -49,6 +49,43 @@
           ]
         }
       }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1091177947332:android:149591e158d3352ad8a991",
+        "android_client_info": {
+          "package_name": "com.gcjewellers.rateswidget"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1091177947332-4gpssebc6hmch06b22d64vek5dm4booq.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.gcjewellers.rateswidget",
+            "certificate_hash": "5962aea20e1d9abdd6d5b88ea34cd98f8756b302"
+          }
+        },
+        {
+          "client_id": "1091177947332-68pls6bhrdeijhk78r3etrg6ssqrllva.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDhW7SO99Q49LZAAr9-7jqIus6ErHH9KHc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1091177947332-68pls6bhrdeijhk78r3etrg6ssqrllva.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
     }
   ],
   "configuration_version": "1"

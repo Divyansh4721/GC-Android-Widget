@@ -1,4 +1,4 @@
-package com.example.rateswidget;
+package com.gcjewellers.rateswidget;
 
 import android.graphics.Bitmap;
 import android.graphics.Canvas;

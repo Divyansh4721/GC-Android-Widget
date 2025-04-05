@@ -1,4 +1,4 @@
-package com.example.rateswidget;
+package com.gcjewellers.rateswidget;
 
 import android.content.Context;
 import android.os.Handler;

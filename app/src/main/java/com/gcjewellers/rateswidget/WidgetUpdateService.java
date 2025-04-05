@@ -1,4 +1,4 @@
-package com.example.rateswidget;
+package com.gcjewellers.rateswidget;
 
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;

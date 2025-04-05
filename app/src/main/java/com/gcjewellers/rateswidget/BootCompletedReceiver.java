@@ -1,4 +1,4 @@
-package com.example.rateswidget;
+package com.gcjewellers.rateswidget;
 
 import android.appwidget.AppWidgetManager;
 import android.content.BroadcastReceiver;

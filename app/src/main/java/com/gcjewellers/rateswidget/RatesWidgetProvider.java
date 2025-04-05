@@ -1,4 +1,4 @@
-package com.example.rateswidget;
+package com.gcjewellers.rateswidget;
 
 import android.app.AlarmManager;
 import android.app.PendingIntent;
@@ -25,15 +25,15 @@ import java.util.concurrent.TimeUnit;
 
 public class RatesWidgetProvider extends AppWidgetProvider {
     private static final String TAG = "RatesWidgetProvider";
-    private static final String ACTION_REFRESH = "com.example.rateswidget.ACTION_REFRESH";
+    private static final String ACTION_REFRESH = "com.gcjewellers.rateswidget.ACTION_REFRESH";
     private static final int REFRESH_INTERVAL_SECONDS = 600; // Changed from 10 to 600 (10 minutes)
     private static ScheduledExecutorService scheduler;
     
     // Add constants for preferences and actions
-    public static final String PREFS_NAME = "com.example.rateswidget.preferences";
+    public static final String PREFS_NAME = "com.gcjewellers.rateswidget.preferences";
     public static final String PREF_AUTO_REFRESH_ENABLED = "auto_refresh_enabled";
-    public static final String ACTION_START_UPDATES = "com.example.rateswidget.ACTION_START_UPDATES";
-    public static final String ACTION_STOP_UPDATES = "com.example.rateswidget.ACTION_STOP_UPDATES";
+    public static final String ACTION_START_UPDATES = "com.gcjewellers.rateswidget.ACTION_START_UPDATES";
+    public static final String ACTION_STOP_UPDATES = "com.gcjewellers.rateswidget.ACTION_STOP_UPDATES";
 
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
