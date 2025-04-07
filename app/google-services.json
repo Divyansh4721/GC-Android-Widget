@@ -52,18 +52,87 @@
     },
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1091177947332:android:149591e158d3352ad8a991",
+        "mobilesdk_app_id": "1:1091177947332:android:1634f024699b3460d8a991",
         "android_client_info": {
           "package_name": "com.gcjewellers.rateswidget"
         }
       },
       "oauth_client": [
         {
-          "client_id": "1091177947332-4gpssebc6hmch06b22d64vek5dm4booq.apps.googleusercontent.com",
+          "client_id": "1091177947332-ac2dfr4hin6n4ev6gt843708o23kg5n0.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.gcjewellers.rateswidget",
-            "certificate_hash": "5962aea20e1d9abdd6d5b88ea34cd98f8756b302"
+            "certificate_hash": "63809e5f5aef5ab8040b8721b3bb0686c80238db"
+          }
+        },
+        {
+          "client_id": "1091177947332-bl970v6aj2kjrb088vnlk28v01q1tbp4.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.gcjewellers.rateswidget",
+            "certificate_hash": "a69227e9814b2f6cd9202637e284377841c44a92"
+          }
+        },
+        {
+          "client_id": "1091177947332-dbl22obi1ts8panu1scec1lbgvof42an.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.gcjewellers.rateswidget",
+            "certificate_hash": "814f395e5ff46d5d42aeaa607338794d21b3f0f6"
+          }
+        },
+        {
+          "client_id": "1091177947332-paq94k4l0c7njmtidng3vvv6np8cih3o.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.gcjewellers.rateswidget",
+            "certificate_hash": "6863aec652307e2df106dc13c6f8ffc15cc4fae6"
+          }
+        },
+        {
+          "client_id": "1091177947332-shram5j09uuhkobm65rhjrpmr5781r6e.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.gcjewellers.rateswidget",
+            "certificate_hash": "8b93fdae0ffe7695b9aaac651a33c53a768f197d"
+          }
+        },
+        {
+          "client_id": "1091177947332-68pls6bhrdeijhk78r3etrg6ssqrllva.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDhW7SO99Q49LZAAr9-7jqIus6ErHH9KHc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1091177947332-68pls6bhrdeijhk78r3etrg6ssqrllva.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1091177947332:android:d6a0f5c550835f3ed8a991",
+        "android_client_info": {
+          "package_name": "com.gcjewellers.rateswidget.debug"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1091177947332-tegpsh62su7c8u3umesvdnv391mqt1q1.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.gcjewellers.rateswidget.debug",
+            "certificate_hash": "a69227e9814b2f6cd9202637e284377841c44a92"
           }
         },
         {
