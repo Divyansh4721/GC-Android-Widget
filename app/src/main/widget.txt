@@ -1,0 +1,39 @@
+$FilePaths = @(
+"C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\java\com\gcjewellers\rateswidget\RatesWidgetProvider.java"
+"C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\java\com\gcjewellers\rateswidget\WidgetUpdateService.java"
+"C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\drawable\widget_background_improved.xml"
+"C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\drawable\ic_refresh.xml"
+"C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\drawable\widget_background.xml"
+"C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\drawable\widget_preview.xml"
+"C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\layout\rates_widget.xml"
+"C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\xml\rates_widget_info.xml"
+"C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\java\com\gcjewellers\rateswidget\RatesUpdateWorker.java"
+"C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\java\com\gcjewellers\rateswidget\MainActivity.java"
+"C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\AndroidManifest.xml"
+)
+
+
+
+
+$OutputFilePath = "C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\widgetprompt.txt"
+
+$OutputContent = ""
+
+foreach ($FilePath in $FilePaths) {
+    if (Test-Path -Path $FilePath -PathType Leaf) {
+        $AbsolutePath = (Resolve-Path $FilePath).Path
+        $FileContent = Get-Content -Path $FilePath -Raw
+        
+        $OutputContent += "Path: $AbsolutePath`r`n"
+        $OutputContent += "Content:`r`n$FileContent`r`n`r`n"
+    }
+    else {
+        Write-Warning "File not found: $FilePath"
+    }
+}
+
+Set-Content -Path $OutputFilePath -Value $OutputContent
+
+Write-Output "Successfully processed files to: $OutputFilePath"
+
+

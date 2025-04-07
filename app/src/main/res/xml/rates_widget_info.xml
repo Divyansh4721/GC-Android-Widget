@@ -1,16 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
-    android:initialKeyguardLayout="@layout/rates_widget_small"
-    android:initialLayout="@layout/rates_widget_small"
+    android:initialLayout="@layout/rates_widget"
     android:minWidth="180dp"
     android:minHeight="40dp"
-    android:maxWidth="400dp"
-    android:maxHeight="200dp"
-    android:previewImage="@drawable/widget_preview"
+    android:updatePeriodMillis="0"
     android:resizeMode="horizontal|vertical"
-    android:updatePeriodMillis="300000"  
     android:widgetCategory="home_screen">
-    
-    <!-- Configure widget activity -->
-    <configuration android:name="com.gcjewellers.rateswidget.WidgetConfigureActivity" />
 </appwidget-provider>

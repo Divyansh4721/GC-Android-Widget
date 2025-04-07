@@ -1,0 +1,850 @@
+Path: C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\java\com\gcjewellers\rateswidget\RatesWidgetProvider.java
+Content:
+package com.gcjewellers.rateswidget;
+
+import android.app.PendingIntent;
+import android.appwidget.AppWidgetManager;
+import android.appwidget.AppWidgetProvider;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.os.Build;
+import android.util.Log;
+import android.widget.RemoteViews;
+
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+
+public class RatesWidgetProvider extends AppWidgetProvider {
+    private static final String TAG = "RatesWidgetProvider";
+
+    // Preferences constants
+    public static final String PREFS_NAME = "widget_prefs";
+    public static final String PREF_AUTO_REFRESH_ENABLED = "auto_refresh_enabled";
+    public static final String PREF_WIDGET_WIDTH = "widget_width";
+    public static final String PREF_WIDGET_HEIGHT = "widget_height";
+
+    // Action constants
+    public static final String ACTION_REFRESH = "com.gcjewellers.rateswidget.ACTION_REFRESH";
+    public static final String ACTION_START_UPDATES = "com.gcjewellers.rateswidget.START_UPDATES";
+    public static final String ACTION_STOP_UPDATES = "com.gcjewellers.rateswidget.STOP_UPDATES";
+
+    @Override
+    public void onReceive(Context context, Intent intent) {
+        super.onReceive(context, intent);
+        
+        if (ACTION_REFRESH.equals(intent.getAction())) {
+            Log.d(TAG, "Refresh action received");
+            AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
+            ComponentName thisWidget = new ComponentName(context, RatesWidgetProvider.class);
+            int[] appWidgetIds = appWidgetManager.getAppWidgetIds(thisWidget);
+            
+            for (int appWidgetId : appWidgetIds) {
+                updateWidgetWithSize(context, appWidgetManager, appWidgetId);
+            }
+        }
+    }
+
+    @Override
+    public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
+        for (int appWidgetId : appWidgetIds) {
+            updateWidgetWithSize(context, appWidgetManager, appWidgetId);
+        }
+    }
+
+    public static void updateWidgetWithSize(Context context, AppWidgetManager appWidgetManager, int appWidgetId) {
+        RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.rates_widget);
+
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (currentUser == null) {
+            views.setTextViewText(R.id.widget_title, "GC Jewellers");
+            views.setTextViewText(R.id.gold_rate, "Sign In");
+            views.setTextColor(R.id.gold_rate, Color.WHITE);
+        } else {
+            // Setup refresh intent
+            Intent refreshIntent = new Intent(context, RatesWidgetProvider.class);
+            refreshIntent.setAction(ACTION_REFRESH);
+            PendingIntent refreshPendingIntent = PendingIntent.getBroadcast(
+                    context, 0, refreshIntent, getPendingIntentFlag());
+            views.setOnClickPendingIntent(R.id.refresh_button, refreshPendingIntent);
+
+            // Fetch rates
+            new RatesFetchTask(context, views, appWidgetManager, appWidgetId).execute();
+        }
+
+        appWidgetManager.updateAppWidget(appWidgetId, views);
+    }
+
+    public static void saveWidgetSize(Context context, int appWidgetId, int width, int height) {
+        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putInt(PREF_WIDGET_WIDTH + "_" + appWidgetId, width)
+              .putInt(PREF_WIDGET_HEIGHT + "_" + appWidgetId, height)
+              .apply();
+    }
+
+    public static int[] getWidgetSize(Context context, int appWidgetId) {
+        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        int width = prefs.getInt(PREF_WIDGET_WIDTH + "_" + appWidgetId, 220);
+        int height = prefs.getInt(PREF_WIDGET_HEIGHT + "_" + appWidgetId, 100);
+        return new int[]{width, height};
+    }
+
+    public static int selectBestLayout(int width, int height) {
+        // For now, always return the single layout
+        return R.layout.rates_widget;
+    }
+
+    public static boolean isAutoRefreshEnabled(Context context) {
+        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        return prefs.getBoolean(PREF_AUTO_REFRESH_ENABLED, true);
+    }
+
+    private static int getPendingIntentFlag() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            return PendingIntent.FLAG_IMMUTABLE;
+        } else {
+            return 0;
+        }
+    }
+}
+
+Path: C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\java\com\gcjewellers\rateswidget\WidgetUpdateService.java
+Content:
+package com.gcjewellers.rateswidget;
+
+import android.app.job.JobInfo;
+import android.app.job.JobParameters;
+import android.app.job.JobScheduler;
+import android.app.job.JobService;
+import android.appwidget.AppWidgetManager;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.util.Log;
+
+public class WidgetUpdateService extends JobService {
+    private static final String TAG = "WidgetUpdateService";
+    private static final int JOB_ID = 1001;
+
+    @Override
+    public boolean onStartJob(JobParameters params) {
+        Log.d(TAG, "onStartJob: Updating widgets");
+        
+        // Check if auto-refresh is enabled before updating
+        SharedPreferences prefs = getSharedPreferences(RatesWidgetProvider.PREFS_NAME, Context.MODE_PRIVATE);
+        boolean autoRefreshEnabled = prefs.getBoolean(RatesWidgetProvider.PREF_AUTO_REFRESH_ENABLED, true);
+        
+        if (!autoRefreshEnabled) {
+            Log.d(TAG, "Auto-refresh is disabled, skipping update");
+            return false;
+        }
+        
+        // Update all widgets
+        AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(this);
+        ComponentName thisWidget = new ComponentName(this, RatesWidgetProvider.class);
+        int[] appWidgetIds = appWidgetManager.getAppWidgetIds(thisWidget);
+        
+        if (appWidgetIds != null && appWidgetIds.length > 0) {
+            Intent updateIntent = new Intent(this, RatesWidgetProvider.class);
+            updateIntent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
+            updateIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, appWidgetIds);
+            sendBroadcast(updateIntent);
+            Log.d(TAG, "Widget update broadcast sent for " + appWidgetIds.length + " widgets");
+        } else {
+            Log.d(TAG, "No widgets found to update");
+        }
+        
+        // Reschedule the job for continuous updates only if auto-refresh is enabled
+        if (autoRefreshEnabled) {
+            scheduleNextUpdate(this);
+        }
+        
+        return false; // Job is done, no more work needed in background
+    }
+
+    @Override
+    public boolean onStopJob(JobParameters params) {
+        Log.d(TAG, "onStopJob: Job was stopped, rescheduling");
+        // Check if auto-refresh is enabled before rescheduling
+        SharedPreferences prefs = getSharedPreferences(RatesWidgetProvider.PREFS_NAME, Context.MODE_PRIVATE);
+        boolean autoRefreshEnabled = prefs.getBoolean(RatesWidgetProvider.PREF_AUTO_REFRESH_ENABLED, true);
+        
+        // Only reschedule if auto-refresh is enabled
+        return autoRefreshEnabled;
+    }
+    
+    public static void scheduleNextUpdate(Context context) {
+        // Check if auto-refresh is enabled before scheduling
+        SharedPreferences prefs = context.getSharedPreferences(RatesWidgetProvider.PREFS_NAME, Context.MODE_PRIVATE);
+        boolean autoRefreshEnabled = prefs.getBoolean(RatesWidgetProvider.PREF_AUTO_REFRESH_ENABLED, true);
+        
+        if (!autoRefreshEnabled) {
+            Log.d(TAG, "Auto-refresh is disabled, not scheduling next update");
+            return;
+        }
+        
+        JobScheduler jobScheduler = 
+                (JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
+        
+        JobInfo.Builder builder = new JobInfo.Builder(
+                JOB_ID,
+                new ComponentName(context, WidgetUpdateService.class))
+                .setMinimumLatency(600 * 1000) // 10 minutes
+                .setOverrideDeadline(610 * 1000) // Maximum delay of 10 minutes + 10 seconds
+                .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+                .setPersisted(true);
+        
+        int result = jobScheduler.schedule(builder.build());
+        if (result == JobScheduler.RESULT_SUCCESS) {
+            Log.d(TAG, "Job scheduled successfully");
+        } else {
+            Log.e(TAG, "Job scheduling failed");
+        }
+    }
+    
+    // Add a new method to cancel scheduled updates
+    public static void cancelUpdates(Context context) {
+        Log.d(TAG, "Cancelling scheduled updates");
+        JobScheduler jobScheduler = 
+                (JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
+        jobScheduler.cancel(JOB_ID);
+    }
+}
+
+Path: C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\drawable\widget_background_improved.xml
+Content:
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <corners android:radius="16dp" />
+    <solid android:color="#99000000" />
+    <stroke
+        android:width="1dp"
+        android:color="#80FFFFFF" />
+</shape>
+
+Path: C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\drawable\ic_refresh.xml
+Content:
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24.0"
+    android:viewportHeight="24.0">
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M17.65,6.35C16.2,4.9 14.21,4 12,4c-4.42,0 -7.99,3.58 -7.99,8s3.57,8 7.99,8c3.73,0 6.84,-2.55 7.73,-6h-2.08c-0.82,2.33 -3.04,4 -5.65,4 -3.31,0 -6,-2.69 -6,-6s2.69,-6 6,-6c1.66,0 3.14,0.69 4.22,1.78L13,11h7V4l-2.35,2.35z"/>
+    <path
+        android:fillColor="#000000"
+        android:pathData="M17.65,6.35C16.2,4.9 14.21,4 12,4c-4.42,0 -7.99,3.58 -7.99,8s3.57,8 7.99,8c3.73,0 6.84,-2.55 7.73,-6h-2.08c-0.82,2.33 -3.04,4 -5.65,4 -3.31,0 -6,-2.69 -6,-6s2.69,-6 6,-6c1.66,0 3.14,0.69 4.22,1.78L13,11h7V4l-2.35,2.35z"
+        android:strokeWidth="0.5"
+        android:strokeColor="#000000"
+        android:strokeAlpha="0.5"
+        android:fillAlpha="0" />
+</vector>
+
+Path: C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\drawable\widget_background.xml
+Content:
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <solid android:color="#20333333" /> <!-- 80 prefix adds 50% transparency -->
+    <corners android:radius="12dp" />
+    <!-- Removed the stroke/border element -->
+    <gradient
+        android:angle="135"
+        android:endColor="#80222222"
+        android:startColor="#80444444"
+        android:type="linear" />
+</shape>
+
+Path: C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\drawable\widget_preview.xml
+Content:
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <solid android:color="#80333333" /> <!-- 80 prefix adds 50% transparency -->
+    <corners android:radius="12dp" />
+    <!-- Removed the stroke/border element -->
+    <gradient
+        android:angle="135"
+        android:endColor="#80222222"
+        android:startColor="#80444444"
+        android:type="linear" />
+</shape>
+
+Path: C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\layout\rates_widget.xml
+Content:
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout 
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/root_layout"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/widget_background_improved"
+    android:padding="6dp">
+
+    <TextView
+        android:id="@+id/widget_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:text="GC Jewellers"
+        android:textColor="@android:color/white"
+        android:textStyle="bold"
+        android:textSize="14sp" />
+
+    <TextView
+        android:id="@+id/last_updated"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_toStartOf="@id/refresh_button"
+        android:layout_toLeftOf="@id/refresh_button"
+        android:layout_toEndOf="@id/widget_title"
+        android:layout_toRightOf="@id/widget_title"
+        android:gravity="end"
+        android:text="--:--"
+        android:textColor="@android:color/white"
+        android:textSize="13sp" />
+
+    <ImageButton
+        android:id="@+id/refresh_button"
+        android:layout_width="22dp"
+        android:layout_height="22dp"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"
+        android:background="@android:color/transparent"
+        android:src="@drawable/ic_refresh" />
+
+    <LinearLayout
+        android:id="@+id/rates_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/widget_title"
+        android:layout_marginTop="2dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <!-- Gold section -->
+        <LinearLayout
+            android:id="@+id/gold_container"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <TextView
+                android:id="@+id/gold_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="GOLD"
+                android:textColor="#FFD700"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/gold_rate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="₹0000"
+                android:textColor="#FFD700"
+                android:textStyle="bold"
+                android:textSize="22sp"
+                android:layout_marginTop="1dp" />
+        </LinearLayout>
+
+        <!-- Silver section -->
+        <LinearLayout
+            android:id="@+id/silver_container"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <TextView
+                android:id="@+id/silver_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="SILVER"
+                android:textColor="#C0C0C0"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/silver_rate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="₹0000"
+                android:textColor="#C0C0C0"
+                android:textStyle="bold"
+                android:textSize="22sp"
+                android:layout_marginTop="1dp" />
+        </LinearLayout>
+    </LinearLayout>
+</RelativeLayout>
+
+
+Path: C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\xml\rates_widget_info.xml
+Content:
+<?xml version="1.0" encoding="utf-8"?>
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:initialLayout="@layout/rates_widget"
+    android:minWidth="180dp"
+    android:minHeight="40dp"
+    android:updatePeriodMillis="0"
+    android:resizeMode="horizontal|vertical"
+    android:widgetCategory="home_screen">
+</appwidget-provider>
+
+Path: C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\java\com\gcjewellers\rateswidget\RatesUpdateWorker.java
+Content:
+package com.gcjewellers.rateswidget;
+
+import android.content.Context;
+import android.content.Intent;
+
+import androidx.annotation.NonNull;
+import androidx.work.Worker;
+import androidx.work.WorkerParameters;
+
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+
+public class RatesUpdateWorker extends Worker {
+    public RatesUpdateWorker(@NonNull Context context, @NonNull WorkerParameters params) {
+        super(context, params);
+    }
+
+    @NonNull
+    @Override
+    public Result doWork() {
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (currentUser != null) {
+            Intent intent = new Intent(getApplicationContext(), RatesWidgetProvider.class);
+            intent.setAction("com.gcjewellers.rateswidget.ACTION_REFRESH");
+            getApplicationContext().sendBroadcast(intent);
+        }
+        return Result.success();
+    }
+}
+
+
+Path: C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\java\com\gcjewellers\rateswidget\MainActivity.java
+Content:
+package com.gcjewellers.rateswidget;
+
+import android.app.Activity;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.net.Uri;
+import android.os.Build;
+import android.os.Bundle;
+import android.os.PowerManager;
+import android.provider.Settings;
+import android.util.Log;
+import android.widget.ImageView;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.switchmaterial.SwitchMaterial;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.squareup.picasso.Callback;
+import com.squareup.picasso.Picasso;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+
+public class MainActivity extends Activity {
+    private static final String TAG = "MainActivity";
+
+    private SwitchMaterial batteryOptSwitch;
+    private SwitchMaterial widgetRefreshSwitch;
+    private MaterialButton logoutButton;
+    private TextView userName;
+    private TextView userEmail;
+    private ImageView userProfileImage;
+    private TextView goldRateText;
+    private TextView silverPriceText;
+    private TextView dateTimeText;
+    private TextView ratesUpdatedTimeText;
+
+    private FirebaseAuth mAuth;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        
+        try {
+            setContentView(R.layout.activity_main);
+
+            // Initialize Firebase Auth
+            mAuth = FirebaseAuth.getInstance();
+            FirebaseUser currentUser = mAuth.getCurrentUser();
+
+            // Verify user is logged in
+            if (currentUser == null) {
+                Log.d(TAG, "No user logged in, redirecting to SignInActivity");
+                Intent intent = new Intent(this, SignInActivity.class);
+                startActivity(intent);
+                finish();
+                return;
+            }
+
+            // Initialize views
+            initializeViews();
+
+            // Setup current date and time
+            setupDateAndTime();
+
+            // Setup user profile
+            setupUserProfile(currentUser);
+
+            // Setup battery optimization switch
+            setupBatteryOptimizationSwitch();
+
+            // Setup widget refresh switch
+            setupWidgetRefreshSwitch();
+
+            // Setup logout button
+            setupLogoutButton();
+
+            // Fetch and display current rates
+            fetchCurrentRates();
+
+            // Schedule widget updates to ensure widgets stay current
+            WidgetUpdateService.scheduleNextUpdate(this);
+
+        } catch (Exception e) {
+            Log.e(TAG, "Critical error in MainActivity onCreate", e);
+            Toast.makeText(this, "An error occurred. Please restart the app.", Toast.LENGTH_LONG).show();
+            
+            // Force logout and redirect to sign-in
+            if (mAuth != null) {
+                mAuth.signOut();
+            }
+            Intent intent = new Intent(this, SignInActivity.class);
+            startActivity(intent);
+            finish();
+        }
+    }
+
+    private void initializeViews() {
+        batteryOptSwitch = findViewById(R.id.battery_optimization_switch);
+        widgetRefreshSwitch = findViewById(R.id.widget_refresh_switch);
+        logoutButton = findViewById(R.id.logout_button);
+        
+        userName = findViewById(R.id.user_name);
+        userEmail = findViewById(R.id.user_email);
+        userProfileImage = findViewById(R.id.user_profile_image);
+        
+        // Date and rates views
+        dateTimeText = findViewById(R.id.date_time_text);
+        ratesUpdatedTimeText = findViewById(R.id.rates_updated_time);
+        
+        // Rates views
+        goldRateText = findViewById(R.id.gold_rate);
+        silverPriceText = findViewById(R.id.silver_price);
+    }
+
+    private void setupDateAndTime() {
+        // Get current date and time
+        SimpleDateFormat dateFormat = new SimpleDateFormat("EEEE, MMMM d, yyyy | hh:mm a", Locale.getDefault());
+        String currentDateTime = dateFormat.format(new Date());
+        
+        // Set date and time in the TextView
+        dateTimeText.setText(currentDateTime);
+    }
+
+    private void setupUserProfile(FirebaseUser user) {
+        if (user != null) {
+            // Set user name
+            String displayName = user.getDisplayName() != null ? user.getDisplayName() : "User";
+            userName.setText(displayName);
+
+            // Set user email
+            String email = user.getEmail() != null ? user.getEmail() : "No email";
+            userEmail.setText(email);
+
+            // Handle profile image
+            if (user.getPhotoUrl() != null) {
+                // Attempt to load photo from Google account
+                try {
+                    Picasso.get()
+                        .load(user.getPhotoUrl())
+                        .placeholder(R.drawable.ic_default_profile)
+                        .error(R.drawable.ic_default_profile)
+                        .into(userProfileImage, new Callback() {
+                            @Override
+                            public void onSuccess() {
+                                Log.d(TAG, "Profile image loaded successfully");
+                            }
+
+                            @Override
+                            public void onError(Exception e) {
+                                Log.e(TAG, "Error loading profile image", e);
+                                // Fallback to generated profile image
+                                generateProfileImage(displayName);
+                            }
+                        });
+                } catch (Exception e) {
+                    Log.e(TAG, "Exception loading profile image", e);
+                    // Fallback to generated profile image
+                    generateProfileImage(displayName);
+                }
+            } else {
+                // No photo URL, generate profile image
+                generateProfileImage(displayName);
+            }
+        }
+    }
+
+    private void generateProfileImage(String displayName) {
+        try {
+            // Ensure non-zero dimensions
+            int width = userProfileImage.getWidth();
+            int height = userProfileImage.getHeight();
+            
+            if (width <= 0) width = 100;
+            if (height <= 0) height = 100;
+
+            Bitmap profileBitmap = ProfileImageGenerator.generateCircularProfileImage(
+                    displayName,
+                    width,
+                    height
+            );
+            userProfileImage.setImageBitmap(profileBitmap);
+        } catch (Exception e) {
+            Log.e(TAG, "Error generating profile image", e);
+            // Fallback to default drawable
+            userProfileImage.setImageResource(R.drawable.ic_default_profile);
+        }
+    }
+
+    private void setupBatteryOptimizationSwitch() {
+        // Check current battery optimization status
+        boolean isIgnoringBatteryOptimizations = isIgnoringBatteryOptimization();
+        batteryOptSwitch.setChecked(isIgnoringBatteryOptimizations);
+
+        batteryOptSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (isChecked) {
+                // Request to disable battery optimization
+                requestBatteryOptimizationExemption();
+            } else {
+                // Enable battery optimization
+                enableBatteryOptimization();
+            }
+        });
+    }
+
+    private void setupWidgetRefreshSwitch() {
+        // Check current auto-refresh state from RatesWidgetProvider preferences
+        boolean isAutoRefreshEnabled = RatesWidgetProvider.isAutoRefreshEnabled(this);
+        widgetRefreshSwitch.setChecked(isAutoRefreshEnabled);
+
+        widgetRefreshSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            // Send broadcast to widget provider to start/stop updates
+            Intent intent = new Intent(this, RatesWidgetProvider.class);
+            intent.setAction(isChecked
+                    ? RatesWidgetProvider.ACTION_START_UPDATES
+                    : RatesWidgetProvider.ACTION_STOP_UPDATES);
+            
+            Log.d(TAG, "Sending " + intent.getAction() + " broadcast");
+            sendBroadcast(intent);
+            
+            // Show confirmation toast
+            Toast.makeText(this, 
+                    isChecked ? "Widget auto-refresh enabled" : "Widget auto-refresh disabled", 
+                    Toast.LENGTH_SHORT).show();
+        });
+    }
+
+    private void setupLogoutButton() {
+        logoutButton.setOnClickListener(v -> logout());
+    }
+
+    private void fetchCurrentRates() {
+        // Show loading state
+        goldRateText.setText("Loading...");
+        silverPriceText.setText("Loading...");
+        
+        // Use the RatesFetcher utility
+        RatesFetcher.fetchRates(this, new RatesFetcher.RatesFetchListener() {
+            @Override
+            public void onRatesFetched(String goldRate, String silverRate, String lastUpdated) {
+                // Update the UI with fetched rates
+                goldRateText.setText("₹" + goldRate);
+                silverPriceText.setText("₹" + silverRate);
+                
+                // Update the rates updated time
+                ratesUpdatedTimeText.setText("Updated at " + lastUpdated);
+            }
+            
+            @Override
+            public void onError(String errorMessage) {
+                // Handle error
+                goldRateText.setText("Error");
+                silverPriceText.setText("Check connection");
+                ratesUpdatedTimeText.setText("Update Failed");
+                Toast.makeText(MainActivity.this, errorMessage, Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private boolean isIgnoringBatteryOptimization() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
+            return powerManager.isIgnoringBatteryOptimizations(getPackageName());
+        }
+        return true;
+    }
+
+    private void requestBatteryOptimizationExemption() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            Intent intent = new Intent();
+            intent.setAction(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+            intent.setData(Uri.parse("package:" + getPackageName()));
+            startActivity(intent);
+        }
+    }
+
+    private void enableBatteryOptimization() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            Intent intent = new Intent();
+            intent.setAction(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
+            startActivity(intent);
+        }
+    }
+
+    private void logout() {
+        // Sign out from Firebase
+        mAuth.signOut();
+
+        // Sign out from GoogleSignIn as well
+        try {
+            GoogleSignInClient googleSignInClient = GoogleSignIn.getClient(this,
+                    new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                            .requestIdToken(getString(R.string.default_web_client_id))
+                            .requestEmail()
+                            .build());
+
+            googleSignInClient.signOut().addOnCompleteListener(this, task -> {
+                // Return to the SignInActivity with flag to prevent auto-login
+                Intent intent = new Intent(MainActivity.this, SignInActivity.class);
+                intent.putExtra("fromLogout", true);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
+                finish();
+            });
+        } catch (Exception e) {
+            // Fallback if there's any issue with Google Sign-out
+            Intent intent = new Intent(MainActivity.this, SignInActivity.class);
+            intent.putExtra("fromLogout", true);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
+            finish();
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Recheck battery optimization status when returning to the activity
+        if (batteryOptSwitch != null) {
+            batteryOptSwitch.setChecked(isIgnoringBatteryOptimization());
+        }
+        
+        // Refresh date and time
+        setupDateAndTime();
+        
+        // Refresh rates when returning to the activity
+        fetchCurrentRates();
+    }
+}
+
+Path: C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\AndroidManifest.xml
+Content:
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.Rateswidget">
+
+        <activity
+            android:name=".SignInActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true" />
+
+        <activity
+            android:name=".CalculatorActivity"
+            android:exported="false" />
+
+        <!-- New Widget Configuration Activity -->
+        <activity
+            android:name=".WidgetConfigureActivity"
+            android:theme="@style/Theme.Rateswidget"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+            </intent-filter>
+        </activity>
+
+        <receiver
+            android:name=".BootCompletedReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
+        <service
+            android:name=".WidgetUpdateService"
+            android:enabled="true"
+            android:exported="false"
+            android:permission="android.permission.BIND_JOB_SERVICE" />
+
+        <receiver
+            android:name=".RatesWidgetProvider"
+            android:exported="true">
+            <intent-filter>
+                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                 <action android:name="com.gcjewellers.rateswidget.ACTION_REFRESH" />
+            </intent-filter>
+              <meta-data
+                  android:name="android.appwidget.provider"
+                  android:resource="@xml/rates_widget_info" />
+            </receiver>
+
+    </application>
+</manifest>
+
+
