@@ -53,7 +53,7 @@ Content:
             android:exported="true">
             <intent-filter>
                  <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-                 <action android:name="com.example.rateswidget.ACTION_REFRESH" />
+                 <action android:name="com.gcjewellers.rateswidget.ACTION_REFRESH" />
             </intent-filter>
               <meta-data
                   android:name="android.appwidget.provider"
@@ -63,9 +63,9 @@ Content:
     </application>
 </manifest>
 
-Path: C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\java\com\example\rateswidget\BootCompletedReceiver.java
+Path: C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\java\com\gcjewellers\rateswidget\BootCompletedReceiver.java
 Content:
-package com.example.rateswidget;
+package com.gcjewellers.rateswidget;
 
 import android.appwidget.AppWidgetManager;
 import android.content.BroadcastReceiver;
@@ -103,9 +103,9 @@ public class BootCompletedReceiver extends BroadcastReceiver {
     }
 }
 
-Path: C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\java\com\example\rateswidget\MainActivity.java
+Path: C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\java\com\gcjewellers\rateswidget\MainActivity.java
 Content:
-package com.example.rateswidget;
+package com.gcjewellers.rateswidget;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -127,6 +127,7 @@ import com.google.android.material.button.MaterialButton;
 import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 
 import java.text.SimpleDateFormat;
@@ -134,11 +135,11 @@ import java.util.Date;
 import java.util.Locale;
 
 public class MainActivity extends Activity {
+    private static final String TAG = "MainActivity";
 
     private SwitchMaterial batteryOptSwitch;
     private SwitchMaterial widgetRefreshSwitch;
     private MaterialButton logoutButton;
-    private MaterialButton calculatorButton;
     private TextView userName;
     private TextView userEmail;
     private ImageView userProfileImage;
@@ -152,50 +153,71 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        
+        try {
+            setContentView(R.layout.activity_main);
 
-        // Initialize Firebase Auth
-        mAuth = FirebaseAuth.getInstance();
-        FirebaseUser currentUser = mAuth.getCurrentUser();
+            // Initialize Firebase Auth
+            mAuth = FirebaseAuth.getInstance();
+            FirebaseUser currentUser = mAuth.getCurrentUser();
 
-        // Initialize views
-        initializeViews();
+            // Verify user is logged in
+            if (currentUser == null) {
+                Log.d(TAG, "No user logged in, redirecting to SignInActivity");
+                Intent intent = new Intent(this, SignInActivity.class);
+                startActivity(intent);
+                finish();
+                return;
+            }
 
-        // Setup current date and time
-        setupDateAndTime();
+            // Initialize views
+            initializeViews();
 
-        // Setup user profile
-        setupUserProfile(currentUser);
+            // Setup current date and time
+            setupDateAndTime();
 
-        // Setup battery optimization switch
-        setupBatteryOptimizationSwitch();
+            // Setup user profile
+            setupUserProfile(currentUser);
 
-        // Setup widget refresh switch
-        setupWidgetRefreshSwitch();
+            // Setup battery optimization switch
+            setupBatteryOptimizationSwitch();
 
-        // Setup logout button
-        setupLogoutButton();
+            // Setup widget refresh switch
+            setupWidgetRefreshSwitch();
 
-        // Setup calculator button
-        setupCalculatorButton();
+            // Setup logout button
+            setupLogoutButton();
 
-        // Fetch and display current rates
-        fetchCurrentRates();
+            // Fetch and display current rates
+            fetchCurrentRates();
 
-        // Schedule widget updates to ensure widgets stay current
-        WidgetUpdateService.scheduleNextUpdate(this);
+            // Schedule widget updates to ensure widgets stay current
+            WidgetUpdateService.scheduleNextUpdate(this);
+
+        } catch (Exception e) {
+            Log.e(TAG, "Critical error in MainActivity onCreate", e);
+            Toast.makeText(this, "An error occurred. Please restart the app.", Toast.LENGTH_LONG).show();
+            
+            // Force logout and redirect to sign-in
+            if (mAuth != null) {
+                mAuth.signOut();
+            }
+            Intent intent = new Intent(this, SignInActivity.class);
+            startActivity(intent);
+            finish();
+        }
     }
 
     private void initializeViews() {
         batteryOptSwitch = findViewById(R.id.battery_optimization_switch);
         widgetRefreshSwitch = findViewById(R.id.widget_refresh_switch);
         logoutButton = findViewById(R.id.logout_button);
-        calculatorButton = findViewById(R.id.calculator_button);
+        
         userName = findViewById(R.id.user_name);
         userEmail = findViewById(R.id.user_email);
         userProfileImage = findViewById(R.id.user_profile_image);
         
-        // New views for date and rates update time
+        // Date and rates views
         dateTimeText = findViewById(R.id.date_time_text);
         ratesUpdatedTimeText = findViewById(R.id.rates_updated_time);
         
@@ -223,23 +245,58 @@ public class MainActivity extends Activity {
             String email = user.getEmail() != null ? user.getEmail() : "No email";
             userEmail.setText(email);
 
-            // Generate profile image from name or use photo URL
+            // Handle profile image
             if (user.getPhotoUrl() != null) {
-                // Use Firebase photo URL if available
-                Picasso.get()
+                // Attempt to load photo from Google account
+                try {
+                    Picasso.get()
                         .load(user.getPhotoUrl())
                         .placeholder(R.drawable.ic_default_profile)
                         .error(R.drawable.ic_default_profile)
-                        .into(userProfileImage);
+                        .into(userProfileImage, new Callback() {
+                            @Override
+                            public void onSuccess() {
+                                Log.d(TAG, "Profile image loaded successfully");
+                            }
+
+                            @Override
+                            public void onError(Exception e) {
+                                Log.e(TAG, "Error loading profile image", e);
+                                // Fallback to generated profile image
+                                generateProfileImage(displayName);
+                            }
+                        });
+                } catch (Exception e) {
+                    Log.e(TAG, "Exception loading profile image", e);
+                    // Fallback to generated profile image
+                    generateProfileImage(displayName);
+                }
             } else {
-                // Generate profile image from name
-                Bitmap profileBitmap = ProfileImageGenerator.generateCircularProfileImage(
-                        displayName,
-                        userProfileImage.getWidth(),
-                        userProfileImage.getHeight()
-                );
-                userProfileImage.setImageBitmap(profileBitmap);
+                // No photo URL, generate profile image
+                generateProfileImage(displayName);
             }
+        }
+    }
+
+    private void generateProfileImage(String displayName) {
+        try {
+            // Ensure non-zero dimensions
+            int width = userProfileImage.getWidth();
+            int height = userProfileImage.getHeight();
+            
+            if (width <= 0) width = 100;
+            if (height <= 0) height = 100;
+
+            Bitmap profileBitmap = ProfileImageGenerator.generateCircularProfileImage(
+                    displayName,
+                    width,
+                    height
+            );
+            userProfileImage.setImageBitmap(profileBitmap);
+        } catch (Exception e) {
+            Log.e(TAG, "Error generating profile image", e);
+            // Fallback to default drawable
+            userProfileImage.setImageResource(R.drawable.ic_default_profile);
         }
     }
 
@@ -271,7 +328,7 @@ public class MainActivity extends Activity {
                     ? RatesWidgetProvider.ACTION_START_UPDATES
                     : RatesWidgetProvider.ACTION_STOP_UPDATES);
             
-            Log.d("MainActivity", "Sending " + intent.getAction() + " broadcast");
+            Log.d(TAG, "Sending " + intent.getAction() + " broadcast");
             sendBroadcast(intent);
             
             // Show confirmation toast
@@ -283,13 +340,6 @@ public class MainActivity extends Activity {
 
     private void setupLogoutButton() {
         logoutButton.setOnClickListener(v -> logout());
-    }
-
-    private void setupCalculatorButton() {
-        calculatorButton.setOnClickListener(v -> {
-            Intent intent = new Intent(MainActivity.this, CalculatorActivity.class);
-            startActivity(intent);
-        });
     }
 
     private void fetchCurrentRates() {
@@ -391,9 +441,9 @@ public class MainActivity extends Activity {
     }
 }
 
-Path: C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\java\com\example\rateswidget\RatesFetchTask.java
+Path: C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\java\com\gcjewellers\rateswidget\RatesFetchTask.java
 Content:
-package com.example.rateswidget;
+package com.gcjewellers.rateswidget;
 
 import android.appwidget.AppWidgetManager;
 import android.content.Context;
@@ -554,9 +604,9 @@ public class RatesFetchTask extends AsyncTask<Void, Void, String[]> {
     }
 }
 
-Path: C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\java\com\example\rateswidget\RatesWidgetProvider.java
+Path: C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\java\com\gcjewellers\rateswidget\RatesWidgetProvider.java
 Content:
-package com.example.rateswidget;
+package com.gcjewellers.rateswidget;
 
 import android.app.AlarmManager;
 import android.app.PendingIntent;
@@ -583,15 +633,15 @@ import java.util.concurrent.TimeUnit;
 
 public class RatesWidgetProvider extends AppWidgetProvider {
     private static final String TAG = "RatesWidgetProvider";
-    private static final String ACTION_REFRESH = "com.example.rateswidget.ACTION_REFRESH";
+    private static final String ACTION_REFRESH = "com.gcjewellers.rateswidget.ACTION_REFRESH";
     private static final int REFRESH_INTERVAL_SECONDS = 600; // Changed from 10 to 600 (10 minutes)
     private static ScheduledExecutorService scheduler;
     
     // Add constants for preferences and actions
-    public static final String PREFS_NAME = "com.example.rateswidget.preferences";
+    public static final String PREFS_NAME = "com.gcjewellers.rateswidget.preferences";
     public static final String PREF_AUTO_REFRESH_ENABLED = "auto_refresh_enabled";
-    public static final String ACTION_START_UPDATES = "com.example.rateswidget.ACTION_START_UPDATES";
-    public static final String ACTION_STOP_UPDATES = "com.example.rateswidget.ACTION_STOP_UPDATES";
+    public static final String ACTION_START_UPDATES = "com.gcjewellers.rateswidget.ACTION_START_UPDATES";
+    public static final String ACTION_STOP_UPDATES = "com.gcjewellers.rateswidget.ACTION_STOP_UPDATES";
 
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
@@ -660,25 +710,41 @@ public class RatesWidgetProvider extends AppWidgetProvider {
     private void updateAppWidget(Context context, AppWidgetManager appWidgetManager, int appWidgetId) {
         Log.d(TAG, "Updating widget ID: " + appWidgetId);
         
-        // Get the widget size
-        Bundle options = appWidgetManager.getAppWidgetOptions(appWidgetId);
-        int minWidth = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 400);
+  // Get the widget size
+Bundle options = appWidgetManager.getAppWidgetOptions(appWidgetId);
+int minWidth = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 400);
+int minHeight = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 100);
+
+// Determine widget layout based on width, with fallback for height
+RemoteViews views;
+
+// First determine by width
+if (minWidth <= 220) {
+    // 3x widget
+    views = new RemoteViews(context.getPackageName(), R.layout.rates_widget_3x1);
+} else if (minWidth <= 250) {
+    // 4x widget
+    views = new RemoteViews(context.getPackageName(), R.layout.rates_widget_4x1);
+} else if (minWidth <= 350) {
+    // 5x widget
+    views = new RemoteViews(context.getPackageName(), R.layout.rates_widget_5x1);
+} else {
+    // Wide widget
+    views = new RemoteViews(context.getPackageName(), R.layout.rates_widget);
+}
+
+// Now apply height-specific adjustments if needed
+if (minHeight > 100) {
+    // For taller widgets, customize existing view with height-specific changes
+    views.setTextViewTextSize(R.id.gold_rate, TypedValue.COMPLEX_UNIT_SP, 26);
+    views.setTextViewTextSize(R.id.silver_rate, TypedValue.COMPLEX_UNIT_SP, 26);
+    
+    // Only try to modify additional_info for layouts that would have it
+    if (minWidth > 350 && minHeight > 200) {
+        // This would be for your wide_x3 layout only
         
-        // Determine widget layout based primarily on width
-        RemoteViews views;
-        if (minWidth <= 220) {
-            // 3x1 widget (smallest)
-            views = new RemoteViews(context.getPackageName(), R.layout.rates_widget_3x1);
-        } else if (minWidth <= 250) {
-            // 4x1 widget
-            views = new RemoteViews(context.getPackageName(), R.layout.rates_widget_4x1);
-        } else if (minWidth <= 350) {
-            // 5x1 widget
-            views = new RemoteViews(context.getPackageName(), R.layout.rates_widget_5x1);
-        } else {
-            // Wide widget
-            views = new RemoteViews(context.getPackageName(), R.layout.rates_widget);
-        }
+    }
+}
 
         // Check if user is authenticated
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
@@ -801,9 +867,9 @@ public class RatesWidgetProvider extends AppWidgetProvider {
     }
 }
 
-Path: C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\java\com\example\rateswidget\SignInActivity.java
+Path: C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\java\com\gcjewellers\rateswidget\SignInActivity.java
 Content:
-package com.example.rateswidget;
+package com.gcjewellers.rateswidget;
 
 import android.appwidget.AppWidgetManager;
 import android.content.ComponentName;
@@ -812,6 +878,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
@@ -820,19 +887,27 @@ import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.FirebaseNetworkException;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 public class SignInActivity extends AppCompatActivity {
     private static final String TAG = "SignInActivity";
     private static final int RC_SIGN_IN = 9001;
+
     private GoogleSignInClient mGoogleSignInClient;
     private FirebaseAuth mAuth;
     private FirebaseFirestore firestore;
+    private SignInButton signInButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -852,18 +927,22 @@ public class SignInActivity extends AppCompatActivity {
         mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
 
         // Setup Sign In Button
-        SignInButton signInButton = findViewById(R.id.sign_in_button);
-        signInButton.setOnClickListener(view -> signIn());
+        signInButton = findViewById(R.id.sign_in_button);
+        signInButton.setSize(SignInButton.SIZE_STANDARD);
+        signInButton.setOnClickListener(view -> {
+            // Disable button during sign-in process to prevent multiple clicks
+            signInButton.setEnabled(false);
+            signIn();
+        });
     }
 
     @Override
     public void onStart() {
         super.onStart();
+        
         // Check if we're coming from a logout
         if (getIntent().getBooleanExtra("fromLogout", false)) {
             Log.d(TAG, "User logged out, requiring manual sign-in");
-            
-            // Clear widget when logged out
             clearWidget();
             return;
         }
@@ -871,100 +950,87 @@ public class SignInActivity extends AppCompatActivity {
         // Check if user is already signed in
         FirebaseUser currentUser = mAuth.getCurrentUser();
         if (currentUser != null) {
+            // Attempt to check user authorization
             checkUserAuthorization(currentUser);
         }
     }
 
-    private void clearWidget() {
-        AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(this);
-        ComponentName thisWidget = new ComponentName(this, RatesWidgetProvider.class);
-        int[] appWidgetIds = appWidgetManager.getAppWidgetIds(thisWidget);
-
-        // Trigger update for all widgets to show sign-in message
-        Intent updateIntent = new Intent(this, RatesWidgetProvider.class);
-        updateIntent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
-        updateIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, appWidgetIds);
-        sendBroadcast(updateIntent);
-    }
-
     private void signIn() {
-        Intent signInIntent = mGoogleSignInClient.getSignInIntent();
-        startActivityForResult(signInIntent, RC_SIGN_IN);
+        // Clear any previous sign-in attempts
+        mGoogleSignInClient.signOut().addOnCompleteListener(this, new OnCompleteListener<Void>() {
+            @Override
+            public void onComplete(@NonNull Task<Void> task) {
+                // Launch the Google Sign-In intent
+                Intent signInIntent = mGoogleSignInClient.getSignInIntent();
+                startActivityForResult(signInIntent, RC_SIGN_IN);
+            }
+        });
     }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
+        // Re-enable sign in button
+        signInButton.setEnabled(true);
+
+        // Result returned from launching the Intent from GoogleSignInClient.getSignInIntent(...);
         if (requestCode == RC_SIGN_IN) {
-            Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
             try {
                 // Google Sign In was successful, authenticate with Firebase
+                Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
                 GoogleSignInAccount account = task.getResult(ApiException.class);
+                
                 Log.d(TAG, "Google Sign-In successful, account: " + account.getEmail());
                 firebaseAuthWithGoogle(account.getIdToken());
             } catch (ApiException e) {
-                // Google Sign In failed
+                // Google Sign In failed, update UI appropriately
                 handleSignInError(e);
             }
         }
     }
 
-    private void handleSignInError(ApiException e) {
-        String errorMessage;
-        switch (e.getStatusCode()) {
-            case 12500: // SIGN_IN_CANCELLED
-                errorMessage = "Sign-in was cancelled";
-                break;
-            case 12501: // SIGN_IN_CURRENTLY_IN_PROGRESS
-                errorMessage = "Sign-in is already in progress";
-                break;
-            case 12502: // SIGN_IN_FAILED
-                errorMessage = "Sign-in failed";
-                break;
-            case 10: // DEVELOPER_ERROR
-                errorMessage = "Developer error: Check SHA-1 & package name in Firebase console";
-                break;
-            default:
-                errorMessage = "Error code: " + e.getStatusCode();
-        }
-        Log.e(TAG, "Google sign-in failed: " + errorMessage, e);
-        Toast.makeText(this, errorMessage, Toast.LENGTH_LONG).show();
-    }
-
     private void firebaseAuthWithGoogle(String idToken) {
+        // Show loading indicator or disable UI interactions
+        signInButton.setEnabled(false);
+
         AuthCredential credential = GoogleAuthProvider.getCredential(idToken, null);
         mAuth.signInWithCredential(credential)
             .addOnCompleteListener(this, task -> {
                 if (task.isSuccessful()) {
+                    // Sign in success, update UI with the signed-in user's information
                     FirebaseUser user = mAuth.getCurrentUser();
                     checkUserAuthorization(user);
                 } else {
-                    Log.e(TAG, "Firebase authentication failed", task.getException());
-                    Toast.makeText(this, "Authentication Failed.", Toast.LENGTH_SHORT).show();
+                    // If sign in fails, display a message to the user.
+                    handleAuthenticationFailure(task.getException());
                 }
             });
     }
 
     private void checkUserAuthorization(FirebaseUser user) {
         if (user == null) {
-            Toast.makeText(this, "No user found", Toast.LENGTH_SHORT).show();
+            Log.e(TAG, "No user found during authorization check");
+            showErrorAndSignOut("No user found");
             return;
         }
 
         String userEmail = user.getEmail();
         if (userEmail == null) {
-            Toast.makeText(this, "Email not available", Toast.LENGTH_SHORT).show();
+            Log.e(TAG, "User email is null during authorization check");
+            showErrorAndSignOut("Email not available");
             return;
         }
 
         Log.d(TAG, "Checking authorization for email: " + userEmail);
 
+        // Check authorization in Firestore
         firestore.collection("authorized_users")
             .document(userEmail)
             .get()
             .addOnSuccessListener(documentSnapshot -> {
                 Log.d(TAG, "Document exists: " + documentSnapshot.exists());
+                
                 if (documentSnapshot.exists()) {
                     Boolean isAuthorized = documentSnapshot.getBoolean("is_authorized");
                     Log.d(TAG, "is_authorized value: " + isAuthorized);
@@ -983,48 +1049,134 @@ public class SignInActivity extends AppCompatActivity {
             })
             .addOnFailureListener(e -> {
                 Log.e(TAG, "Error checking authorization", e);
-                Toast.makeText(this, "Error checking authorization", Toast.LENGTH_LONG).show();
-                handleUnauthorizedUser();
+                handleAuthorizationFailure(e);
             });
     }
 
     private void handleUnauthorizedUser() {
         // Sign out the user
+        signOutAndClearWidget("You are not authorized to access this app");
+    }
+
+    private void handleAuthenticationFailure(Exception exception) {
+        // Re-enable sign in button
+        signInButton.setEnabled(true);
+
+        if (exception != null) {
+            Log.e(TAG, "Authentication failed", exception);
+            
+            String errorMessage = "Authentication Failed: ";
+            if (exception instanceof FirebaseAuthInvalidCredentialsException) {
+                errorMessage += "Invalid credentials";
+            } else if (exception instanceof FirebaseNetworkException) {
+                errorMessage += "Network error";
+            } else {
+                errorMessage += exception.getMessage();
+            }
+            
+            Toast.makeText(this, errorMessage, Toast.LENGTH_LONG).show();
+        }
+        
+        // Ensure user is signed out
+        signOutAndClearWidget(null);
+    }
+
+    private void handleAuthorizationFailure(Exception e) {
+        // Handle Firestore authorization check failure
+        String errorMessage = "Error checking authorization: " + 
+            (e != null ? e.getMessage() : "Unknown error");
+        
+        Log.e(TAG, errorMessage, e);
+        Toast.makeText(this, errorMessage, Toast.LENGTH_LONG).show();
+        
+        // Sign out the user
+        signOutAndClearWidget(errorMessage);
+    }
+
+    private void signOutAndClearWidget(String message) {
+        // Sign out from Firebase
         mAuth.signOut();
         
+        // Sign out from Google Sign-In
         mGoogleSignInClient.signOut().addOnCompleteListener(this, task -> {
-            // Show unauthorized message
-            Toast.makeText(this, 
-                "You are not authorized to access this app", 
-                Toast.LENGTH_LONG).show();
-            
             // Clear widget
             clearWidget();
+            
+            // Show message if provided
+            if (message != null) {
+                Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+            }
+            
+            // Re-enable sign in button
+            signInButton.setEnabled(true);
         });
     }
 
+    private void clearWidget() {
+        // Update all app widgets to show sign-in message
+        AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(this);
+        ComponentName thisWidget = new ComponentName(this, RatesWidgetProvider.class);
+        int[] appWidgetIds = appWidgetManager.getAppWidgetIds(thisWidget);
+        
+        Intent updateIntent = new Intent(this, RatesWidgetProvider.class);
+        updateIntent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
+        updateIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, appWidgetIds);
+        sendBroadcast(updateIntent);
+    }
+    
     private void proceedToMainActivity() {
         // Update widgets to show rates
         AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(this);
         ComponentName thisWidget = new ComponentName(this, RatesWidgetProvider.class);
         int[] appWidgetIds = appWidgetManager.getAppWidgetIds(thisWidget);
-
-        // Trigger update for all widgets to fetch rates
+        
         Intent updateIntent = new Intent(this, RatesWidgetProvider.class);
         updateIntent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
         updateIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, appWidgetIds);
         sendBroadcast(updateIntent);
-
+    
         // Proceed to main activity
         Intent intent = new Intent(SignInActivity.this, MainActivity.class);
         startActivity(intent);
         finish();
     }
+
+    private void handleSignInError(ApiException e) {
+        // Re-enable sign in button
+        signInButton.setEnabled(true);
+    
+        String errorMessage;
+        switch (e.getStatusCode()) {
+            case 12500: // SIGN_IN_CANCELLED
+                errorMessage = "Sign-in was cancelled";
+                break;
+            case 12501: // SIGN_IN_CURRENTLY_IN_PROGRESS
+                errorMessage = "Sign-in is already in progress";
+                break;
+            case 12502: // SIGN_IN_FAILED
+                errorMessage = "Sign-in failed";
+                break;
+            case 10: // NETWORK_ERROR
+                errorMessage = "Network error during sign-in";
+                break;
+            default:
+                errorMessage = "Error code: " + e.getStatusCode();
+        }
+        
+        Log.e(TAG, "Google sign-in failed: " + errorMessage, e);
+        Toast.makeText(this, errorMessage, Toast.LENGTH_LONG).show();
+    }
+
+    private void showErrorAndSignOut(String message) {
+        Log.e(TAG, message);
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+        signOutAndClearWidget(message);
+    }
 }
 
-Path: C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\java\com\example\rateswidget\WidgetUpdateService.java
+Path: C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\java\com\gcjewellers\rateswidget\WidgetUpdateService.java
 Content:
-package com.example.rateswidget;
+package com.gcjewellers.rateswidget;
 
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
@@ -1126,68 +1278,292 @@ public class WidgetUpdateService extends JobService {
     }
 }
 
-Path: C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\layout\activity_sign_in.xml
+Path: C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\java\com\gcjewellers\rateswidget\RatesFetcher.java
+Content:
+package com.gcjewellers.rateswidget;
+
+import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
+import android.util.Log;
+import android.widget.Toast;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+/**
+ * Utility class for fetching gold and silver rates from the API
+ * Can be used from any activity or fragment in the app
+ */
+public class RatesFetcher {
+    private static final String TAG = "RatesFetcher";
+    private static final String API_URL = "https://bcast.jmdpatil.com:7768/VOTSBroadcastStreaming/Services/xml/GetLiveRateByTemplateID/jmd";
+    private static final int GOLD_ROW = 6;
+    private static final int SILVER_ROW = 5;
+    private static final int RATE_COLUMN = 4;
+    
+    /**
+     * Interface for callback when rates are fetched
+     */
+    public interface RatesFetchListener {
+        void onRatesFetched(String goldRate, String silverRate, String lastUpdated);
+        void onError(String errorMessage);
+    }
+    
+    /**
+     * Fetch rates from the API
+     * 
+     * @param context Context for showing Toast on error
+     * @param listener Callback for when rates are fetched
+     */
+    public static void fetchRates(final Context context, final RatesFetchListener listener) {
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        Handler handler = new Handler(Looper.getMainLooper());
+        
+        executor.execute(() -> {
+            String[] rates = new String[2]; // [gold, silver]
+            boolean hasError = false;
+            String errorMessage = "";
+            
+            try {
+                Log.d(TAG, "Making API request to: " + API_URL);
+                URL url = new URL(API_URL);
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestMethod("GET");
+                connection.setConnectTimeout(5000);
+                connection.setReadTimeout(5000);
+                
+                int responseCode = connection.getResponseCode();
+                Log.d(TAG, "API response code: " + responseCode);
+                
+                if (responseCode == HttpURLConnection.HTTP_OK) {
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                    String line;
+                    int currentRow = 0;
+                    
+                    while ((line = reader.readLine()) != null) {
+                        currentRow++;
+                        if (currentRow == GOLD_ROW || currentRow == SILVER_ROW) {
+                            String[] columns = line.split("\t");
+                            if (columns.length > RATE_COLUMN) {
+                                if (currentRow == GOLD_ROW) {
+                                    rates[0] = columns[RATE_COLUMN].trim();
+                                    Log.d(TAG, "Found gold rate: " + rates[0]);
+                                } else {
+                                    rates[1] = columns[RATE_COLUMN].trim();
+                                    Log.d(TAG, "Found silver rate: " + rates[1]);
+                                }
+                            }
+                        }
+                    }
+                    reader.close();
+                } else {
+                    hasError = true;
+                    errorMessage = "Server returned code: " + responseCode;
+                    Log.e(TAG, errorMessage);
+                }
+                connection.disconnect();
+            } catch (Exception e) {
+                hasError = true;
+                errorMessage = "Error: " + e.getMessage();
+                Log.e(TAG, "API request failed", e);
+            }
+            
+            // Get the current time for last updated
+            SimpleDateFormat dateFormat = new SimpleDateFormat("hh:mm a", Locale.getDefault());
+            String currentTime = dateFormat.format(new Date());
+            
+            // Final variables to use in lambda
+            final boolean finalHasError = hasError;
+            final String finalErrorMessage = errorMessage;
+            final String goldRate = rates[0] != null ? rates[0] : "N/A";
+            final String silverRate = rates[1] != null ? rates[1] : "N/A";
+            final String lastUpdated = currentTime;
+            
+            // Post result to main thread
+            handler.post(() -> {
+                if (finalHasError) {
+                    listener.onError(finalErrorMessage);
+                } else {
+                    listener.onRatesFetched(goldRate, silverRate, lastUpdated);
+                }
+            });
+        });
+    }
+}
+
+Path: C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\java\com\gcjewellers\rateswidget\ProfileImageGenerator.java
+Content:
+package com.gcjewellers.rateswidget;
+
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Rect;
+import android.graphics.Typeface;
+
+public class ProfileImageGenerator {
+    
+    public static Bitmap generateCircularProfileImage(String name, int width, int height) {
+        // Ensure non-zero dimensions
+        if (width <= 0) width = 100;
+        if (height <= 0) height = 100;
+        
+        // Create bitmap
+        Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
+        
+        // Background
+        Paint backgroundPaint = new Paint();
+        backgroundPaint.setStyle(Paint.Style.FILL);
+        backgroundPaint.setColor(generateColorFromName(name));
+        
+        // Draw circle
+        canvas.drawCircle(width / 2f, height / 2f, Math.min(width, height) / 2f, backgroundPaint);
+        
+        // Text
+        Paint textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        textPaint.setColor(Color.WHITE);
+        textPaint.setTextAlign(Paint.Align.CENTER);
+        textPaint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
+        
+        // Dynamically size text
+        textPaint.setTextSize(width * 0.5f);
+        
+        // Get initials
+        String initials = getInitials(name);
+        
+        // Center text
+        Rect textBounds = new Rect();
+        textPaint.getTextBounds(initials, 0, initials.length(), textBounds);
+        
+        canvas.drawText(
+            initials, 
+            width / 2f, 
+            height / 2f + textBounds.height() / 2f - textBounds.bottom, 
+            textPaint
+        );
+        
+        return bitmap;
+    }
+    
+    private static String getInitials(String name) {
+        if (name == null || name.trim().isEmpty()) {
+            return "?";
+        }
+        
+        String[] nameParts = name.trim().split("\\s+");
+        
+        if (nameParts.length == 1) {
+            return nameParts[0].substring(0, 1).toUpperCase();
+        }
+        
+        return (nameParts[0].substring(0, 1) + 
+                nameParts[nameParts.length - 1].substring(0, 1))
+                .toUpperCase();
+    }
+    
+    private static int generateColorFromName(String name) {
+        if (name == null || name.isEmpty()) {
+            return Color.GRAY;
+        }
+        
+        int[] goldenColors = {
+            Color.rgb(255, 215, 0),   // Gold
+            Color.rgb(218, 165, 32),  // Goldenrod
+            Color.rgb(238, 232, 170), // Pale Goldenrod
+            Color.rgb(189, 183, 107), // Dark Khaki
+            Color.rgb(240, 230, 140)  // Khaki
+        };
+        
+        return goldenColors[Math.abs(name.hashCode()) % goldenColors.length];
+    }
+}
+
+Path: C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\drawable\ic_app_logo.xml
 Content:
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@android:color/black"
-    android:padding="16dp">
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="100"
+    android:viewportHeight="100">
+    
+    <!-- Background circle -->
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M50,50 m-45,0 a45,45 0 1,0 90,0 a45,45 0 1,0 -90,0"/>
+    
+    <!-- Gold bar symbol -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M25,40 L75,40 L75,60 L25,60 Z"/>
+    
+    <!-- GC text -->
+    <path
+        android:fillColor="#000000"
+        android:pathData="M35,50 L40,50 Q45,45 50,50 Q55,55 60,50 L65,50 Q60,40 50,40 Q40,40 35,50 Z"/>
+</vector>
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:gravity="center"
-        android:layout_centerInParent="true">
+Path: C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\drawable\ic_default_profile.xml
+Content:
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="64dp"
+    android:height="64dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M12,2C6.48,2 2,6.48 2,12s4.48,10 10,10 10,-4.48 10,-10S17.52,2 12,2zM12,5c1.66,0 3,1.34 3,3s-1.34,3 -3,3 -3,-1.34 -3,-3 1.34,-3 3,-3zM12,19.2c-2.5,0 -4.71,-1.28 -6,-3.22 0.03,-1.99 4,-3.08 6,-3.08 1.99,0 5.97,1.09 6,3.08 -1.29,1.94 -3.5,3.22 -6,3.22z"/>
+</vector>
 
-        <ImageView
-            android:id="@+id/app_logo"
-            android:layout_width="200dp"
-            android:layout_height="200dp"
-            android:src="@drawable/gc_jewellers_logo"
-            android:contentDescription="GC Jewellers Logo" />
+Path: C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\drawable\ic_refresh.xml
+Content:
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24.0"
+    android:viewportHeight="24.0">
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M17.65,6.35C16.2,4.9 14.21,4 12,4c-4.42,0 -7.99,3.58 -7.99,8s3.57,8 7.99,8c3.73,0 6.84,-2.55 7.73,-6h-2.08c-0.82,2.33 -3.04,4 -5.65,4 -3.31,0 -6,-2.69 -6,-6s2.69,-6 6,-6c1.66,0 3.14,0.69 4.22,1.78L13,11h7V4l-2.35,2.35z"/>
+    <path
+        android:fillColor="#000000"
+        android:pathData="M17.65,6.35C16.2,4.9 14.21,4 12,4c-4.42,0 -7.99,3.58 -7.99,8s3.57,8 7.99,8c3.73,0 6.84,-2.55 7.73,-6h-2.08c-0.82,2.33 -3.04,4 -5.65,4 -3.31,0 -6,-2.69 -6,-6s2.69,-6 6,-6c1.66,0 3.14,0.69 4.22,1.78L13,11h7V4l-2.35,2.35z"
+        android:strokeWidth="0.5"
+        android:strokeColor="#000000"
+        android:strokeAlpha="0.5"
+        android:fillAlpha="0" />
+</vector>
 
-        <TextView
-            android:id="@+id/sign_in_title"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="GC Jewellers Rates"
-            android:textColor="@android:color/white"
-            android:textSize="28sp"
-            android:textStyle="bold" />
+Path: C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\drawable\rate_item_background.xml
+Content:
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <solid android:color="#F8F8F8" />
+    <corners android:radius="8dp" />
+    <stroke android:color="#E0E0E0" android:width="1dp" />
+</shape>
 
-        <TextView
-            android:id="@+id/sign_in_subtitle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="Sign in to access gold and silver rates"
-            android:textColor="@android:color/white"
-            android:textSize="16sp" />
-
-        <com.google.android.gms.common.SignInButton
-            android:id="@+id/sign_in_button"
-            android:layout_width="150dp"
-            android:layout_height="50dp"
-            android:layout_marginTop="32dp" />
-
-    </LinearLayout>
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="24dp"
-        android:gravity="center"
-        android:text="Add widget to your home screen after signing in\nto view real-time gold and silver rates"
-        android:textColor="#AAAAAA"
-        android:textSize="14sp" />
-
-</RelativeLayout>
+Path: C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\drawable\widget_background_improved.xml
+Content:
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <corners android:radius="16dp" />
+    <solid android:color="#99000000" />
+    <stroke
+        android:width="1dp"
+        android:color="#80FFFFFF" />
+</shape>
 
 Path: C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\drawable\ic_launcher_background.xml
 Content:
@@ -1348,6 +1724,69 @@ Content:
         android:type="linear" />
 </shape>
 
+Path: C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\layout\activity_sign_in.xml
+Content:
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/black"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:layout_centerInParent="true">
+
+        <ImageView
+            android:id="@+id/app_logo"
+            android:layout_width="200dp"
+            android:layout_height="200dp"
+            android:src="@drawable/gc_jewellers_logo"
+            android:contentDescription="GC Jewellers Logo" />
+
+        <TextView
+            android:id="@+id/sign_in_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="GC Jewellers Rates"
+            android:textColor="@android:color/white"
+            android:textSize="28sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/sign_in_subtitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Sign in to access gold and silver rates"
+            android:textColor="@android:color/white"
+            android:textSize="16sp" />
+
+        <com.google.android.gms.common.SignInButton
+            android:id="@+id/sign_in_button"
+            android:layout_width="150dp"
+            android:layout_height="50dp"
+            android:layout_marginTop="32dp" />
+
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="24dp"
+        android:gravity="center"
+        android:text="Add widget to your home screen after signing in\nto view real-time gold and silver rates"
+        android:textColor="#AAAAAA"
+        android:textSize="14sp" />
+
+</RelativeLayout>
+
 Path: C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\layout\activity_main.xml
 Content:
 <?xml version="1.0" encoding="utf-8"?>
@@ -1405,7 +1844,7 @@ Content:
                         android:id="@+id/user_email"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="johndoe@example.com"
+                        android:text="johndoe@gcjewellers.com"
                         android:textColor="?attr/colorOnBackground"
                         android:textSize="14sp" />
                 </LinearLayout>
@@ -1603,17 +2042,7 @@ Content:
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
-        <!-- Price Calculator Button -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/calculator_button"
-            style="@style/Widget.App.Button.Gold"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Price Calculator"
-            android:textAllCaps="false"
-            android:layout_marginBottom="16dp"
-            android:drawableStart="@android:drawable/ic_menu_add"
-            android:drawablePadding="8dp" />
+       
 
         <!-- Sign Out Button -->
         <com.google.android.material.button.MaterialButton
@@ -1744,6 +2173,523 @@ Content:
                 android:textStyle="bold"
                 android:textSize="22sp"
                 android:layout_marginTop="1dp" />
+        </LinearLayout>
+    </LinearLayout>
+</RelativeLayout>
+
+Path: C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\layout\rates_widget_3x1.xml
+Content:
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_background_improved"
+    android:padding="6dp">
+
+    <TextView
+        android:id="@+id/widget_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:text="GC Jewellers"
+        android:textColor="@android:color/white"
+        android:textStyle="bold"
+        android:textSize="14sp" />
+
+    <TextView
+        android:id="@+id/last_updated"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_toStartOf="@id/refresh_button"
+        android:layout_toEndOf="@id/widget_title"
+        android:gravity="end"
+        android:text="--:--"
+        android:textColor="@android:color/white"
+        android:textSize="13sp" />
+
+    <ImageButton
+        android:id="@+id/refresh_button"
+        android:layout_width="18dp"
+        android:layout_height="18dp"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentTop="true"
+        android:background="@android:color/transparent"
+        android:src="@drawable/ic_refresh" />
+
+    <LinearLayout
+        android:id="@+id/rates_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/widget_title"
+        android:layout_marginTop="2dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <!-- Gold section -->
+        <LinearLayout
+            android:id="@+id/gold_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <!-- Gold label -->
+            <TextView
+                android:id="@+id/gold_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="GOLD"
+                android:textColor="#FFD700"
+                android:textSize="12sp" />
+
+            <!-- Gold rate -->
+            <TextView
+                android:id="@+id/gold_rate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="₹0000"
+                android:textColor="#FFD700"
+                android:textStyle="bold"
+                android:textSize="22sp"
+                android:layout_marginTop="1dp" />
+        </LinearLayout>
+
+        <!-- Silver section (hidden by default) -->
+        <LinearLayout
+            android:id="@+id/silver_container"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:visibility="gone">
+        </LinearLayout>
+    </LinearLayout>
+</RelativeLayout>
+
+Path: C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\layout\rates_widget_4x1.xml
+Content:
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_background_improved"
+    android:padding="6dp">
+
+    <TextView
+        android:id="@+id/widget_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:text="GC Jewellers"
+        android:textColor="@android:color/white"
+        android:textStyle="bold"
+        android:textSize="14sp" />
+
+    <TextView
+        android:id="@+id/last_updated"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_toStartOf="@id/refresh_button"
+        android:layout_toEndOf="@id/widget_title"
+        android:gravity="end"
+        android:text="--:--"
+        android:textColor="@android:color/white"
+        android:textSize="13sp" />
+
+    <ImageButton
+        android:id="@+id/refresh_button"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentTop="true"
+        android:background="@android:color/transparent"
+        android:src="@drawable/ic_refresh" />
+
+    <LinearLayout
+        android:id="@+id/rates_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/widget_title"
+        android:layout_marginTop="2dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <!-- Gold section -->
+        <LinearLayout
+            android:id="@+id/gold_container"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <!-- Gold label -->
+            <TextView
+                android:id="@+id/gold_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="GOLD"
+                android:textColor="#FFD700"
+                android:textSize="12sp" />
+
+            <!-- Gold rate -->
+            <TextView
+                android:id="@+id/gold_rate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="₹0000"
+                android:textColor="#FFD700"
+                android:textStyle="bold"
+                android:textSize="22sp"
+                android:layout_marginTop="1dp" />
+        </LinearLayout>
+
+        <!-- Silver section -->
+        <LinearLayout
+            android:id="@+id/silver_container"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <!-- Silver label -->
+            <TextView
+                android:id="@+id/silver_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="SILVER"
+                android:textColor="#C0C0C0"
+                android:textSize="12sp" />
+
+            <!-- Silver rate -->
+            <TextView
+                android:id="@+id/silver_rate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="₹0000"
+                android:textColor="#C0C0C0"
+                android:textStyle="bold"
+                android:textSize="22sp"
+                android:layout_marginTop="1dp" />
+        </LinearLayout>
+    </LinearLayout>
+</RelativeLayout>
+
+Path: C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\layout\rates_widget_5x1.xml
+Content:
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_background_improved"
+    android:padding="6dp">
+
+    <TextView
+        android:id="@+id/widget_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:text="GC Jewellers"
+        android:textColor="@android:color/white"
+        android:textStyle="bold"
+        android:textSize="14sp" />
+
+    <TextView
+        android:id="@+id/last_updated"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_toStartOf="@id/refresh_button"
+        android:layout_toEndOf="@id/widget_title"
+        android:gravity="end"
+        android:text="--:--"
+        android:textColor="@android:color/white"
+        android:textSize="13sp" />
+
+    <ImageButton
+        android:id="@+id/refresh_button"
+        android:layout_width="22dp"
+        android:layout_height="22dp"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentTop="true"
+        android:background="@android:color/transparent"
+        android:src="@drawable/ic_refresh" />
+
+    <LinearLayout
+        android:id="@+id/rates_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/widget_title"
+        android:layout_marginTop="2dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <!-- Gold section -->
+        <LinearLayout
+            android:id="@+id/gold_container"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <!-- Gold label -->
+            <TextView
+                android:id="@+id/gold_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="GOLD"
+                android:textColor="#FFD700"
+                android:textSize="12sp" />
+
+            <!-- Gold rate -->
+            <TextView
+                android:id="@+id/gold_rate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="₹0000"
+                android:textColor="#FFD700"
+                android:textStyle="bold"
+                android:textSize="22sp"
+                android:layout_marginTop="1dp" />
+        </LinearLayout>
+
+        <!-- Silver section -->
+        <LinearLayout
+            android:id="@+id/silver_container"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <!-- Silver label -->
+            <TextView
+                android:id="@+id/silver_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="SILVER"
+                android:textColor="#C0C0C0"
+                android:textSize="12sp" />
+
+            <!-- Silver rate -->
+            <TextView
+                android:id="@+id/silver_rate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="₹0000"
+                android:textColor="#C0C0C0"
+                android:textStyle="bold"
+                android:textSize="22sp"
+                android:layout_marginTop="1dp" />
+        </LinearLayout>
+    </LinearLayout>
+</RelativeLayout>
+
+Path: C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\layout\rates_widget_extended.xml
+Content:
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_background_improved"
+    android:padding="8dp">
+
+    <TextView
+        android:id="@+id/widget_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:text="GC Jewellers"
+        android:textColor="@android:color/white"
+        android:textStyle="bold"
+        android:textSize="16sp" />
+
+    <TextView
+        android:id="@+id/last_updated"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="3dp"
+        android:layout_marginEnd="2dp"
+        android:layout_toStartOf="@id/refresh_button"
+        android:layout_toEndOf="@id/widget_title"
+        android:gravity="end"
+        android:text="Updated: --:--"
+        android:textColor="@android:color/white"
+        android:textSize="14sp" />
+
+    <ImageButton
+        android:id="@+id/refresh_button"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentTop="true"
+        android:background="@android:color/transparent"
+        android:src="@drawable/ic_refresh" />
+
+    <LinearLayout
+        android:id="@+id/rates_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/widget_title"
+        android:layout_marginTop="2dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <!-- Gold section -->
+        <LinearLayout
+            android:id="@+id/gold_container"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <!-- Gold label -->
+            <TextView
+                android:id="@+id/gold_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="GOLD 995"
+                android:textColor="#FFD700"
+                android:textSize="14sp" />
+
+            <!-- Gold rate -->
+            <TextView
+                android:id="@+id/gold_rate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="₹0000"
+                android:textColor="#FFD700"
+                android:textStyle="bold"
+                android:textSize="22sp"
+                android:layout_marginTop="2dp" />
+        </LinearLayout>
+
+        <!-- Silver section -->
+        <LinearLayout
+            android:id="@+id/silver_container"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <!-- Silver label -->
+            <TextView
+                android:id="@+id/silver_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="SILVER 999"
+                android:textColor="#C0C0C0"
+                android:textSize="14sp" />
+
+            <!-- Silver rate -->
+            <TextView
+                android:id="@+id/silver_rate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="₹0000"
+                android:textColor="#C0C0C0"
+                android:textStyle="bold"
+                android:textSize="22sp"
+                android:layout_marginTop="2dp" />
+        </LinearLayout>
+    </LinearLayout>
+</RelativeLayout>
+
+Path: C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\layout\rates_widget_small.xml
+Content:
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_background_improved"
+    android:padding="6dp">
+
+    <TextView
+        android:id="@+id/widget_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:text="GCJewellers"
+        android:textColor="@android:color/white"
+        android:textStyle="bold"
+        android:textSize="14sp" />
+
+    <TextView
+        android:id="@+id/last_updated"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_toStartOf="@id/refresh_button"
+        android:layout_toEndOf="@id/widget_title"
+        android:gravity="end"
+        android:text="--:--"
+        android:textColor="@android:color/white"
+        android:textSize="12sp" />
+
+    <ImageButton
+        android:id="@+id/refresh_button"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentTop="true"
+        android:background="@android:color/transparent"
+        android:src="@drawable/ic_refresh" />
+
+    <LinearLayout
+        android:id="@+id/rates_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/widget_title"
+        android:layout_marginTop="2dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <!-- Gold section -->
+        <LinearLayout
+            android:id="@+id/gold_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <!-- Gold label -->
+            <TextView
+                android:id="@+id/gold_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="GOLD"
+                android:textColor="#FFD700"
+                android:textSize="12sp" />
+
+            <!-- Gold rate -->
+            <TextView
+                android:id="@+id/gold_rate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="₹0000"
+                android:textColor="#FFD700"
+                android:textStyle="bold"
+                android:textSize="18sp"
+                android:layout_marginTop="2dp" />
+        </LinearLayout>
+
+        <!-- Silver section (hidden by default) -->
+        <LinearLayout
+            android:id="@+id/silver_container"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:visibility="gone">
         </LinearLayout>
     </LinearLayout>
 </RelativeLayout>
@@ -1940,11 +2886,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.rateswidget"
+    namespace = "com.gcjewellers.rateswidget"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.example.rateswidget"
+        applicationId = "com.gcjewellers.rateswidget"
         minSdk = 24
         targetSdk = 34
         versionCode = 1
@@ -1995,11 +2941,14 @@ dependencies {
     // Core Kotlin extensions
     implementation("androidx.core:core-ktx:1.9.0")
 
-       implementation("com.squareup.picasso:picasso:2.8")
+    implementation("com.squareup.picasso:picasso:2.8")
     implementation("de.hdodenhof:circleimageview:3.1.0")
 
-     implementation("org.jsoup:jsoup:1.15.3")
+    implementation("org.jsoup:jsoup:1.15.3")
     implementation("com.squareup.okhttp3:okhttp:4.10.0")
+
+    implementation ("androidx.work:work-runtime:2.9.0")
+
 }
 
 // Explicitly disable all test tasks
@@ -2016,7 +2965,7 @@ Path: C:\Users\Cshek\AndroidStudioProjects\rateswidget\build.gradle.kts
 Content:
 // Top-level build file
 plugins {
-    id("com.android.application") version "8.8.2" apply false
+    id("com.android.application") version "8.9.1" apply false
     id("org.jetbrains.kotlin.android") version "1.9.0" apply false
 }
 buildscript {
@@ -2025,7 +2974,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath("com.android.tools.build:gradle:8.8.2")
+        classpath("com.android.tools.build:gradle:8.9.1")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.0")
         classpath("com.google.gms:google-services:4.3.15")
     }
@@ -2051,204 +3000,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "rateswidget"
 include(":app")
-
-Path: C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\java\com\example\rateswidget\RatesFetcher.java
-Content:
-package com.example.rateswidget;
-
-import android.content.Context;
-import android.os.Handler;
-import android.os.Looper;
-import android.util.Log;
-import android.widget.Toast;
-
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
-/**
- * Utility class for fetching gold and silver rates from the API
- * Can be used from any activity or fragment in the app
- */
-public class RatesFetcher {
-    private static final String TAG = "RatesFetcher";
-    private static final String API_URL = "https://bcast.jmdpatil.com:7768/VOTSBroadcastStreaming/Services/xml/GetLiveRateByTemplateID/jmd";
-    private static final int GOLD_ROW = 6;
-    private static final int SILVER_ROW = 5;
-    private static final int RATE_COLUMN = 4;
-    
-    /**
-     * Interface for callback when rates are fetched
-     */
-    public interface RatesFetchListener {
-        void onRatesFetched(String goldRate, String silverRate, String lastUpdated);
-        void onError(String errorMessage);
-    }
-    
-    /**
-     * Fetch rates from the API
-     * 
-     * @param context Context for showing Toast on error
-     * @param listener Callback for when rates are fetched
-     */
-    public static void fetchRates(final Context context, final RatesFetchListener listener) {
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        Handler handler = new Handler(Looper.getMainLooper());
-        
-        executor.execute(() -> {
-            String[] rates = new String[2]; // [gold, silver]
-            boolean hasError = false;
-            String errorMessage = "";
-            
-            try {
-                Log.d(TAG, "Making API request to: " + API_URL);
-                URL url = new URL(API_URL);
-                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                connection.setRequestMethod("GET");
-                connection.setConnectTimeout(5000);
-                connection.setReadTimeout(5000);
-                
-                int responseCode = connection.getResponseCode();
-                Log.d(TAG, "API response code: " + responseCode);
-                
-                if (responseCode == HttpURLConnection.HTTP_OK) {
-                    BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-                    String line;
-                    int currentRow = 0;
-                    
-                    while ((line = reader.readLine()) != null) {
-                        currentRow++;
-                        if (currentRow == GOLD_ROW || currentRow == SILVER_ROW) {
-                            String[] columns = line.split("\t");
-                            if (columns.length > RATE_COLUMN) {
-                                if (currentRow == GOLD_ROW) {
-                                    rates[0] = columns[RATE_COLUMN].trim();
-                                    Log.d(TAG, "Found gold rate: " + rates[0]);
-                                } else {
-                                    rates[1] = columns[RATE_COLUMN].trim();
-                                    Log.d(TAG, "Found silver rate: " + rates[1]);
-                                }
-                            }
-                        }
-                    }
-                    reader.close();
-                } else {
-                    hasError = true;
-                    errorMessage = "Server returned code: " + responseCode;
-                    Log.e(TAG, errorMessage);
-                }
-                connection.disconnect();
-            } catch (Exception e) {
-                hasError = true;
-                errorMessage = "Error: " + e.getMessage();
-                Log.e(TAG, "API request failed", e);
-            }
-            
-            // Get the current time for last updated
-            SimpleDateFormat dateFormat = new SimpleDateFormat("hh:mm a", Locale.getDefault());
-            String currentTime = dateFormat.format(new Date());
-            
-            // Final variables to use in lambda
-            final boolean finalHasError = hasError;
-            final String finalErrorMessage = errorMessage;
-            final String goldRate = rates[0] != null ? rates[0] : "N/A";
-            final String silverRate = rates[1] != null ? rates[1] : "N/A";
-            final String lastUpdated = currentTime;
-            
-            // Post result to main thread
-            handler.post(() -> {
-                if (finalHasError) {
-                    listener.onError(finalErrorMessage);
-                } else {
-                    listener.onRatesFetched(goldRate, silverRate, lastUpdated);
-                }
-            });
-        });
-    }
-}
-
-Path: C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\java\com\example\rateswidget\ProfileImageGenerator.java
-Content:
-package com.example.rateswidget;
-
-import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint;
-import android.graphics.Rect;
-import android.graphics.Typeface;
-
-public class ProfileImageGenerator {
-    
-    public static Bitmap generateCircularProfileImage(String name, int width, int height) {
-        Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-        Canvas canvas = new Canvas(bitmap);
-        
-        Paint backgroundPaint = new Paint();
-        backgroundPaint.setStyle(Paint.Style.FILL);
-        backgroundPaint.setColor(generateColorFromName(name));
-        
-        canvas.drawCircle(width / 2f, height / 2f, width / 2f, backgroundPaint);
-        
-        Paint textPaint = new Paint();
-        textPaint.setColor(Color.WHITE);
-        textPaint.setTextAlign(Paint.Align.CENTER);
-        textPaint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
-        
-        textPaint.setTextSize(width * 0.6f);
-        
-        String initials = getInitials(name);
-        
-        Rect textBounds = new Rect();
-        textPaint.getTextBounds(initials, 0, initials.length(), textBounds);
-        
-        canvas.drawText(
-            initials, 
-            width / 2f, 
-            height / 2f + textBounds.height() / 2f, 
-            textPaint
-        );
-        
-        return bitmap;
-    }
-    
-    private static String getInitials(String name) {
-        if (name == null || name.trim().isEmpty()) {
-            return "?";
-        }
-        
-        String[] nameParts = name.trim().split("\\s+");
-        
-        if (nameParts.length == 1) {
-            return nameParts[0].substring(0, 1).toUpperCase();
-        }
-        
-        return (nameParts[0].substring(0, 1) + 
-                nameParts[nameParts.length - 1].substring(0, 1))
-                .toUpperCase();
-    }
-    
-    private static int generateColorFromName(String name) {
-        if (name == null || name.isEmpty()) {
-            return Color.GRAY;
-        }
-        
-        int[] goldenColors = {
-            Color.rgb(255, 215, 0),   // Gold
-            Color.rgb(218, 165, 32),  // Goldenrod
-            Color.rgb(238, 232, 170), // Pale Goldenrod
-            Color.rgb(189, 183, 107), // Dark Khaki
-            Color.rgb(240, 230, 140)  // Khaki
-        };
-        
-        return goldenColors[Math.abs(name.hashCode()) % goldenColors.length];
-    }
-}
 
 

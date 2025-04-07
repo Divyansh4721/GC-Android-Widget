@@ -65,6 +65,9 @@ dependencies {
 
     implementation("org.jsoup:jsoup:1.15.3")
     implementation("com.squareup.okhttp3:okhttp:4.10.0")
+
+    implementation ("androidx.work:work-runtime:2.9.0")
+
 }
 
 // Explicitly disable all test tasks
