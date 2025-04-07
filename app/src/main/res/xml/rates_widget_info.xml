@@ -4,8 +4,13 @@
     android:initialLayout="@layout/rates_widget_small"
     android:minWidth="180dp"
     android:minHeight="40dp"
-    android:previewImage="@drawable/pw"
-    android:resizeMode="horizontal"
+    android:maxWidth="400dp"
+    android:maxHeight="200dp"
+    android:previewImage="@drawable/widget_preview"
+    android:resizeMode="horizontal|vertical"
     android:updatePeriodMillis="300000"  
     android:widgetCategory="home_screen">
+    
+    <!-- Configure widget activity -->
+    <configuration android:name="com.gcjewellers.rateswidget.WidgetConfigureActivity" />
 </appwidget-provider>

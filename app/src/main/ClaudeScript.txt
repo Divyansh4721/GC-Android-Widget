@@ -30,7 +30,6 @@ $FilePaths = @(
 "C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\mipmap-anydpi-v26\ic_launcher_round.xml"
 "C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\values\colors.xml"
 "C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\values\strings.xml"
-"C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\values\styles.xml"
 "C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\values\themes.xml"
 "C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\values-night\themes.xml"
 "C:\Users\Cshek\AndroidStudioProjects\rateswidget\app\src\main\res\xml\rates_widget_info.xml"
