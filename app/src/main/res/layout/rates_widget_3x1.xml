@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout 
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/root_layout"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
     android:background="@drawable/widget_background_improved"
     android:padding="6dp">
 
@@ -10,6 +12,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
+        android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
         android:text="GC Jewellers"
         android:textColor="@android:color/white"
@@ -22,7 +25,9 @@
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
         android:layout_toStartOf="@id/refresh_button"
+        android:layout_toLeftOf="@id/refresh_button"
         android:layout_toEndOf="@id/widget_title"
+        android:layout_toRightOf="@id/widget_title"
         android:gravity="end"
         android:text="--:--"
         android:textColor="@android:color/white"
@@ -30,9 +35,10 @@
 
     <ImageButton
         android:id="@+id/refresh_button"
-        android:layout_width="18dp"
-        android:layout_height="18dp"
+        android:layout_width="22dp"
+        android:layout_height="22dp"
         android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"
         android:layout_alignParentTop="true"
         android:background="@android:color/transparent"
         android:src="@drawable/ic_refresh" />
@@ -49,12 +55,12 @@
         <!-- Gold section -->
         <LinearLayout
             android:id="@+id/gold_container"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="center">
 
-            <!-- Gold label -->
             <TextView
                 android:id="@+id/gold_label"
                 android:layout_width="wrap_content"
@@ -63,7 +69,6 @@
                 android:textColor="#FFD700"
                 android:textSize="12sp" />
 
-            <!-- Gold rate -->
             <TextView
                 android:id="@+id/gold_rate"
                 android:layout_width="wrap_content"

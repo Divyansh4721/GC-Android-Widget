@@ -120,17 +120,18 @@ public class RatesWidgetProvider extends AppWidgetProvider {
 
     private void updateAppWidget(Context context, AppWidgetManager appWidgetManager, int appWidgetId) {
         Log.d(TAG, "Updating widget ID: " + appWidgetId);
+
         Bundle options = appWidgetManager.getAppWidgetOptions(appWidgetId);
         SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        
-        // Use widget-specific keys for custom size
+
+        // Retrieve widget-specific custom width and height
         int customWidth = prefs.getInt(PREF_WIDGET_WIDTH + "_" + appWidgetId,
                 options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 400));
         int customHeight = prefs.getInt(PREF_WIDGET_HEIGHT + "_" + appWidgetId,
                 options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 100));
 
         RemoteViews views;
-        // Determine layout based on custom width
+        // Select layout based on custom width
         if (customWidth <= 220) {
             views = new RemoteViews(context.getPackageName(), R.layout.rates_widget_3x1);
         } else if (customWidth <= 250) {
@@ -141,15 +142,17 @@ public class RatesWidgetProvider extends AppWidgetProvider {
             views = new RemoteViews(context.getPackageName(), R.layout.rates_widget);
         }
 
-        // Apply height-specific adjustments
-        if (customHeight > 100) {
-            views.setTextViewTextSize(R.id.gold_rate, TypedValue.COMPLEX_UNIT_SP, 26);
-            views.setTextViewTextSize(R.id.silver_rate, TypedValue.COMPLEX_UNIT_SP, 26);
-            if (customWidth > 350 && customHeight > 200) {
-                // Additional layout modifications for taller widgets can be inserted here.
-            }
+        // Dynamic height adjustments: alter text sizes based on custom height
+        if (customHeight > 150) {
+            views.setTextViewTextSize(R.id.gold_rate, TypedValue.COMPLEX_UNIT_SP, 28);
+            views.setTextViewTextSize(R.id.silver_rate, TypedValue.COMPLEX_UNIT_SP, 28);
+            // Additional UI modifications for taller widgets can be applied here.
+        } else {
+            views.setTextViewTextSize(R.id.gold_rate, TypedValue.COMPLEX_UNIT_SP, 22);
+            views.setTextViewTextSize(R.id.silver_rate, TypedValue.COMPLEX_UNIT_SP, 22);
         }
 
+        // Adjust widget appearance based on Firebase authentication state
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         if (currentUser == null) {
             views.setTextViewText(R.id.widget_title, "GC Jewellers");
@@ -171,7 +174,7 @@ public class RatesWidgetProvider extends AppWidgetProvider {
     public static void saveWidgetSize(Context context, int appWidgetId, int width, int height) {
         SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
-        // Clamp values to specified min and max
+        // Validate and clamp the values
         width = Math.max(MIN_WIDGET_WIDTH, Math.min(width, MAX_WIDGET_WIDTH));
         height = Math.max(MIN_WIDGET_HEIGHT, Math.min(height, MAX_WIDGET_HEIGHT));
         editor.putInt(PREF_WIDGET_WIDTH + "_" + appWidgetId, width)
@@ -215,9 +218,8 @@ public class RatesWidgetProvider extends AppWidgetProvider {
         PowerManager powerManager = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
         PowerManager.WakeLock wakeLock = powerManager.newWakeLock(
                 PowerManager.PARTIAL_WAKE_LOCK, "RatesWidget:WakeLock");
-        // Acquire wake lock with a timeout to ensure device battery is not drained.
         wakeLock.acquire(15 * 60 * 1000);
-        
+
         scheduler = Executors.newSingleThreadScheduledExecutor();
         scheduler.scheduleAtFixedRate(() -> {
             try {
@@ -273,13 +275,13 @@ public class RatesWidgetProvider extends AppWidgetProvider {
                 context, 0, intent, getPendingIntentFlag());
         alarmManager.cancel(pendingIntent);
     }
-    
+
     public static boolean isAutoRefreshEnabled(Context context) {
         SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         return prefs.getBoolean(PREF_AUTO_REFRESH_ENABLED, true);
     }
-    
-    // Helper method to determine PendingIntent flags based on OS version
+
+    // Helper method to provide proper PendingIntent flags based on API level
     private static int getPendingIntentFlag() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             return PendingIntent.FLAG_IMMUTABLE;
