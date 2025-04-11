@@ -26,7 +26,7 @@ public class RatesFetcher {
     private static final String API_URL = "https://goldrate.divyanshbansal.com/api/live";
     private static final int GOLD_ROW = 5;
     private static final int SILVER_ROW = 4;
-    private static final int RATE_COLUMN = 3;
+    private static final int RATE_COLUMN = 1;
 
     /**
      * Interface for callback when rates are fetched

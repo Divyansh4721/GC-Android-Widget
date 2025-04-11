@@ -1,207 +1,80 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<!--
+ A layout with a vertical LinearLayout. 
+ The top row includes a Spinner (series selector) and a ToggleGroup (Buy/Sell).
+ Below that, two TextViews show the Low/High from "stats". 
+ Finally, a LineChart occupies the remaining space with a weighted height.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?attr/android:windowBackground">
+    android:orientation="vertical"
+    android:padding="16dp">
 
+    <!-- Spinner for selecting the series (golddollar, silverdollar, etc.) -->
+    <Spinner
+        android:id="@+id/spinner_series"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:spinnerMode="dropdown" />
+
+    <!-- Toggle for Buy/Sell selection -->
+    <com.google.android.material.button.MaterialButtonToggleGroup
+        android:id="@+id/toggle_buy_sell"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:singleSelection="true"
+        android:layout_marginTop="8dp">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/button_buy"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:text="Buy" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/button_sell"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:text="Sell" />
+    </com.google.android.material.button.MaterialButtonToggleGroup>
+
+    <!-- High and Low TextViews -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:orientation="horizontal"
+        android:layout_marginTop="8dp">
 
-        <!-- Top Row with Auto Refresh Switch and Refresh Button -->
-        <LinearLayout
-            android:layout_width="match_parent"
+        <TextView
+            android:id="@+id/text_low"
+            android:layout_width="0dp"
+            android:layout_weight="1"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:layout_marginBottom="16dp">
+            android:text="Lowest: ₹0.00"
+            android:textSize="16sp" />
 
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Auto Refresh"
-                android:textColor="?attr/colorOnSurface"
-                android:textSize="16sp" />
-
-            <com.google.android.material.switchmaterial.SwitchMaterial
-                android:id="@+id/auto_refresh_switch"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="8dp"/>
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/refresh_button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Refresh"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                app:icon="@drawable/ic_refresh"
-                app:iconGravity="textStart"/>
-        </LinearLayout>
-
-        <!-- Gold Rates Card -->
-        <androidx.cardview.widget.CardView
-            android:layout_width="match_parent"
+        <TextView
+            android:id="@+id/text_high"
+            android:layout_width="0dp"
+            android:layout_weight="1"
             android:layout_height="wrap_content"
-            app:cardBackgroundColor="?attr/colorSurface"
-            app:cardElevation="2dp"
-            app:cardCornerRadius="16dp"
-            android:layout_marginBottom="16dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Gold Rates"
-                    android:textColor="#FFD700"
-                    android:textSize="20sp"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="8dp" />
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginBottom="8dp">
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Lowest Rate"
-                        android:textColor="?attr/colorOnBackground"
-                        android:textSize="16sp" />
-
-                    <TextView
-                        android:id="@+id/gold_lowest_rate"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="₹0000"
-                        android:textColor="#FFD700"
-                        android:textSize="18sp"
-                        android:textStyle="bold" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginBottom="8dp">
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Highest Rate"
-                        android:textColor="?attr/colorOnBackground"
-                        android:textSize="16sp" />
-
-                    <TextView
-                        android:id="@+id/gold_highest_rate"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="₹0000"
-                        android:textColor="#FFD700"
-                        android:textSize="18sp"
-                        android:textStyle="bold" />
-                </LinearLayout>
-
-                <!-- LineChart for Gold Rates with increased height -->
-                <com.github.mikephil.charting.charts.LineChart
-                    android:id="@+id/gold_graph"
-                    android:layout_width="match_parent"
-                    android:layout_height="250dp"
-                    android:layout_marginTop="8dp"/>
-            </LinearLayout>
-        </androidx.cardview.widget.CardView>
-
-        <!-- Silver Rates Card -->
-        <androidx.cardview.widget.CardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:cardBackgroundColor="?attr/colorSurface"
-            app:cardElevation="2dp"
-            app:cardCornerRadius="16dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Silver Rates"
-                    android:textColor="#C0C0C0"
-                    android:textSize="20sp"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="8dp" />
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginBottom="8dp">
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Lowest Rate"
-                        android:textColor="?attr/colorOnBackground"
-                        android:textSize="16sp" />
-
-                    <TextView
-                        android:id="@+id/silver_lowest_rate"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="₹0000"
-                        android:textColor="#C0C0C0"
-                        android:textSize="18sp"
-                        android:textStyle="bold" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginBottom="8dp">
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Highest Rate"
-                        android:textColor="?attr/colorOnBackground"
-                        android:textSize="16sp" />
-
-                    <TextView
-                        android:id="@+id/silver_highest_rate"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="₹0000"
-                        android:textColor="#C0C0C0"
-                        android:textSize="18sp"
-                        android:textStyle="bold" />
-                </LinearLayout>
-
-                <!-- LineChart for Silver Rates with increased height -->
-                <com.github.mikephil.charting.charts.LineChart
-                    android:id="@+id/silver_graph"
-                    android:layout_width="match_parent"
-                    android:layout_height="250dp"
-                    android:layout_marginTop="8dp"/>
-            </LinearLayout>
-        </androidx.cardview.widget.CardView>
+            android:text="Highest: ₹0.00"
+            android:textSize="16sp"
+            android:gravity="end" />
     </LinearLayout>
-</ScrollView>
+
+    <!-- Full-page LineChart: occupies all remaining space -->
+    <com.github.mikephil.charting.charts.LineChart
+        android:id="@+id/line_chart"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="16dp" />
+
+</LinearLayout>

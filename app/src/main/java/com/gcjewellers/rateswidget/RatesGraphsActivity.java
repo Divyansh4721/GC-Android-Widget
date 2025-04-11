@@ -2,18 +2,15 @@ package com.gcjewellers.rateswidget;
 
 import android.content.res.Configuration;
 import android.graphics.Color;
-import android.graphics.drawable.Drawable;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.util.Log;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.ContextCompat;
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.AxisBase;
 import com.github.mikephil.charting.components.XAxis;
@@ -23,7 +20,7 @@ import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
 import com.github.mikephil.charting.formatter.ValueFormatter;
 import com.google.android.material.button.MaterialButton;
-import com.google.android.material.switchmaterial.SwitchMaterial;
+import com.google.android.material.button.MaterialButtonToggleGroup;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonParser;
@@ -33,315 +30,285 @@ import java.io.InputStreamReader;
 import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.TimeZone;
 
 public class RatesGraphsActivity extends AppCompatActivity {
+
     private static final String TAG = "RatesGraphsActivity";
-    private static final String API_BASE_URL = "https://goldrate.divyanshbansal.com/api/rates";
+    private static final String API_BASE_URL = "https://goldrate.divyanshbansal.com/api/rates?startDate=2025-04-08&endDate=2025-04-11";
 
-    // UI Components
-    private SwitchMaterial autoRefreshSwitch;
-    private MaterialButton refreshButton;
-    private TextView goldLowestRate;
-    private TextView goldHighestRate;
-    private TextView silverLowestRate;
-    private TextView silverHighestRate;
-    private LineChart goldChart;
-    private LineChart silverChart;
+    // UI
+    private Spinner spinnerSeries;
+    private MaterialButtonToggleGroup toggleBuySell;
+    private MaterialButton buttonBuy, buttonSell;
+    private TextView textLow, textHigh;
+    private LineChart lineChart;
 
-    // Refresh Handling
-    private Handler refreshHandler;
-    private Runnable autoRefreshRunnable;
+    // Full response from the API
+    private ApiResponse apiResponse;
+    // Holds the Date objects for each data point (parsed from createdAt).
+    private final List<Date> dataPointDates = new ArrayList<>();
 
-    // Rate Indices and historical data constant
-    private static final int GOLD_ROW_INDEX = 5;
-    private static final int SILVER_ROW_INDEX = 4;
-    private static final int RATE_VALUE_INDEX = 3;
-    private static final int HISTORICAL_DAYS = 15;
+    // The available series (matching the JSON structure)
+    private final String[] seriesOptions = {
+            "golddollar", "silverdollar", "dollarinr", "goldfuture",
+            "silverfuture", "gold", "goldrefine", "goldrtgs"
+    };
+    // Which series is currently selected in the Spinner
+    private int selectedSeriesIndex = 0;
+    // True => Buy is selected; False => Sell
+    private boolean isBuySelected = true;
+
+    // For parsing the "createdAt" in ISO8601 format (UTC).
+    private final SimpleDateFormat isoFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault());
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_rates_graphs);
 
+        // If your API times are in UTC, set that here.
+        isoFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+
         initializeViews();
-        setupCharts();
-        setupRefreshButton();
-        setupAutoRefresh();
-        fetchHistoricalRatesData();
+        setupSpinner();
+        setupToggleButtons();
+        setupChart();
+        fetchRatesData();
     }
 
     private void initializeViews() {
-        autoRefreshSwitch = findViewById(R.id.auto_refresh_switch);
-        refreshButton = findViewById(R.id.refresh_button);
-        goldLowestRate = findViewById(R.id.gold_lowest_rate);
-        goldHighestRate = findViewById(R.id.gold_highest_rate);
-        silverLowestRate = findViewById(R.id.silver_lowest_rate);
-        silverHighestRate = findViewById(R.id.silver_highest_rate);
-        goldChart = findViewById(R.id.gold_graph);
-        silverChart = findViewById(R.id.silver_graph);
-        refreshHandler = new Handler(Looper.getMainLooper());
+        spinnerSeries = findViewById(R.id.spinner_series);
+        toggleBuySell = findViewById(R.id.toggle_buy_sell);
+        buttonBuy = findViewById(R.id.button_buy);
+        buttonSell = findViewById(R.id.button_sell);
+        textLow = findViewById(R.id.text_low);
+        textHigh = findViewById(R.id.text_high);
+        lineChart = findViewById(R.id.line_chart);
     }
 
-    private boolean isNetworkAvailable() {
-        ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
-        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
-        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+    private void setupSpinner() {
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
+                android.R.layout.simple_spinner_item, seriesOptions);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerSeries.setAdapter(adapter);
+        spinnerSeries.setSelection(0);
+        spinnerSeries.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                selectedSeriesIndex = position;
+                updateUI();
+            }
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) { }
+        });
     }
 
-    private void setupCharts() {
-        // Configure both charts with the designated color themes.
-        setupChart(goldChart, "#FFD700"); // Gold
-        setupChart(silverChart, "#C0C0C0"); // Silver
-
+    private void setupToggleButtons() {
+        // Ensure "Buy" is initially selected
+        toggleBuySell.check(R.id.button_buy);
+        toggleBuySell.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
+            if (isChecked) {
+                isBuySelected = (checkedId == R.id.button_buy);
+                updateUI();
+            }
+        });
     }
 
-    private boolean isDarkThemeActive() {
-        int currentNightMode = getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
-        return currentNightMode == Configuration.UI_MODE_NIGHT_YES;
-    }
+    private void setupChart() {
+        // Remove the default description text
+        lineChart.getDescription().setEnabled(false);
+        // Allow user interactions (scrolling, zooming)
+        lineChart.setTouchEnabled(true);
+        lineChart.setDragEnabled(true);
+        lineChart.setScaleEnabled(true);
+        lineChart.setPinchZoom(true);
+        // Simple animation
+        lineChart.animateX(1000);
 
-    private void setupChart(LineChart chart, String lineColor) {
-        chart.getDescription().setEnabled(false);
-        chart.setTouchEnabled(true);
-        chart.setDragEnabled(true);
-        chart.setScaleEnabled(true);
-        chart.setPinchZoom(true);
-        chart.setExtraOffsets(10, 10, 10, 10);
-        chart.animateX(1000);
+        // Hide background grid if desired
+        lineChart.setDrawGridBackground(false);
 
+        // X-axis style
         int axisTextColor = isDarkThemeActive() ? Color.WHITE : Color.BLACK;
-        int gridColor = isDarkThemeActive() ? Color.DKGRAY : Color.LTGRAY;
-
-        // X Axis
-        XAxis xAxis = chart.getXAxis();
+        XAxis xAxis = lineChart.getXAxis();
         xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
         xAxis.setTextColor(axisTextColor);
         xAxis.setDrawGridLines(true);
-        xAxis.setGridColor(gridColor);
-        xAxis.setDrawAxisLine(true);
-        xAxis.setAxisLineColor(axisTextColor);
         xAxis.setGranularity(1f);
-        xAxis.setLabelRotationAngle(-45);
-        xAxis.setValueFormatter(new ValueFormatter() {
-            private final SimpleDateFormat sdf = new SimpleDateFormat("dd/MM", Locale.getDefault());
+        // We'll assign a real ValueFormatter once we load data (in updateChartWithData).
 
-            @Override
-            public String getAxisLabel(float value, AxisBase axis) {
-                return formatDateFromIndex((int) value);
-            }
-        });
-
-        // Y Axis
-        YAxis leftAxis = chart.getAxisLeft();
+        // Y-axis style
+        YAxis leftAxis = lineChart.getAxisLeft();
         leftAxis.setTextColor(axisTextColor);
-        leftAxis.setGridColor(gridColor);
-        leftAxis.setAxisLineColor(axisTextColor);
-        leftAxis.setGranularity(500f);
-
-        chart.getAxisRight().setEnabled(false);
-        chart.getLegend().setEnabled(false);
+        leftAxis.setDrawGridLines(true);
+        leftAxis.setGranularity(1f);
+        lineChart.getAxisRight().setEnabled(false);
     }
 
-    private String formatDateFromIndex(int index) {
-        Calendar cal = Calendar.getInstance();
-        cal.add(Calendar.DAY_OF_YEAR, -(HISTORICAL_DAYS - 1 - index));
-        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM", Locale.getDefault());
-        return sdf.format(cal.getTime());
+    private void fetchRatesData() {
+        new FetchRatesTask().execute(API_BASE_URL);
     }
 
-    private void setupRefreshButton() {
-        refreshButton.setOnClickListener(v -> fetchHistoricalRatesData());
+    // Called whenever data changes or the user modifies the series/toggle.
+    private void updateUI() {
+        if (apiResponse == null) return;
+        updateChartWithData();
+        updateHighLowText();
     }
 
-    private void setupAutoRefresh() {
-        autoRefreshSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            if (isChecked) {
-                scheduleAutoRefresh();
-            } else {
-                cancelAutoRefresh();
-            }
-        });
-    }
+    // Build the chart entries from the "data" array, picking the selected row & buy/sell index.
+    private void updateChartWithData() {
+        dataPointDates.clear();
+        List<Entry> entries = new ArrayList<>();
+        List<DataItem> dataList = apiResponse.getData();
 
-    private void scheduleAutoRefresh() {
-        autoRefreshRunnable = new Runnable() {
-            @Override
-            public void run() {
-                if (autoRefreshSwitch.isChecked()) {
-                    fetchHistoricalRatesData();
-                    refreshHandler.postDelayed(this, 60000);
-                }
-            }
-        };
-        refreshHandler.postDelayed(autoRefreshRunnable, 60000);
-    }
+        for (int i = 0; i < dataList.size(); i++) {
+            DataItem item = dataList.get(i);
 
-    private void cancelAutoRefresh() {
-        if (refreshHandler != null && autoRefreshRunnable != null) {
-            refreshHandler.removeCallbacks(autoRefreshRunnable);
-        }
-    }
-
-    private void fetchHistoricalRatesData() {
-        if (!isNetworkAvailable()) {
-            showErrorToast("No network connection available");
-            return;
-        }
-        resetRateViews();
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-        Calendar cal = Calendar.getInstance();
-        String endDate = dateFormat.format(cal.getTime());
-        cal.add(Calendar.DAY_OF_YEAR, -HISTORICAL_DAYS + 1);
-        String startDate = dateFormat.format(cal.getTime());
-        String apiUrl = API_BASE_URL + "?startDate=" + startDate + "&endDate=" + endDate;
-        Log.d(TAG, "Fetching historical rates from URL: " + apiUrl);
-        new FetchHistoricalRatesTask().execute(apiUrl);
-    }
-
-    private void resetRateViews() {
-        goldLowestRate.setText("Loading...");
-        goldHighestRate.setText("Loading...");
-        silverLowestRate.setText("Loading...");
-        silverHighestRate.setText("Loading...");
-    }
-
-    private void updateRatesAndGraphs(List<RateData> historicalData) {
-        try {
-            if (historicalData == null || historicalData.isEmpty()) {
-                throw new Exception("No historical data received");
+            // Parse out the date/time
+            try {
+                Date d = isoFormat.parse(item.getCreatedAt());
+                dataPointDates.add(d);
+            } catch (ParseException e) {
+                // If there's an error, fallback to "now"
+                dataPointDates.add(new Date());
+                Log.e(TAG, "Error parsing createdAt", e);
             }
 
-            List<Float> goldRates = new ArrayList<>();
-            List<Float> silverRates = new ArrayList<>();
-            Log.d(TAG, "Number of historical data points: " + historicalData.size());
-
-            for (RateData dayData : historicalData) {
-                try {
-                    Log.d(TAG, "Processing data: " + dayData.toString());
-                    float goldRate = dayData.getGoldRate();
-                    float silverRate = dayData.getSilverRate();
-                    goldRates.add(goldRate);
-                    silverRates.add(silverRate);
-                    Log.d(TAG, "Gold Rate: " + goldRate + ", Silver Rate: " + silverRate);
-                } catch (Exception e) {
-                    Log.e(TAG, "Error processing individual data point", e);
-                }
+            // Parse the "data" field
+            try {
+                JsonArray outerArray = JsonParser.parseString(item.getData()).getAsJsonArray();
+                // We select the row corresponding to the user’s spinner selection
+                JsonArray seriesRow = outerArray.get(selectedSeriesIndex).getAsJsonArray();
+                // For the graph, index=0 => Buy, index=1 => Sell
+                String valueStr = isBuySelected ? seriesRow.get(0).getAsString() : seriesRow.get(1).getAsString();
+                float value = Float.parseFloat(valueStr);
+                entries.add(new Entry(i, value));
+            } catch (Exception e) {
+                Log.e(TAG, "Error parsing data array at index " + i, e);
             }
-
-            if (goldRates.isEmpty() || silverRates.isEmpty()) {
-                throw new Exception("No valid rates extracted");
-            }
-
-            final float goldLowestFinal = findMin(goldRates);
-            final float goldHighestFinal = findMax(goldRates);
-            final float silverLowestFinal = findMin(silverRates);
-            final float silverHighestFinal = findMax(silverRates);
-
-            runOnUiThread(() -> {
-                goldLowestRate.setText(String.format("Lowest: ₹%.2f", goldLowestFinal));
-                goldHighestRate.setText(String.format("Highest: ₹%.2f", goldHighestFinal));
-                silverLowestRate.setText(String.format("Lowest: ₹%.2f", silverLowestFinal));
-                silverHighestRate.setText(String.format("Highest: ₹%.2f", silverHighestFinal));
-
-                List<Entry> goldEntries = new ArrayList<>();
-                List<Entry> silverEntries = new ArrayList<>();
-                for (int i = 0; i < goldRates.size(); i++) {
-                    goldEntries.add(new Entry(i, goldRates.get(i)));
-                }
-                for (int i = 0; i < silverRates.size(); i++) {
-                    silverEntries.add(new Entry(i, silverRates.get(i)));
-                }
-
-                updateGraphWithData(goldChart, goldEntries, "#FFD700");
-                updateGraphWithData(silverChart, silverEntries, "#C0C0C0");
-            });
-        } catch (Exception e) {
-            Log.e(TAG, "Error parsing historical rates", e);
-            showErrorToast("Error parsing rates: " + e.getMessage());
-        }
-    }
-
-    private float findMin(List<Float> rates) {
-        if (rates == null || rates.isEmpty()) {
-            return 0f;
-        }
-        float min = rates.get(0);
-        for (float rate : rates) {
-            min = Math.min(min, rate);
-        }
-        return min;
-    }
-
-    private float findMax(List<Float> rates) {
-        if (rates == null || rates.isEmpty()) {
-            return 0f;
-        }
-        float max = rates.get(0);
-        for (float rate : rates) {
-            max = Math.max(max, rate);
-        }
-        return max;
-    }
-
-    private void updateGraphWithData(LineChart chart, List<Entry> entries, String lineColor) {
-        if (entries.isEmpty()) {
-            chart.clear();
-            return;
         }
 
+        // Create the line dataset
         LineDataSet dataSet = new LineDataSet(entries, "Rates");
-        dataSet.setColor(android.graphics.Color.parseColor(lineColor));
+        // Make the line green, slightly thick
+        dataSet.setColor(Color.parseColor("#388E3C")); // a shade of green
         dataSet.setLineWidth(2f);
-        dataSet.setCircleColor(android.graphics.Color.parseColor(lineColor));
-        dataSet.setCircleRadius(4f);
-        dataSet.setDrawValues(false); // Remove distracting number labels
 
-        // Enable a filled area under the curve for enhanced visual appeal.
+        // Show circles at each data point
+        dataSet.setDrawCircles(true);
+        dataSet.setCircleColor(Color.parseColor("#388E3C"));
+        dataSet.setCircleRadius(3f);
+
+        // Draw gradient fill under the line
         dataSet.setDrawFilled(true);
-        dataSet.setFillAlpha(80);
-        // Option 1: Use a solid fill color matching the line.
+        // The gradient fill can be done with two colors: top -> bottom
+        // This will create a gentle fade from a lighter blue down to a slightly different shade.
+        dataSet.setGradientColor(
+                Color.parseColor("#E3F2FD"), // top color (very light blue)
+                Color.parseColor("#BBDEFB")  // bottom color (light blue)
+        );
+        dataSet.setFillAlpha(200);
 
-        // dataSet.setFillColor(android.graphics.Color.parseColor(lineColor));
-        // Option 2: Uncomment below to use a gradient fill (ensure drawable exists in
-        // res/drawable).
+        // Hide the point labels
+        dataSet.setDrawValues(false);
 
-        Drawable gradientDrawable = null;
-        if (lineColor.equals("#FFD700")) {
-            gradientDrawable = ContextCompat.getDrawable(this, R.drawable.fade_gold);
-        } else if (lineColor.equals("#C0C0C0")) {
-            gradientDrawable = ContextCompat.getDrawable(this, R.drawable.fade_silver);
-        }
-        if (gradientDrawable != null) {
-            dataSet.setFillDrawable(gradientDrawable);
-        }
+        // Optionally, a smooth (cubic) line
+        dataSet.setMode(LineDataSet.Mode.CUBIC_BEZIER);
 
-        dataSet.setMode(LineDataSet.Mode.CUBIC_BEZIER); // Render a smooth, curved line.
-
+        // Create final LineData and attach to chart
         LineData lineData = new LineData(dataSet);
-        chart.setData(lineData);
-        chart.animateX(1000);
-        chart.invalidate();
+        lineChart.setData(lineData);
+
+        // Set up a custom X-axis formatter that displays date by default,
+        // and shows time if the user zooms in. (Similar to your earlier code.)
+        lineChart.getXAxis().setValueFormatter(new DateTimeValueFormatter());
+        lineChart.invalidate();
     }
 
-    private void showErrorToast(String message) {
-        runOnUiThread(() -> {
-            Toast.makeText(RatesGraphsActivity.this, message, Toast.LENGTH_LONG).show();
-            goldLowestRate.setText("Error");
-            goldHighestRate.setText("Error");
-            silverLowestRate.setText("Error");
-            silverHighestRate.setText("Error");
-        });
+    // Display "Lowest: ___" and "Highest: ___" from the stats object
+    private void updateHighLowText() {
+        if (apiResponse.getStats() == null) {
+            textLow.setText("Lowest: N/A");
+            textHigh.setText("Highest: N/A");
+            return;
+        }
+        Price price;
+        switch (selectedSeriesIndex) {
+            case 0:
+                price = isBuySelected ? apiResponse.getStats().getGolddollar().getBuy() : apiResponse.getStats().getGolddollar().getSell();
+                break;
+            case 1:
+                price = isBuySelected ? apiResponse.getStats().getSilverdollar().getBuy() : apiResponse.getStats().getSilverdollar().getSell();
+                break;
+            case 2:
+                price = isBuySelected ? apiResponse.getStats().getDollarinr().getBuy() : apiResponse.getStats().getDollarinr().getSell();
+                break;
+            case 3:
+                price = isBuySelected ? apiResponse.getStats().getGoldfuture().getBuy() : apiResponse.getStats().getGoldfuture().getSell();
+                break;
+            case 4:
+                price = isBuySelected ? apiResponse.getStats().getSilverfuture().getBuy() : apiResponse.getStats().getSilverfuture().getSell();
+                break;
+            case 5:
+                price = isBuySelected ? apiResponse.getStats().getGold().getBuy() : apiResponse.getStats().getGold().getSell();
+                break;
+            case 6:
+                price = isBuySelected ? apiResponse.getStats().getGoldrefine().getBuy() : apiResponse.getStats().getGoldrefine().getSell();
+                break;
+            case 7:
+                price = isBuySelected ? apiResponse.getStats().getGoldrtgs().getBuy() : apiResponse.getStats().getGoldrtgs().getSell();
+                break;
+            default:
+                price = null;
+                break;
+        }
+        if (price != null) {
+            textLow.setText(String.format(Locale.getDefault(), "Lowest: ₹%.2f", price.getLow()));
+            textHigh.setText(String.format(Locale.getDefault(), "Highest: ₹%.2f", price.getHigh()));
+        } else {
+            textLow.setText("Lowest: N/A");
+            textHigh.setText("Highest: N/A");
+        }
     }
 
-    private class FetchHistoricalRatesTask extends AsyncTask<String, Void, List<RateData>> {
+    // Custom ValueFormatter that changes to time if user zooms in
+    private class DateTimeValueFormatter extends ValueFormatter {
+        // Two formatters: date by default, time if zoomed
+        private final SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM", Locale.getDefault());
+        private final SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
+        // If the scaleX is greater than this threshold, we show "HH:mm"
+        private final float ZOOM_THRESHOLD = 5f;
+
         @Override
-        protected List<RateData> doInBackground(String... params) {
-            List<RateData> historicalData = new ArrayList<>();
+        public String getAxisLabel(float value, AxisBase axis) {
+            int index = (int) value;
+            if (index < 0 || index >= dataPointDates.size()) return "";
+            Date d = dataPointDates.get(index);
+
+            // Check how far the user has zoomed horizontally
+            float scaleX = lineChart.getViewPortHandler().getScaleX();
+            if (scaleX > ZOOM_THRESHOLD) {
+                // If zoomed in, show time
+                return timeFormat.format(d);
+            } else {
+                // Else show day/month
+                return dateFormat.format(d);
+            }
+        }
+    }
+
+    // Simple AsyncTask to fetch the JSON
+    private class FetchRatesTask extends AsyncTask<String, Void, ApiResponse> {
+        @Override
+        protected ApiResponse doInBackground(String... params) {
             HttpURLConnection connection = null;
             try {
                 URL url = new URL(params[0]);
@@ -349,8 +316,6 @@ public class RatesGraphsActivity extends AppCompatActivity {
                 connection.setRequestMethod("GET");
                 connection.setConnectTimeout(10000);
                 connection.setReadTimeout(10000);
-                connection.setRequestProperty("Content-Type", "application/json");
-                connection.setRequestProperty("Accept", "application/json");
 
                 int responseCode = connection.getResponseCode();
                 Log.d(TAG, "Response Code: " + responseCode);
@@ -368,127 +333,84 @@ public class RatesGraphsActivity extends AppCompatActivity {
                     Log.d(TAG, "Full Response: " + responseStr);
 
                     Gson gson = new Gson();
-                    Type listType = new TypeToken<ApiResponse>() {
-                    }.getType();
-                    ApiResponse apiResponse = gson.fromJson(responseStr, listType);
-
-                    if (apiResponse != null && apiResponse.getData() != null) {
-                        for (DataItem dataItem : apiResponse.getData()) {
-                            if (dataItem != null && dataItem.getData() != null) {
-                                RateData rateData = parseRateData(dataItem.getData());
-                                if (rateData != null) {
-                                    historicalData.add(rateData);
-                                }
-                            }
-                        }
-                    }
+                    Type responseType = new TypeToken<ApiResponse>() {}.getType();
+                    return gson.fromJson(responseStr, responseType);
                 } else {
                     Log.e(TAG, "HTTP error code: " + responseCode);
-                    BufferedReader errorReader = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
-                    StringBuilder errorResponse = new StringBuilder();
-                    String errorLine;
-                    while ((errorLine = errorReader.readLine()) != null) {
-                        errorResponse.append(errorLine);
-                    }
-                    errorReader.close();
-                    Log.e(TAG, "Error response: " + errorResponse.toString());
                 }
             } catch (Exception e) {
-                Log.e(TAG, "Error fetching historical rates", e);
+                Log.e(TAG, "Error fetching rates", e);
             } finally {
-                if (connection != null) {
-                    connection.disconnect();
-                }
+                if (connection != null) connection.disconnect();
             }
-            return historicalData;
-        }
-
-        private RateData parseRateData(String dataString) {
-            try {
-                JsonArray dataArray = JsonParser.parseString(dataString).getAsJsonArray();
-                JsonArray goldRow = dataArray.get(GOLD_ROW_INDEX).getAsJsonArray();
-                JsonArray silverRow = dataArray.get(SILVER_ROW_INDEX).getAsJsonArray();
-                float goldRate = Float.parseFloat(goldRow.get(RATE_VALUE_INDEX).getAsString());
-                float silverRate = Float.parseFloat(silverRow.get(RATE_VALUE_INDEX).getAsString());
-                return new RateData(goldRate, silverRate);
-            } catch (Exception e) {
-                Log.e(TAG, "Error parsing rate data", e);
-                return null;
-            }
+            return null;
         }
 
         @Override
-        protected void onPostExecute(List<RateData> historicalData) {
-            if (historicalData == null || historicalData.isEmpty()) {
-                showErrorToast("No historical data found");
+        protected void onPostExecute(ApiResponse result) {
+            if (result == null || result.getData() == null || result.getData().isEmpty()) {
+                Log.e(TAG, "No data received from API or data empty");
                 return;
             }
-            try {
-                updateRatesAndGraphs(historicalData);
-            } catch (Exception e) {
-                Log.e(TAG, "Error processing historical rates", e);
-                showErrorToast("Error processing rates data: " + e.getMessage());
-            }
+            apiResponse = result;
+            updateUI();
         }
     }
 
-    // Supporting classes for JSON parsing.
+    // Model classes
+
     private static class ApiResponse {
         private List<DataItem> data;
-
-        public List<DataItem> getData() {
-            return data;
-        }
+        private Stats stats;
+        public List<DataItem> getData() { return data; }
+        public Stats getStats() { return stats; }
     }
 
     private static class DataItem {
+        // "data" is a JSON string (an array of arrays)
         private String data;
-
-        public String getData() {
-            return data;
-        }
+        // "createdAt" is the date/time in ISO8601
+        private String createdAt;
+        public String getData() { return data; }
+        public String getCreatedAt() { return createdAt; }
     }
 
-    private static class RateData {
-        private final float goldRate;
-        private final float silverRate;
-
-        public RateData(float goldRate, float silverRate) {
-            this.goldRate = goldRate;
-            this.silverRate = silverRate;
-        }
-
-        public float getGoldRate() {
-            return goldRate;
-        }
-
-        public float getSilverRate() {
-            return silverRate;
-        }
-
-        @Override
-        public String toString() {
-            return "RateData{" + "goldRate=" + goldRate + ", silverRate=" + silverRate + '}';
-        }
+    private static class Stats {
+        private RateInfo golddollar;
+        private RateInfo silverdollar;
+        private RateInfo dollarinr;
+        private RateInfo goldfuture;
+        private RateInfo silverfuture;
+        private RateInfo gold;
+        private RateInfo goldrefine;
+        private RateInfo goldrtgs;
+        public RateInfo getGolddollar() { return golddollar; }
+        public RateInfo getSilverdollar() { return silverdollar; }
+        public RateInfo getDollarinr() { return dollarinr; }
+        public RateInfo getGoldfuture() { return goldfuture; }
+        public RateInfo getSilverfuture() { return silverfuture; }
+        public RateInfo getGold() { return gold; }
+        public RateInfo getGoldrefine() { return goldrefine; }
+        public RateInfo getGoldrtgs() { return goldrtgs; }
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        cancelAutoRefresh();
+    private static class RateInfo {
+        private Price buy;
+        private Price sell;
+        public Price getBuy() { return buy; }
+        public Price getSell() { return sell; }
     }
 
-    @Override
-    protected void onPause() {
-        super.onPause();
-        cancelAutoRefresh();
+    private static class Price {
+        private float high;
+        private float low;
+        public float getHigh() { return high; }
+        public float getLow() { return low; }
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        if (autoRefreshSwitch != null && autoRefreshSwitch.isChecked()) {
-            scheduleAutoRefresh();
-        }
+    // Helper to detect dark mode
+    private boolean isDarkThemeActive() {
+        int currentNightMode = getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
+        return currentNightMode == Configuration.UI_MODE_NIGHT_YES;
     }
 }
