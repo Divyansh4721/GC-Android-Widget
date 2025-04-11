@@ -29,10 +29,9 @@
             android:exported="true" />
 
         <activity
-            android:name=".CalculatorActivity"
+            android:name=".RatesGraphsActivity"
             android:exported="false" />
 
-        <!-- New Widget Configuration Activity -->
         <activity
             android:name=".WidgetConfigureActivity"
             android:theme="@style/Theme.Rateswidget"

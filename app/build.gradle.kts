@@ -12,8 +12,8 @@ android {
         applicationId = "com.gcjewellers.rateswidget"
         minSdk = 24
         targetSdk = 34
-        versionCode = 5
-        versionName = "1.5"
+        versionCode = 7
+        versionName = "1.7"
     }
 
     buildTypes {
@@ -34,7 +34,7 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
-    
+
     // Disable unit tests to allow build to complete
     testOptions {
         unitTests.all {
@@ -44,29 +44,20 @@ android {
 }
 
 dependencies {
-    // Firebase Authentication
+    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
     implementation("com.google.firebase:firebase-auth:22.3.1")
-
-    // Firebase Firestore
     implementation("com.google.firebase:firebase-firestore:24.10.3")
-
-    // Google Sign-In
     implementation("com.google.android.gms:play-services-auth:20.7.0")
-
-    // AndroidX and Material Design
     implementation("androidx.appcompat:appcompat:1.6.1")
-    implementation("com.google.android.material:material:1.11.0")
-
-    // Core Kotlin extensions
+    implementation("com.google.android.material:material:1.5.0")
     implementation("androidx.core:core-ktx:1.9.0")
-
     implementation("com.squareup.picasso:picasso:2.8")
     implementation("de.hdodenhof:circleimageview:3.1.0")
-
     implementation("org.jsoup:jsoup:1.15.3")
     implementation("com.squareup.okhttp3:okhttp:4.10.0")
-
-    implementation ("androidx.work:work-runtime:2.9.0")
+    implementation("androidx.work:work-runtime:2.9.0")
+    implementation("com.google.code.gson:gson:2.10.1")
+    implementation("com.android.volley:volley:1.2.1")
 
 }
 

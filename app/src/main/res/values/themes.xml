@@ -1,29 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
+
+
     <!-- Base application theme -->
     <style name="Base.Theme.Rateswidget" parent="Theme.MaterialComponents.Light.NoActionBar">
         <!-- Primary colors -->
         <item name="colorPrimary">@color/gold_primary</item>
         <item name="colorPrimaryVariant">@color/gold_dark</item>
         <item name="colorOnPrimary">@android:color/black</item>
-        
+
         <!-- Secondary colors -->
         <item name="colorSecondary">@color/silver_secondary</item>
         <item name="colorSecondaryVariant">@color/silver_dark</item>
         <item name="colorOnSecondary">@android:color/black</item>
-        
+
         <!-- Background colors -->
         <item name="android:windowBackground">@color/light_background</item>
         <item name="colorSurface">@color/white</item>
         <item name="colorOnSurface">@color/dark_text</item>
         <item name="colorOnBackground">@color/medium_text</item>
-        
+
         <!-- Status bar color -->
         <item name="android:statusBarColor">@color/gold_dark</item>
-        
+
         <!-- Button styles -->
         <item name="materialButtonStyle">@style/Widget.App.Button</item>
+
+        <!-- Status bar appearance -->
+        <item name="android:statusBarColor">@android:color/black</item>
+        <item name="android:windowLightStatusBar">false</item> <!-- Ensures white icons -->
+
     </style>
+
+    <style name="Widget.App.Toolbar" parent="Widget.MaterialComponents.Toolbar.Primary">
+        <item name="titleTextColor">@android:color/black</item>
+        <item name="subtitleTextColor">@android:color/black</item>
+        <item name="android:textColorPrimary">@android:color/black</item>
+    </style>
+
 
     <!-- Application theme -->
     <style name="Theme.Rateswidget" parent="Base.Theme.Rateswidget" />
@@ -51,7 +65,6 @@
     </style>
 
 
-    
     <!-- Card Style for Light Mode -->
     <style name="Widget.App.CardView" parent="Widget.MaterialComponents.CardView">
         <item name="cardBackgroundColor">@color/white</item>

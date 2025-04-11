@@ -1,6 +1,5 @@
 package com.gcjewellers.rateswidget;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
@@ -9,9 +8,17 @@ import android.os.Bundle;
 import android.os.PowerManager;
 import android.provider.Settings;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import android.view.WindowInsetsController;
+import com.gcjewellers.rateswidget.RatesGraphsActivity;
+
+
 
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
@@ -27,7 +34,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
-public class MainActivity extends Activity {
+public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
 
     private SwitchMaterial batteryOptSwitch;
@@ -42,17 +49,28 @@ public class MainActivity extends Activity {
     private TextView ratesUpdatedTimeText;
 
     private FirebaseAuth mAuth;
+    private GoogleSignInClient googleSignInClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        
-        try {
-            setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_main);
+
+       try {
+            // Add this block to set up the toolbar
+            Toolbar toolbar = findViewById(R.id.toolbar);
+            setSupportActionBar(toolbar);
 
             // Initialize Firebase Auth
             mAuth = FirebaseAuth.getInstance();
             FirebaseUser currentUser = mAuth.getCurrentUser();
+
+            // Configure Google Sign-In
+            GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                    .requestIdToken(getString(R.string.default_web_client_id))
+                    .requestEmail()
+                    .build();
+            googleSignInClient = GoogleSignIn.getClient(this, gso);
 
             // Verify user is logged in
             if (currentUser == null) {
@@ -293,29 +311,31 @@ public class MainActivity extends Activity {
         mAuth.signOut();
 
         // Sign out from GoogleSignIn as well
-        try {
-            GoogleSignInClient googleSignInClient = GoogleSignIn.getClient(this,
-                    new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                            .requestIdToken(getString(R.string.default_web_client_id))
-                            .requestEmail()
-                            .build());
-
-            googleSignInClient.signOut().addOnCompleteListener(this, task -> {
-                // Return to the SignInActivity with flag to prevent auto-login
-                Intent intent = new Intent(MainActivity.this, SignInActivity.class);
-                intent.putExtra("fromLogout", true);
-                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-                startActivity(intent);
-                finish();
-            });
-        } catch (Exception e) {
-            // Fallback if there's any issue with Google Sign-out
+        googleSignInClient.signOut().addOnCompleteListener(this, task -> {
+            // Return to the SignInActivity with flag to prevent auto-login
             Intent intent = new Intent(MainActivity.this, SignInActivity.class);
             intent.putExtra("fromLogout", true);
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(intent);
             finish();
+        });
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.main_activity_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == R.id.action_rates_graphs) {
+            // Navigate to Rates Graphs Activity
+            Intent intent = new Intent(this, RatesGraphsActivity.class);
+            startActivity(intent);
+            return true;
         }
+        return super.onOptionsItemSelected(item);
     }
 
     @Override
