@@ -60,6 +60,8 @@ public class RatesWidgetProvider extends AppWidgetProvider {
             views.setTextViewText(R.id.widget_title, "GC Jewellers");
             views.setTextViewText(R.id.gold_rate, "Sign In");
             views.setTextColor(R.id.gold_rate, Color.WHITE);
+            views.setTextViewText(R.id.silver_rate, "");
+            views.setTextColor(R.id.silver_rate, Color.WHITE);
         } else {
             // Setup refresh intent
             Intent refreshIntent = new Intent(context, RatesWidgetProvider.class);

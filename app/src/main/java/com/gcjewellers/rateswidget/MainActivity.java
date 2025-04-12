@@ -1,6 +1,7 @@
 package com.gcjewellers.rateswidget;
 
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
@@ -8,18 +9,13 @@ import android.os.Bundle;
 import android.os.PowerManager;
 import android.provider.Settings;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import android.view.WindowInsetsController;
+import androidx.core.content.ContextCompat;
 import com.gcjewellers.rateswidget.RatesGraphsActivity;
-
-
-
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
@@ -29,7 +25,6 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
-
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -56,12 +51,28 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-       try {
-            // Add this block to set up the toolbar
+        try {
+            // Initialize the Toolbar
             Toolbar toolbar = findViewById(R.id.toolbar);
             setSupportActionBar(toolbar);
 
-            // Initialize Firebase Auth
+            // Ensure the Toolbar displays the app name from strings.xml
+            if (getSupportActionBar() != null) {
+                getSupportActionBar().setTitle(R.string.app_name);
+                getSupportActionBar().setDisplayShowTitleEnabled(true);
+            }
+
+            // Explicitly set the title text color based on the current UI mode
+            int currentNightMode = getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
+            if (currentNightMode == Configuration.UI_MODE_NIGHT_YES) {
+                // In dark mode, set the title color to white for optimal contrast
+                toolbar.setTitleTextColor(ContextCompat.getColor(this, android.R.color.white));
+            } else {
+                // In light mode, set the title color to black or as desired
+                toolbar.setTitleTextColor(ContextCompat.getColor(this, android.R.color.black));
+            }
+
+            // Initialize Firebase Auth and check for a signed-in user
             mAuth = FirebaseAuth.getInstance();
             FirebaseUser currentUser = mAuth.getCurrentUser();
 
@@ -72,7 +83,7 @@ public class MainActivity extends AppCompatActivity {
                     .build();
             googleSignInClient = GoogleSignIn.getClient(this, gso);
 
-            // Verify user is logged in
+            // If no user is logged in, redirect to SignInActivity
             if (currentUser == null) {
                 Log.d(TAG, "No user logged in, redirecting to SignInActivity");
                 Intent intent = new Intent(this, SignInActivity.class);
@@ -83,33 +94,20 @@ public class MainActivity extends AppCompatActivity {
 
             // Initialize views
             initializeViews();
-
-            // Setup current date and time
             setupDateAndTime();
-
-            // Setup user profile
             setupUserProfile(currentUser);
-
-            // Setup battery optimization switch
             setupBatteryOptimizationSwitch();
-
-            // Setup widget refresh switch
             setupWidgetRefreshSwitch();
-
-            // Setup logout button
             setupLogoutButton();
-
-            // Fetch and display current rates
             fetchCurrentRates();
 
-            // Schedule widget updates to ensure widgets stay current
+            // Schedule widget updates for currency rates
             WidgetUpdateService.scheduleNextUpdate(this);
 
         } catch (Exception e) {
             Log.e(TAG, "Critical error in MainActivity onCreate", e);
             Toast.makeText(this, "An error occurred. Please restart the app.", Toast.LENGTH_LONG).show();
-            
-            // Force logout and redirect to sign-in
+
             if (mAuth != null) {
                 mAuth.signOut();
             }
@@ -123,42 +121,29 @@ public class MainActivity extends AppCompatActivity {
         batteryOptSwitch = findViewById(R.id.battery_optimization_switch);
         widgetRefreshSwitch = findViewById(R.id.widget_refresh_switch);
         logoutButton = findViewById(R.id.logout_button);
-        
         userName = findViewById(R.id.user_name);
         userEmail = findViewById(R.id.user_email);
         userProfileImage = findViewById(R.id.user_profile_image);
-        
-        // Date and rates views
         dateTimeText = findViewById(R.id.date_time_text);
         ratesUpdatedTimeText = findViewById(R.id.rates_updated_time);
-        
-        // Rates views
         goldRateText = findViewById(R.id.gold_rate);
         silverPriceText = findViewById(R.id.silver_price);
     }
 
     private void setupDateAndTime() {
-        // Get current date and time
         SimpleDateFormat dateFormat = new SimpleDateFormat("EEEE, MMMM d, yyyy | hh:mm a", Locale.getDefault());
         String currentDateTime = dateFormat.format(new Date());
-        
-        // Set date and time in the TextView
         dateTimeText.setText(currentDateTime);
     }
 
     private void setupUserProfile(FirebaseUser user) {
         if (user != null) {
-            // Set user name
             String displayName = user.getDisplayName() != null ? user.getDisplayName() : "User";
             userName.setText(displayName);
-
-            // Set user email
             String email = user.getEmail() != null ? user.getEmail() : "No email";
             userEmail.setText(email);
 
-            // Handle profile image
             if (user.getPhotoUrl() != null) {
-                // Attempt to load photo from Google account
                 try {
                     Picasso.get()
                         .load(user.getPhotoUrl())
@@ -169,21 +154,17 @@ public class MainActivity extends AppCompatActivity {
                             public void onSuccess() {
                                 Log.d(TAG, "Profile image loaded successfully");
                             }
-
                             @Override
                             public void onError(Exception e) {
                                 Log.e(TAG, "Error loading profile image", e);
-                                // Fallback to generated profile image
                                 generateProfileImage(displayName);
                             }
                         });
                 } catch (Exception e) {
                     Log.e(TAG, "Exception loading profile image", e);
-                    // Fallback to generated profile image
                     generateProfileImage(displayName);
                 }
             } else {
-                // No photo URL, generate profile image
                 generateProfileImage(displayName);
             }
         }
@@ -191,61 +172,41 @@ public class MainActivity extends AppCompatActivity {
 
     private void generateProfileImage(String displayName) {
         try {
-            // Ensure non-zero dimensions
             int width = userProfileImage.getWidth();
             int height = userProfileImage.getHeight();
-            
             if (width <= 0) width = 100;
             if (height <= 0) height = 100;
-
-            Bitmap profileBitmap = ProfileImageGenerator.generateCircularProfileImage(
-                    displayName,
-                    width,
-                    height
-            );
+            Bitmap profileBitmap = ProfileImageGenerator.generateCircularProfileImage(displayName, width, height);
             userProfileImage.setImageBitmap(profileBitmap);
         } catch (Exception e) {
             Log.e(TAG, "Error generating profile image", e);
-            // Fallback to default drawable
             userProfileImage.setImageResource(R.drawable.ic_default_profile);
         }
     }
 
     private void setupBatteryOptimizationSwitch() {
-        // Check current battery optimization status
         boolean isIgnoringBatteryOptimizations = isIgnoringBatteryOptimization();
         batteryOptSwitch.setChecked(isIgnoringBatteryOptimizations);
-
         batteryOptSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (isChecked) {
-                // Request to disable battery optimization
                 requestBatteryOptimizationExemption();
             } else {
-                // Enable battery optimization
                 enableBatteryOptimization();
             }
         });
     }
 
     private void setupWidgetRefreshSwitch() {
-        // Check current auto-refresh state from RatesWidgetProvider preferences
         boolean isAutoRefreshEnabled = RatesWidgetProvider.isAutoRefreshEnabled(this);
         widgetRefreshSwitch.setChecked(isAutoRefreshEnabled);
-
         widgetRefreshSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            // Send broadcast to widget provider to start/stop updates
             Intent intent = new Intent(this, RatesWidgetProvider.class);
             intent.setAction(isChecked
                     ? RatesWidgetProvider.ACTION_START_UPDATES
                     : RatesWidgetProvider.ACTION_STOP_UPDATES);
-            
             Log.d(TAG, "Sending " + intent.getAction() + " broadcast");
             sendBroadcast(intent);
-            
-            // Show confirmation toast
-            Toast.makeText(this, 
-                    isChecked ? "Widget auto-refresh enabled" : "Widget auto-refresh disabled", 
-                    Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, isChecked ? "Widget auto-refresh enabled" : "Widget auto-refresh disabled", Toast.LENGTH_SHORT).show();
         });
     }
 
@@ -254,25 +215,17 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void fetchCurrentRates() {
-        // Show loading state
         goldRateText.setText("Loading...");
         silverPriceText.setText("Loading...");
-        
-        // Use the RatesFetcher utility
         RatesFetcher.fetchRates(this, new RatesFetcher.RatesFetchListener() {
             @Override
             public void onRatesFetched(String goldRate, String silverRate, String lastUpdated) {
-                // Update the UI with fetched rates
                 goldRateText.setText("₹" + goldRate);
                 silverPriceText.setText("₹" + silverRate);
-                
-                // Update the rates updated time
                 ratesUpdatedTimeText.setText("Updated at " + lastUpdated);
             }
-            
             @Override
             public void onError(String errorMessage) {
-                // Handle error
                 goldRateText.setText("Error");
                 silverPriceText.setText("Check connection");
                 ratesUpdatedTimeText.setText("Update Failed");
@@ -307,12 +260,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void logout() {
-        // Sign out from Firebase
         mAuth.signOut();
-
-        // Sign out from GoogleSignIn as well
         googleSignInClient.signOut().addOnCompleteListener(this, task -> {
-            // Return to the SignInActivity with flag to prevent auto-login
             Intent intent = new Intent(MainActivity.this, SignInActivity.class);
             intent.putExtra("fromLogout", true);
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -322,15 +271,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
+    public boolean onCreateOptionsMenu(android.view.Menu menu) {
         getMenuInflater().inflate(R.menu.main_activity_menu, menu);
         return true;
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
+    public boolean onOptionsItemSelected(android.view.MenuItem item) {
         if (item.getItemId() == R.id.action_rates_graphs) {
-            // Navigate to Rates Graphs Activity
             Intent intent = new Intent(this, RatesGraphsActivity.class);
             startActivity(intent);
             return true;
@@ -341,15 +289,10 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        // Recheck battery optimization status when returning to the activity
         if (batteryOptSwitch != null) {
             batteryOptSwitch.setChecked(isIgnoringBatteryOptimization());
         }
-        
-        // Refresh date and time
         setupDateAndTime();
-        
-        // Refresh rates when returning to the activity
         fetchCurrentRates();
     }
 }

@@ -32,6 +32,13 @@
 
     </style>
 
+    <!-- New Splash Theme for the Splash Screen -->
+    <style name="SplashTheme" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="android:windowBackground">@color/light_background</item>
+        <item name="android:windowNoTitle">true</item>
+    </style>
+
+
     <style name="Widget.App.Toolbar" parent="Widget.MaterialComponents.Toolbar.Primary">
         <item name="titleTextColor">@android:color/black</item>
         <item name="subtitleTextColor">@android:color/black</item>

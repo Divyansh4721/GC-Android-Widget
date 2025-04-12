@@ -1,5 +1,6 @@
 package com.gcjewellers.rateswidget;
 
+import android.content.Context;
 import android.content.res.Configuration;
 import android.graphics.Color;
 import android.os.AsyncTask;
@@ -10,21 +11,27 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Spinner;
 import android.widget.TextView;
+
 import androidx.appcompat.app.AppCompatActivity;
+
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.AxisBase;
+import com.github.mikephil.charting.components.MarkerView;
 import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
 import com.github.mikephil.charting.formatter.ValueFormatter;
+import com.github.mikephil.charting.highlight.Highlight;
+import com.github.mikephil.charting.utils.MPPointF;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.button.MaterialButtonToggleGroup;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
+
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.lang.reflect.Type;
@@ -43,43 +50,55 @@ public class RatesGraphsActivity extends AppCompatActivity {
     private static final String TAG = "RatesGraphsActivity";
     private static final String API_BASE_URL = "https://goldrate.divyanshbansal.com/api/rates?startDate=2025-04-08&endDate=2025-04-11";
 
-    // UI
+    // UI Components
     private Spinner spinnerSeries;
     private MaterialButtonToggleGroup toggleBuySell;
     private MaterialButton buttonBuy, buttonSell;
     private TextView textLow, textHigh;
     private LineChart lineChart;
+    
+    // New UI Components for Time Range Filtering
+    private MaterialButtonToggleGroup toggleTimeRange;
+    private MaterialButton buttonOneDay, buttonOneWeek, buttonOneYear;
 
-    // Full response from the API
+    // Data from API
     private ApiResponse apiResponse;
-    // Holds the Date objects for each data point (parsed from createdAt).
+    // List to hold Date objects corresponding to each DataItem's createdAt field.
     private final List<Date> dataPointDates = new ArrayList<>();
 
-    // The available series (matching the JSON structure)
+    // Series options in order
     private final String[] seriesOptions = {
             "golddollar", "silverdollar", "dollarinr", "goldfuture",
             "silverfuture", "gold", "goldrefine", "goldrtgs"
     };
-    // Which series is currently selected in the Spinner
+    // Defaults
     private int selectedSeriesIndex = 0;
-    // True => Buy is selected; False => Sell
-    private boolean isBuySelected = true;
+    private boolean isBuySelected = true; // true = Buy, false = Sell
 
-    // For parsing the "createdAt" in ISO8601 format (UTC).
-    private final SimpleDateFormat isoFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault());
+    // For parsing ISO8601 date coming from API (assumed UTC)
+    private final SimpleDateFormat isoFormat =
+            new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault());
+
+    // New enum for time ranges
+    private enum TimeRange {
+        ONE_DAY, ONE_WEEK, ONE_YEAR
+    }
+    // Default time range selection
+    private TimeRange selectedTimeRange = TimeRange.ONE_WEEK;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_rates_graphs);
-
-        // If your API times are in UTC, set that here.
         isoFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
 
         initializeViews();
         setupSpinner();
         setupToggleButtons();
+        setupTimeRangeToggle(); // Setup the new time-range toggle functionality
         setupChart();
+        // Set our custom marker view (now using a built-in system layout)
+        lineChart.setMarker(new CustomMarkerView(this));
         fetchRatesData();
     }
 
@@ -91,6 +110,12 @@ public class RatesGraphsActivity extends AppCompatActivity {
         textLow = findViewById(R.id.text_low);
         textHigh = findViewById(R.id.text_high);
         lineChart = findViewById(R.id.line_chart);
+        
+        // Initialize new time range toggle controls
+        toggleTimeRange = findViewById(R.id.toggle_time_range);
+        buttonOneDay = findViewById(R.id.button_one_day);
+        buttonOneWeek = findViewById(R.id.button_one_week);
+        buttonOneYear = findViewById(R.id.button_one_year);
     }
 
     private void setupSpinner() {
@@ -111,8 +136,7 @@ public class RatesGraphsActivity extends AppCompatActivity {
     }
 
     private void setupToggleButtons() {
-        // Ensure "Buy" is initially selected
-        toggleBuySell.check(R.id.button_buy);
+        toggleBuySell.check(R.id.button_buy); // Default selection
         toggleBuySell.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
             if (isChecked) {
                 isBuySelected = (checkedId == R.id.button_buy);
@@ -120,31 +144,62 @@ public class RatesGraphsActivity extends AppCompatActivity {
             }
         });
     }
+    
+    private void setupTimeRangeToggle() {
+        // Set default selection to "One Week"
+        toggleTimeRange.check(R.id.button_one_week);
+        toggleTimeRange.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
+            if (isChecked) {
+                if (checkedId == R.id.button_one_day) {
+                    selectedTimeRange = TimeRange.ONE_DAY;
+                } else if (checkedId == R.id.button_one_week) {
+                    selectedTimeRange = TimeRange.ONE_WEEK;
+                } else if (checkedId == R.id.button_one_year) {
+                    selectedTimeRange = TimeRange.ONE_YEAR;
+                }
+                // Refresh the UI (only the graph changes)
+                updateUI();
+            }
+        });
+    }
 
     private void setupChart() {
-        // Remove the default description text
-        lineChart.getDescription().setEnabled(false);
-        // Allow user interactions (scrolling, zooming)
+        // Disable the description text
+        lineChart.getDescription().setEnabled(true);
+        // Enable touch gestures (panning/zooming)
         lineChart.setTouchEnabled(true);
         lineChart.setDragEnabled(true);
         lineChart.setScaleEnabled(true);
         lineChart.setPinchZoom(true);
-        // Simple animation
+        // Animate horizontal drawing
         lineChart.animateX(1000);
-
-        // Hide background grid if desired
-        lineChart.setDrawGridBackground(false);
-
-        // X-axis style
+        
+        // Remove any extra offsets so that zooming focuses on the data points.
+        lineChart.setExtraOffsets(0f, 0f, 0f, 0f);
+        
+        // Enable auto-scale based solely on the data (optional but recommended).
+        lineChart.setAutoScaleMinMaxEnabled(true);
+    
         int axisTextColor = isDarkThemeActive() ? Color.WHITE : Color.BLACK;
+        
+        // X-Axis configuration
         XAxis xAxis = lineChart.getXAxis();
         xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
         xAxis.setTextColor(axisTextColor);
         xAxis.setDrawGridLines(true);
         xAxis.setGranularity(1f);
-        // We'll assign a real ValueFormatter once we load data (in updateChartWithData).
-
-        // Y-axis style
+        // Remove additional spacing on the left/right of the x-axis.
+        xAxis.setSpaceMin(0f);
+        xAxis.setSpaceMax(0f);
+        // Set a dummy formatter; it will be replaced later after the data loads.
+        xAxis.setValueFormatter(new ValueFormatter() {
+            @Override
+            public String getAxisLabel(float value, AxisBase axis) {
+                return "";
+            }
+        });
+    
+        // Y-Axis configuration
         YAxis leftAxis = lineChart.getAxisLeft();
         leftAxis.setTextColor(axisTextColor);
         leftAxis.setDrawGridLines(true);
@@ -156,84 +211,95 @@ public class RatesGraphsActivity extends AppCompatActivity {
         new FetchRatesTask().execute(API_BASE_URL);
     }
 
-    // Called whenever data changes or the user modifies the series/toggle.
+    // Updates both the chart and high/low TextViews based on API data, selected series, toggle, and time range.
     private void updateUI() {
         if (apiResponse == null) return;
         updateChartWithData();
         updateHighLowText();
     }
 
-    // Build the chart entries from the "data" array, picking the selected row & buy/sell index.
+    // Filters data according to the selected time range and updates the chart.
     private void updateChartWithData() {
         dataPointDates.clear();
         List<Entry> entries = new ArrayList<>();
-        List<DataItem> dataList = apiResponse.getData();
 
-        for (int i = 0; i < dataList.size(); i++) {
-            DataItem item = dataList.get(i);
+        if (apiResponse == null || apiResponse.getData() == null || apiResponse.getData().isEmpty())
+            return;
 
-            // Parse out the date/time
+        // Determine the maximum date in the dataset and cache all parsed dates.
+        Date maxDate = null;
+        List<Date> allDates = new ArrayList<>();
+        for (DataItem item : apiResponse.getData()) {
             try {
                 Date d = isoFormat.parse(item.getCreatedAt());
-                dataPointDates.add(d);
+                allDates.add(d);
+                if (maxDate == null || d.after(maxDate)) {
+                    maxDate = d;
+                }
             } catch (ParseException e) {
-                // If there's an error, fallback to "now"
-                dataPointDates.add(new Date());
+                allDates.add(new Date());
                 Log.e(TAG, "Error parsing createdAt", e);
             }
-
-            // Parse the "data" field
-            try {
-                JsonArray outerArray = JsonParser.parseString(item.getData()).getAsJsonArray();
-                // We select the row corresponding to the user’s spinner selection
-                JsonArray seriesRow = outerArray.get(selectedSeriesIndex).getAsJsonArray();
-                // For the graph, index=0 => Buy, index=1 => Sell
-                String valueStr = isBuySelected ? seriesRow.get(0).getAsString() : seriesRow.get(1).getAsString();
-                float value = Float.parseFloat(valueStr);
-                entries.add(new Entry(i, value));
-            } catch (Exception e) {
-                Log.e(TAG, "Error parsing data array at index " + i, e);
-            }
+        }
+        if (maxDate == null) {
+            maxDate = new Date();
         }
 
-        // Create the line dataset
-        LineDataSet dataSet = new LineDataSet(entries, "Rates");
-        // Make the line green, slightly thick
-        dataSet.setColor(Color.parseColor("#388E3C")); // a shade of green
-        dataSet.setLineWidth(2f);
+        // Calculate threshold based on selected time range.
+        long thresholdMillis = maxDate.getTime();
+        switch (selectedTimeRange) {
+            case ONE_DAY:
+                thresholdMillis = maxDate.getTime() - 24 * 60 * 60 * 1000L;
+                break;
+            case ONE_WEEK:
+                thresholdMillis = maxDate.getTime() - 7 * 24 * 60 * 60 * 1000L;
+                break;
+            case ONE_YEAR:
+                thresholdMillis = maxDate.getTime() - 365 * 24 * 60 * 60 * 1000L;
+                break;
+        }
 
-        // Show circles at each data point
+        // Loop through and add only data points whose date is within the threshold.
+        int xIndex = 0;
+        int i = 0;
+        for (DataItem item : apiResponse.getData()) {
+            Date currentDate = allDates.get(i);
+            if (currentDate.getTime() >= thresholdMillis) {
+                dataPointDates.add(currentDate);
+                try {
+                    JsonArray outerArray = JsonParser.parseString(item.getData()).getAsJsonArray();
+                    JsonArray seriesRow = outerArray.get(selectedSeriesIndex).getAsJsonArray();
+                    // Select Buy (index 0) or Sell (index 1) based on toggle.
+                    String valueStr = isBuySelected ? seriesRow.get(0).getAsString() : seriesRow.get(1).getAsString();
+                    float value = Float.parseFloat(valueStr);
+                    entries.add(new Entry(xIndex, value));
+                    xIndex++;
+                } catch (Exception e) {
+                    Log.e(TAG, "Error parsing data at index " + i, e);
+                }
+            }
+            i++;
+        }
+
+        LineDataSet dataSet = new LineDataSet(entries, "Rates");
+        dataSet.setColor(Color.parseColor("#388E3C")); // Green line
+        dataSet.setLineWidth(2f);
         dataSet.setDrawCircles(true);
         dataSet.setCircleColor(Color.parseColor("#388E3C"));
         dataSet.setCircleRadius(3f);
-
-        // Draw gradient fill under the line
+        dataSet.setDrawValues(false);
+        dataSet.setMode(LineDataSet.Mode.CUBIC_BEZIER);
         dataSet.setDrawFilled(true);
-        // The gradient fill can be done with two colors: top -> bottom
-        // This will create a gentle fade from a lighter blue down to a slightly different shade.
-        dataSet.setGradientColor(
-                Color.parseColor("#E3F2FD"), // top color (very light blue)
-                Color.parseColor("#BBDEFB")  // bottom color (light blue)
-        );
+        dataSet.setGradientColor(Color.parseColor("#E3F2FD"), Color.parseColor("#BBDEFB"));
         dataSet.setFillAlpha(200);
 
-        // Hide the point labels
-        dataSet.setDrawValues(false);
-
-        // Optionally, a smooth (cubic) line
-        dataSet.setMode(LineDataSet.Mode.CUBIC_BEZIER);
-
-        // Create final LineData and attach to chart
         LineData lineData = new LineData(dataSet);
         lineChart.setData(lineData);
-
-        // Set up a custom X-axis formatter that displays date by default,
-        // and shows time if the user zooms in. (Similar to your earlier code.)
         lineChart.getXAxis().setValueFormatter(new DateTimeValueFormatter());
         lineChart.invalidate();
     }
 
-    // Display "Lowest: ___" and "Highest: ___" from the stats object
+    // Updates the High and Low TextViews based on the stats from the API.
     private void updateHighLowText() {
         if (apiResponse.getStats() == null) {
             textLow.setText("Lowest: N/A");
@@ -279,33 +345,26 @@ public class RatesGraphsActivity extends AppCompatActivity {
         }
     }
 
-    // Custom ValueFormatter that changes to time if user zooms in
+    // Custom ValueFormatter: by default shows date (dd/MM); when zoomed in, shows time (HH:mm).
     private class DateTimeValueFormatter extends ValueFormatter {
-        // Two formatters: date by default, time if zoomed
         private final SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM", Locale.getDefault());
         private final SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
-        // If the scaleX is greater than this threshold, we show "HH:mm"
-        private final float ZOOM_THRESHOLD = 5f;
-
+        private final float zoomThreshold = 5f;
         @Override
         public String getAxisLabel(float value, AxisBase axis) {
             int index = (int) value;
             if (index < 0 || index >= dataPointDates.size()) return "";
             Date d = dataPointDates.get(index);
-
-            // Check how far the user has zoomed horizontally
             float scaleX = lineChart.getViewPortHandler().getScaleX();
-            if (scaleX > ZOOM_THRESHOLD) {
-                // If zoomed in, show time
+            if (scaleX > zoomThreshold) {
                 return timeFormat.format(d);
             } else {
-                // Else show day/month
                 return dateFormat.format(d);
             }
         }
     }
 
-    // Simple AsyncTask to fetch the JSON
+    // AsyncTask to fetch JSON from the API.
     private class FetchRatesTask extends AsyncTask<String, Void, ApiResponse> {
         @Override
         protected ApiResponse doInBackground(String... params) {
@@ -316,10 +375,8 @@ public class RatesGraphsActivity extends AppCompatActivity {
                 connection.setRequestMethod("GET");
                 connection.setConnectTimeout(10000);
                 connection.setReadTimeout(10000);
-
                 int responseCode = connection.getResponseCode();
                 Log.d(TAG, "Response Code: " + responseCode);
-
                 if (responseCode == HttpURLConnection.HTTP_OK) {
                     BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
                     StringBuilder response = new StringBuilder();
@@ -328,10 +385,8 @@ public class RatesGraphsActivity extends AppCompatActivity {
                         response.append(line);
                     }
                     reader.close();
-
                     String responseStr = response.toString();
                     Log.d(TAG, "Full Response: " + responseStr);
-
                     Gson gson = new Gson();
                     Type responseType = new TypeToken<ApiResponse>() {}.getType();
                     return gson.fromJson(responseStr, responseType);
@@ -345,7 +400,6 @@ public class RatesGraphsActivity extends AppCompatActivity {
             }
             return null;
         }
-
         @Override
         protected void onPostExecute(ApiResponse result) {
             if (result == null || result.getData() == null || result.getData().isEmpty()) {
@@ -357,24 +411,19 @@ public class RatesGraphsActivity extends AppCompatActivity {
         }
     }
 
-    // Model classes
-
+    // Model classes for JSON parsing
     private static class ApiResponse {
         private List<DataItem> data;
         private Stats stats;
         public List<DataItem> getData() { return data; }
         public Stats getStats() { return stats; }
     }
-
     private static class DataItem {
-        // "data" is a JSON string (an array of arrays)
-        private String data;
-        // "createdAt" is the date/time in ISO8601
-        private String createdAt;
+        private String data;       // JSON string representing an array of arrays
+        private String createdAt;  // ISO date string
         public String getData() { return data; }
         public String getCreatedAt() { return createdAt; }
     }
-
     private static class Stats {
         private RateInfo golddollar;
         private RateInfo silverdollar;
@@ -393,14 +442,12 @@ public class RatesGraphsActivity extends AppCompatActivity {
         public RateInfo getGoldrefine() { return goldrefine; }
         public RateInfo getGoldrtgs() { return goldrtgs; }
     }
-
     private static class RateInfo {
         private Price buy;
         private Price sell;
         public Price getBuy() { return buy; }
         public Price getSell() { return sell; }
     }
-
     private static class Price {
         private float high;
         private float low;
@@ -408,9 +455,37 @@ public class RatesGraphsActivity extends AppCompatActivity {
         public float getLow() { return low; }
     }
 
-    // Helper to detect dark mode
+    // Helper method to detect dark mode.
     private boolean isDarkThemeActive() {
         int currentNightMode = getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
         return currentNightMode == Configuration.UI_MODE_NIGHT_YES;
+    }
+
+    // Custom MarkerView to display a box with details (rate, date, time) when the user taps a point.
+    private class CustomMarkerView extends MarkerView {
+        private final TextView tvContent;
+        private final SimpleDateFormat markerFormat = new SimpleDateFormat("dd/MM HH:mm", Locale.getDefault());
+        public CustomMarkerView(Context context) {
+            // Use a built-in simple layout to avoid inflating our own XML.
+            super(context, android.R.layout.simple_list_item_1);
+            tvContent = findViewById(android.R.id.text1);
+            tvContent.setTextColor(Color.WHITE);
+            tvContent.setBackgroundColor(Color.DKGRAY);
+            tvContent.setPadding(10, 10, 10, 10);
+        }
+        @Override
+        public void refreshContent(Entry e, Highlight highlight) {
+            int index = (int) e.getX();
+            String dateStr = "";
+            if (index >= 0 && index < dataPointDates.size()) {
+                dateStr = markerFormat.format(dataPointDates.get(index));
+            }
+            tvContent.setText("Rate: " + e.getY() + "\n" + dateStr);
+            super.refreshContent(e, highlight);
+        }
+        @Override
+        public MPPointF getOffset() {
+            return new MPPointF(-(getWidth() / 2f), -getHeight());
+        }
     }
 }

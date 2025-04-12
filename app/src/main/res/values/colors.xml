@@ -29,4 +29,7 @@
     <color name="dark_background">#101010</color>
     <color name="black.1">#202020</color>
 
+    <color name="splash_background">#FFCC00</color>
+
+
 </resources>

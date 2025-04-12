@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
- A layout with a vertical LinearLayout. 
- The top row includes a Spinner (series selector) and a ToggleGroup (Buy/Sell).
- Below that, two TextViews show the Low/High from "stats". 
- Finally, a LineChart occupies the remaining space with a weighted height.
+ A vertical LinearLayout with a Spinner, Buy/Sell toggle,
+ two TextViews for Low/High values, and a full-page LineChart.
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -12,14 +10,14 @@
     android:orientation="vertical"
     android:padding="16dp">
 
-    <!-- Spinner for selecting the series (golddollar, silverdollar, etc.) -->
+    <!-- Series selector -->
     <Spinner
         android:id="@+id/spinner_series"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:spinnerMode="dropdown" />
 
-    <!-- Toggle for Buy/Sell selection -->
+    <!-- Buy/Sell toggle buttons -->
     <com.google.android.material.button.MaterialButtonToggleGroup
         android:id="@+id/toggle_buy_sell"
         android:layout_width="match_parent"
@@ -44,37 +42,66 @@
             android:text="Sell" />
     </com.google.android.material.button.MaterialButtonToggleGroup>
 
-    <!-- High and Low TextViews -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginTop="8dp">
+       <!-- High and Low Display -->
+       <LinearLayout
+       android:layout_width="match_parent"
+       android:layout_height="wrap_content"
+       android:orientation="horizontal"
+       android:layout_marginTop="8dp">
 
-        <TextView
-            android:id="@+id/text_low"
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="wrap_content"
-            android:text="Lowest: ₹0.00"
-            android:textSize="16sp" />
+       <TextView
+           android:id="@+id/text_low"
+           android:layout_width="0dp"
+           android:layout_weight="1"
+           android:layout_height="wrap_content"
+           android:text="Lowest: ₹0.00"
+           android:textSize="16sp" />
 
-        <TextView
-            android:id="@+id/text_high"
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="wrap_content"
-            android:text="Highest: ₹0.00"
-            android:textSize="16sp"
-            android:gravity="end" />
-    </LinearLayout>
+       <TextView
+           android:id="@+id/text_high"
+           android:layout_width="0dp"
+           android:layout_weight="1"
+           android:layout_height="wrap_content"
+           android:text="Highest: ₹0.00"
+           android:textSize="16sp"
+           android:gravity="end" />
+   </LinearLayout>
 
-    <!-- Full-page LineChart: occupies all remaining space -->
-    <com.github.mikephil.charting.charts.LineChart
-        android:id="@+id/line_chart"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:layout_marginTop="16dp" />
+   <!-- Time Range Toggle: One Day, One Week, One Year -->
+   <com.google.android.material.button.MaterialButtonToggleGroup
+       android:id="@+id/toggle_time_range"
+       android:layout_width="match_parent"
+       android:layout_height="wrap_content"
+       app:singleSelection="true"
+       android:layout_marginTop="8dp">
 
+       <com.google.android.material.button.MaterialButton
+           android:id="@+id/button_one_day"
+           android:layout_width="0dp"
+           android:layout_weight="1"
+           android:layout_height="wrap_content"
+           android:text="One Day" />
+
+       <com.google.android.material.button.MaterialButton
+           android:id="@+id/button_one_week"
+           android:layout_width="0dp"
+           android:layout_weight="1"
+           android:layout_height="wrap_content"
+           android:text="One Week" />
+
+       <com.google.android.material.button.MaterialButton
+           android:id="@+id/button_one_year"
+           android:layout_width="0dp"
+           android:layout_weight="1"
+           android:layout_height="wrap_content"
+           android:text="One Year" />
+   </com.google.android.material.button.MaterialButtonToggleGroup>
+
+   <!-- Full-page LineChart -->
+   <com.github.mikephil.charting.charts.LineChart
+       android:id="@+id/line_chart"
+       android:layout_width="match_parent"
+       android:layout_height="0dp"
+       android:layout_weight="1"
+       android:layout_marginTop="16dp" />
 </LinearLayout>

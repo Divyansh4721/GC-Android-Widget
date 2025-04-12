@@ -5,14 +5,15 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
+
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
         style="?attr/toolbarStyle"
         android:background="?attr/colorPrimary"
-        app:titleTextColor="?android:attr/textColorPrimary"
         app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
+
 
     <ScrollView
         android:layout_width="match_parent"
