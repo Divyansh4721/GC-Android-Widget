@@ -197,9 +197,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupWidgetRefreshSwitch() {
-        // Assuming RatesWidgetProvider.isAutoRefreshEnabled is defined in your widget functionality.
-        WidgetManager.RatesWidgetProvider RatesWidgetProvider = null;
-        boolean isAutoRefreshEnabled = RatesWidgetProvider.isAutoRefreshEnabled(this);
+        WidgetManager.RatesWidgetProvider ratesWidgetProvider = new WidgetManager.RatesWidgetProvider();
+        boolean isAutoRefreshEnabled = ratesWidgetProvider.isAutoRefreshEnabled(this);
         widgetRefreshSwitch.setChecked(isAutoRefreshEnabled);
         widgetRefreshSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
             Intent intent = new Intent(this, WidgetManager.RatesWidgetProvider.class);

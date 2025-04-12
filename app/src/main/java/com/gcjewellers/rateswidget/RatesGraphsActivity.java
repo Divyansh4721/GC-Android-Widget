@@ -11,7 +11,9 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Spinner;
 import android.widget.TextView;
+
 import androidx.appcompat.app.AppCompatActivity;
+
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.AxisBase;
 import com.github.mikephil.charting.components.MarkerView;
@@ -29,6 +31,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
+
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.lang.reflect.Type;
@@ -37,6 +40,7 @@ import java.net.URL;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -45,7 +49,7 @@ import java.util.TimeZone;
 public class RatesGraphsActivity extends AppCompatActivity {
 
     private static final String TAG = "RatesGraphsActivity";
-    private static final String API_BASE_URL = "https://goldrate.divyanshbansal.com/api/rates?startDate=2025-04-08&endDate=2025-04-11";
+    // The static API_BASE_URL is removed in favor of a dynamic URL builder.
 
     // UI Components
     private Spinner spinnerSeries;
@@ -94,7 +98,7 @@ public class RatesGraphsActivity extends AppCompatActivity {
         setupToggleButtons();
         setupTimeRangeToggle(); // Setup the new time-range toggle functionality
         setupChart();
-        // Set our custom marker view (now using a built-in system layout)
+        // Set our custom marker view (using a built-in system layout)
         lineChart.setMarker(new CustomMarkerView(this));
         fetchRatesData();
     }
@@ -154,8 +158,8 @@ public class RatesGraphsActivity extends AppCompatActivity {
                 } else if (checkedId == R.id.button_one_year) {
                     selectedTimeRange = TimeRange.ONE_YEAR;
                 }
-                // Refresh the UI (only the graph changes)
-                updateUI();
+                // Refresh the API results each time the selected time range changes.
+                fetchRatesData();
             }
         });
     }
@@ -174,7 +178,7 @@ public class RatesGraphsActivity extends AppCompatActivity {
         // Remove any extra offsets so that zooming focuses on the data points.
         lineChart.setExtraOffsets(0f, 0f, 0f, 0f);
         
-        // Enable auto-scale based solely on the data (optional but recommended).
+        // Enable auto-scale based solely on the data.
         lineChart.setAutoScaleMinMaxEnabled(true);
     
         int axisTextColor = isDarkThemeActive() ? Color.WHITE : Color.BLACK;
@@ -185,10 +189,9 @@ public class RatesGraphsActivity extends AppCompatActivity {
         xAxis.setTextColor(axisTextColor);
         xAxis.setDrawGridLines(true);
         xAxis.setGranularity(1f);
-        // Remove additional spacing on the left/right of the x-axis.
         xAxis.setSpaceMin(0f);
         xAxis.setSpaceMax(0f);
-        // Set a dummy formatter; it will be replaced later after the data loads.
+        // Dummy formatter; replaced after data loads.
         xAxis.setValueFormatter(new ValueFormatter() {
             @Override
             public String getAxisLabel(float value, AxisBase axis) {
@@ -204,8 +207,34 @@ public class RatesGraphsActivity extends AppCompatActivity {
         lineChart.getAxisRight().setEnabled(false);
     }
 
+    // Dynamically build the API URL using the current date and selected time range.
+    private String getApiUrl() {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        Calendar calendar = Calendar.getInstance();
+        // End date is today's date.
+        String endDate = sdf.format(calendar.getTime());
+        
+        // Adjust calendar for start date based on selected time range.
+        switch (selectedTimeRange) {
+            case ONE_DAY:
+                break;
+            case ONE_WEEK:
+                calendar.add(Calendar.DATE, -7);
+                break;
+            case ONE_YEAR:
+                calendar.add(Calendar.DATE, -365);
+                break;
+        }
+        String startDate = sdf.format(calendar.getTime());
+        
+        return "https://goldrate.divyanshbansal.com/api/rates?startDate=" + startDate + "&endDate=" + endDate;
+    }
+
     private void fetchRatesData() {
-        new FetchRatesTask().execute(API_BASE_URL);
+        String apiUrl = getApiUrl();
+        // Log the API URL each time before the API call is executed.
+        Log.d(TAG, "API being hit: " + apiUrl);
+        new FetchRatesTask().execute(apiUrl);
     }
 
     // Updates both the chart and high/low TextViews based on API data, selected series, toggle, and time range.
@@ -223,7 +252,7 @@ public class RatesGraphsActivity extends AppCompatActivity {
         if (apiResponse == null || apiResponse.getData() == null || apiResponse.getData().isEmpty())
             return;
 
-        // Determine the maximum date in the dataset and cache all parsed dates.
+        // Determine the maximum date in the dataset and cache parsed dates.
         Date maxDate = null;
         List<Date> allDates = new ArrayList<>();
         for (DataItem item : apiResponse.getData()) {
@@ -256,7 +285,7 @@ public class RatesGraphsActivity extends AppCompatActivity {
                 break;
         }
 
-        // Loop through and add only data points whose date is within the threshold.
+        // Add only data points within the threshold.
         int xIndex = 0;
         int i = 0;
         for (DataItem item : apiResponse.getData()) {
@@ -342,7 +371,7 @@ public class RatesGraphsActivity extends AppCompatActivity {
         }
     }
 
-    // Custom ValueFormatter: by default shows date (dd/MM); when zoomed in, shows time (HH:mm).
+    // Custom ValueFormatter: shows date (dd/MM) or time (HH:mm) based on the zoom level.
     private class DateTimeValueFormatter extends ValueFormatter {
         private final SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM", Locale.getDefault());
         private final SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
@@ -458,7 +487,7 @@ public class RatesGraphsActivity extends AppCompatActivity {
         return currentNightMode == Configuration.UI_MODE_NIGHT_YES;
     }
 
-    // Custom MarkerView to display a box with details (rate, date, time) when the user taps a point.
+    // Custom MarkerView to display details (rate, date, time) when the user taps a point.
     private class CustomMarkerView extends MarkerView {
         private final TextView tvContent;
         private final SimpleDateFormat markerFormat = new SimpleDateFormat("dd/MM HH:mm", Locale.getDefault());
