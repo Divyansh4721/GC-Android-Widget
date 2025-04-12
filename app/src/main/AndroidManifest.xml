@@ -48,22 +48,25 @@
             </intent-filter>
         </activity>
 
+        <!-- Boot completed receiver referencing inner class -->
         <receiver
-            android:name=".BootCompletedReceiver"
+            android:name=".WidgetManager$BootCompletedReceiver"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
 
+        <!-- Widget update service referencing inner class -->
         <service
-            android:name=".WidgetUpdateService"
+            android:name=".WidgetManager$WidgetUpdateService"
             android:enabled="true"
             android:exported="false"
             android:permission="android.permission.BIND_JOB_SERVICE" />
 
+        <!-- Widget provider referencing inner class -->
         <receiver
-            android:name=".RatesWidgetProvider"
+            android:name=".WidgetManager$RatesWidgetProvider"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
@@ -73,7 +76,6 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/rates_widget_info" />
         </receiver>
-
 
     </application>
 </manifest>

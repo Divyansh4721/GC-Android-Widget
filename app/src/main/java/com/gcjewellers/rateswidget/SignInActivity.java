@@ -204,9 +204,9 @@ public class SignInActivity extends AppCompatActivity {
 
     private void clearWidget() {
         AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(this);
-        ComponentName thisWidget = new ComponentName(this, RatesWidgetProvider.class);
+        ComponentName thisWidget = new ComponentName(this, WidgetManager.RatesWidgetProvider.class);
         int[] appWidgetIds = appWidgetManager.getAppWidgetIds(thisWidget);
-        Intent updateIntent = new Intent(this, RatesWidgetProvider.class);
+        Intent updateIntent = new Intent(this, WidgetManager.RatesWidgetProvider.class);
         updateIntent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
         updateIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, appWidgetIds);
         sendBroadcast(updateIntent);
@@ -214,9 +214,9 @@ public class SignInActivity extends AppCompatActivity {
 
     private void proceedToMainActivity() {
         AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(this);
-        ComponentName thisWidget = new ComponentName(this, RatesWidgetProvider.class);
+        ComponentName thisWidget = new ComponentName(this, WidgetManager.RatesWidgetProvider.class);
         int[] appWidgetIds = appWidgetManager.getAppWidgetIds(thisWidget);
-        Intent updateIntent = new Intent(this, RatesWidgetProvider.class);
+        Intent updateIntent = new Intent(this, WidgetManager.RatesWidgetProvider.class);
         updateIntent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
         updateIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, appWidgetIds);
         sendBroadcast(updateIntent);

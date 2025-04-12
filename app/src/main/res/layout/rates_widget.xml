@@ -12,22 +12,21 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
-        android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
         android:text="GC Jewellers"
         android:textColor="@android:color/white"
         android:textStyle="bold"
         android:textSize="14sp" />
 
+    <!-- Updated TextView ID from "last_updated" to "rates_updated_time" -->
     <TextView
-        android:id="@+id/last_updated"
+        android:id="@+id/rates_updated_time"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
-        android:layout_toStartOf="@id/refresh_button"
-        android:layout_toLeftOf="@id/refresh_button"
         android:layout_toEndOf="@id/widget_title"
         android:layout_toRightOf="@id/widget_title"
+        android:layout_toStartOf="@id/refresh_button"
         android:gravity="end"
         android:text="--:--"
         android:textColor="@android:color/white"
@@ -38,7 +37,6 @@
         android:layout_width="22dp"
         android:layout_height="22dp"
         android:layout_alignParentEnd="true"
-        android:layout_alignParentRight="true"
         android:layout_alignParentTop="true"
         android:background="@android:color/transparent"
         android:src="@drawable/ic_refresh" />
