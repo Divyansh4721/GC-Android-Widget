@@ -15,14 +15,21 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Rateswidget">
 
+        <!-- New launcher activity -->
         <activity
-            android:name=".SignInActivity"
-            android:exported="true">
+            android:name=".SplashActivity"
+            android:exported="true"
+            android:theme="@style/SplashTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- SignInActivity no longer has the launcher intent -->
+        <activity
+            android:name=".SignInActivity"
+            android:exported="true" />
 
         <activity
             android:name=".MainActivity"
@@ -59,13 +66,14 @@
             android:name=".RatesWidgetProvider"
             android:exported="true">
             <intent-filter>
-                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-                 <action android:name="com.gcjewellers.rateswidget.ACTION_REFRESH" />
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.gcjewellers.rateswidget.ACTION_REFRESH" />
             </intent-filter>
-              <meta-data
-                  android:name="android.appwidget.provider"
-                  android:resource="@xml/rates_widget_info" />
-            </receiver>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/rates_widget_info" />
+        </receiver>
+
 
     </application>
 </manifest>
