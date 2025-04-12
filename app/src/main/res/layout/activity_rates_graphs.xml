@@ -42,66 +42,66 @@
             android:text="Sell" />
     </com.google.android.material.button.MaterialButtonToggleGroup>
 
-       <!-- High and Low Display -->
-       <LinearLayout
-       android:layout_width="match_parent"
-       android:layout_height="wrap_content"
-       android:orientation="horizontal"
-       android:layout_marginTop="8dp">
+    <!-- High and Low Display -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="8dp">
 
-       <TextView
-           android:id="@+id/text_low"
-           android:layout_width="0dp"
-           android:layout_weight="1"
-           android:layout_height="wrap_content"
-           android:text="Lowest: ₹0.00"
-           android:textSize="16sp" />
+        <TextView
+            android:id="@+id/text_low"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:text="Lowest: ₹0.00"
+            android:textSize="16sp" />
 
-       <TextView
-           android:id="@+id/text_high"
-           android:layout_width="0dp"
-           android:layout_weight="1"
-           android:layout_height="wrap_content"
-           android:text="Highest: ₹0.00"
-           android:textSize="16sp"
-           android:gravity="end" />
-   </LinearLayout>
+        <TextView
+            android:id="@+id/text_high"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:text="Highest: ₹0.00"
+            android:textSize="16sp"
+            android:gravity="end" />
+    </LinearLayout>
 
-   <!-- Time Range Toggle: One Day, One Week, One Year -->
-   <com.google.android.material.button.MaterialButtonToggleGroup
-       android:id="@+id/toggle_time_range"
-       android:layout_width="match_parent"
-       android:layout_height="wrap_content"
-       app:singleSelection="true"
-       android:layout_marginTop="8dp">
+    <!-- Time Range Toggle: One Day, One Week, One Year -->
+    <com.google.android.material.button.MaterialButtonToggleGroup
+        android:id="@+id/toggle_time_range"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:singleSelection="true"
+        android:layout_marginTop="8dp">
 
-       <com.google.android.material.button.MaterialButton
-           android:id="@+id/button_one_day"
-           android:layout_width="0dp"
-           android:layout_weight="1"
-           android:layout_height="wrap_content"
-           android:text="One Day" />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/button_one_day"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:text="One Day" />
 
-       <com.google.android.material.button.MaterialButton
-           android:id="@+id/button_one_week"
-           android:layout_width="0dp"
-           android:layout_weight="1"
-           android:layout_height="wrap_content"
-           android:text="One Week" />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/button_one_week"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:text="One Week" />
 
-       <com.google.android.material.button.MaterialButton
-           android:id="@+id/button_one_year"
-           android:layout_width="0dp"
-           android:layout_weight="1"
-           android:layout_height="wrap_content"
-           android:text="One Year" />
-   </com.google.android.material.button.MaterialButtonToggleGroup>
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/button_one_year"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:text="One Year" />
+    </com.google.android.material.button.MaterialButtonToggleGroup>
 
-   <!-- Full-page LineChart -->
-   <com.github.mikephil.charting.charts.LineChart
-       android:id="@+id/line_chart"
-       android:layout_width="match_parent"
-       android:layout_height="0dp"
-       android:layout_weight="1"
-       android:layout_marginTop="16dp" />
+    <!-- Full-page LineChart -->
+    <com.github.mikephil.charting.charts.LineChart
+        android:id="@+id/line_chart"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="16dp" />
 </LinearLayout>

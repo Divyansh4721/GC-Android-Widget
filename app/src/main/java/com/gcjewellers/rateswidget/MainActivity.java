@@ -145,20 +145,21 @@ public class MainActivity extends AppCompatActivity {
             if (user.getPhotoUrl() != null) {
                 try {
                     Picasso.get()
-                        .load(user.getPhotoUrl())
-                        .placeholder(R.drawable.ic_default_profile)
-                        .error(R.drawable.ic_default_profile)
-                        .into(userProfileImage, new Callback() {
-                            @Override
-                            public void onSuccess() {
-                                Log.d(TAG, "Profile image loaded successfully");
-                            }
-                            @Override
-                            public void onError(Exception e) {
-                                Log.e(TAG, "Error loading profile image", e);
-                                generateProfileImage(displayName);
-                            }
-                        });
+                            .load(user.getPhotoUrl())
+                            .placeholder(R.drawable.ic_default_profile)
+                            .error(R.drawable.ic_default_profile)
+                            .into(userProfileImage, new Callback() {
+                                @Override
+                                public void onSuccess() {
+                                    Log.d(TAG, "Profile image loaded successfully");
+                                }
+
+                                @Override
+                                public void onError(Exception e) {
+                                    Log.e(TAG, "Error loading profile image", e);
+                                    generateProfileImage(displayName);
+                                }
+                            });
                 } catch (Exception e) {
                     Log.e(TAG, "Exception loading profile image", e);
                     generateProfileImage(displayName);
@@ -173,8 +174,10 @@ public class MainActivity extends AppCompatActivity {
         try {
             int width = userProfileImage.getWidth();
             int height = userProfileImage.getHeight();
-            if (width <= 0) width = 100;
-            if (height <= 0) height = 100;
+            if (width <= 0)
+                width = 100;
+            if (height <= 0)
+                height = 100;
             // Utilize the integrated ProfileImageGenerator functionality.
             Bitmap profileBitmap = ProfileImageGenerator.generateCircularProfileImage(displayName, width, height);
             userProfileImage.setImageBitmap(profileBitmap);
@@ -206,7 +209,8 @@ public class MainActivity extends AppCompatActivity {
                     ? WidgetManager.RatesWidgetProvider.ACTION_START_UPDATES
                     : WidgetManager.RatesWidgetProvider.ACTION_STOP_UPDATES);
             sendBroadcast(intent);
-            Toast.makeText(this, isChecked ? "Widget auto-refresh enabled" : "Widget auto-refresh disabled", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, isChecked ? "Widget auto-refresh enabled" : "Widget auto-refresh disabled",
+                    Toast.LENGTH_SHORT).show();
         });
     }
 
@@ -224,6 +228,7 @@ public class MainActivity extends AppCompatActivity {
                 silverPriceText.setText("₹" + silverRate);
                 ratesUpdatedTimeText.setText("Updated at " + lastUpdated);
             }
+
             @Override
             public void onError(String errorMessage) {
                 goldRateText.setText("Error");
@@ -267,14 +272,42 @@ public class MainActivity extends AppCompatActivity {
             finish();
         });
     }
-    
+
+    @Override
+    public boolean onCreateOptionsMenu(android.view.Menu menu) {
+        getMenuInflater().inflate(R.menu.main_activity_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(android.view.MenuItem item) {
+        if (item.getItemId() == R.id.action_rates_graphs) {
+            Intent intent = new Intent(this, RatesGraphsActivity.class);
+            startActivity(intent);
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (batteryOptSwitch != null) {
+            batteryOptSwitch.setChecked(isIgnoringBatteryOptimization());
+        }
+        setupDateAndTime();
+        fetchCurrentRates();
+    }
+
     // -------------------------------------------------------------------------
     // Integrated static inner class: ProfileImageGenerator
     // -------------------------------------------------------------------------
     public static class ProfileImageGenerator {
         public static Bitmap generateCircularProfileImage(String name, int width, int height) {
-            if (width <= 0) width = 100;
-            if (height <= 0) height = 100;
+            if (width <= 0)
+                width = 100;
+            if (height <= 0)
+                height = 100;
             Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
             Canvas canvas = new Canvas(bitmap);
             Paint backgroundPaint = new Paint();
@@ -289,30 +322,35 @@ public class MainActivity extends AppCompatActivity {
             String initials = getInitials(name);
             Rect textBounds = new Rect();
             textPaint.getTextBounds(initials, 0, initials.length(), textBounds);
-            canvas.drawText(initials, width / 2f, height / 2f + textBounds.height() / 2f - textBounds.bottom, textPaint);
+            canvas.drawText(initials, width / 2f, height / 2f + textBounds.height() / 2f - textBounds.bottom,
+                    textPaint);
             return bitmap;
         }
+
         private static String getInitials(String name) {
-            if (name == null || name.trim().isEmpty()) return "?";
+            if (name == null || name.trim().isEmpty())
+                return "?";
             String[] nameParts = name.trim().split("\\s+");
             if (nameParts.length == 1) {
                 return nameParts[0].substring(0, 1).toUpperCase();
             }
             return (nameParts[0].substring(0, 1) + nameParts[nameParts.length - 1].substring(0, 1)).toUpperCase();
         }
+
         private static int generateColorFromName(String name) {
-            if (name == null || name.isEmpty()) return Color.GRAY;
+            if (name == null || name.isEmpty())
+                return Color.GRAY;
             int[] goldenColors = {
-                Color.rgb(255, 215, 0),   // Gold
-                Color.rgb(218, 165, 32),  // Goldenrod
-                Color.rgb(238, 232, 170), // Pale Goldenrod
-                Color.rgb(189, 183, 107), // Dark Khaki
-                Color.rgb(240, 230, 140)  // Khaki
+                    Color.rgb(255, 215, 0), // Gold
+                    Color.rgb(218, 165, 32), // Goldenrod
+                    Color.rgb(238, 232, 170), // Pale Goldenrod
+                    Color.rgb(189, 183, 107), // Dark Khaki
+                    Color.rgb(240, 230, 140) // Khaki
             };
             return goldenColors[Math.abs(name.hashCode()) % goldenColors.length];
         }
     }
-    
+
     // -------------------------------------------------------------------------
     // Integrated static inner class: RatesFetcher
     // -------------------------------------------------------------------------
@@ -322,12 +360,13 @@ public class MainActivity extends AppCompatActivity {
         private static final int GOLD_ROW = 5;
         private static final int SILVER_ROW = 4;
         private static final int RATE_COLUMN = 1;
-        
+
         public interface RatesFetchListener {
             void onRatesFetched(String goldRate, String silverRate, String lastUpdated);
+
             void onError(String errorMessage);
         }
-        
+
         public static void fetchRates(final Context context, final RatesFetchListener listener) {
             new Thread(() -> {
                 String[] rates = new String[2];

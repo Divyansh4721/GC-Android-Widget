@@ -35,8 +35,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * Consolidated widget management that combines RatesWidgetProvider, WidgetUpdateService,
- * RatesFetchTask, RatesUpdateWorker, and BootCompletedReceiver into a single file.
+ * Consolidated widget management that combines RatesWidgetProvider,
+ * WidgetUpdateService,
+ * RatesFetchTask, RatesUpdateWorker, and BootCompletedReceiver into a single
+ * file.
  */
 public class WidgetManager {
 
@@ -98,8 +100,7 @@ public class WidgetManager {
                         context,
                         0,
                         refreshIntent,
-                        getPendingIntentFlag()
-                );
+                        getPendingIntentFlag());
                 views.setOnClickPendingIntent(R.id.refresh_button, refreshPendingIntent);
 
                 // Launch asynchronous task to fetch and update rates
@@ -113,15 +114,15 @@ public class WidgetManager {
             SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
             SharedPreferences.Editor editor = prefs.edit();
             editor.putInt(PREF_WIDGET_WIDTH + "_" + appWidgetId, width)
-                  .putInt(PREF_WIDGET_HEIGHT + "_" + appWidgetId, height)
-                  .apply();
+                    .putInt(PREF_WIDGET_HEIGHT + "_" + appWidgetId, height)
+                    .apply();
         }
 
         public static int[] getWidgetSize(Context context, int appWidgetId) {
             SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
             int width = prefs.getInt(PREF_WIDGET_WIDTH + "_" + appWidgetId, 220);
             int height = prefs.getInt(PREF_WIDGET_HEIGHT + "_" + appWidgetId, 100);
-            return new int[]{width, height};
+            return new int[] { width, height };
         }
 
         // Utility method for PendingIntent flag based on Android version.
@@ -139,7 +140,8 @@ public class WidgetManager {
     }
 
     // -------------------------------------------------------------------------
-    // WidgetUpdateService: JobService to schedule widget refreshes using JobScheduler
+    // WidgetUpdateService: JobService to schedule widget refreshes using
+    // JobScheduler
     // -------------------------------------------------------------------------
     public static class WidgetUpdateService extends JobService {
         private static final String TAG = "WidgetUpdateService";
@@ -190,7 +192,8 @@ public class WidgetManager {
 
         // Schedules the next widget update using JobScheduler.
         public static void scheduleNextUpdate(Context context) {
-            SharedPreferences prefs = context.getSharedPreferences(RatesWidgetProvider.PREFS_NAME, Context.MODE_PRIVATE);
+            SharedPreferences prefs = context.getSharedPreferences(RatesWidgetProvider.PREFS_NAME,
+                    Context.MODE_PRIVATE);
             boolean autoRefreshEnabled = prefs.getBoolean(RatesWidgetProvider.PREF_AUTO_REFRESH_ENABLED, true);
 
             if (!autoRefreshEnabled) {
@@ -201,10 +204,9 @@ public class WidgetManager {
             JobScheduler jobScheduler = (JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
             JobInfo.Builder builder = new JobInfo.Builder(
                     JOB_ID,
-                    new ComponentName(context, WidgetUpdateService.class)
-            )
-                    .setMinimumLatency(600 * 1000)        // 10 minutes delay
-                    .setOverrideDeadline(610 * 1000)       // 10 minutes + 10 sec max delay
+                    new ComponentName(context, WidgetUpdateService.class))
+                    .setMinimumLatency(600 * 1000) // 10 minutes delay
+                    .setOverrideDeadline(610 * 1000) // 10 minutes + 10 sec max delay
                     .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
                     .setPersisted(true);
 
@@ -270,7 +272,8 @@ public class WidgetManager {
                         responseBuilder.append(line);
                     }
                     reader.close();
-                    // Parse the JSON response; the parsing logic below assumes a specific structure.
+                    // Parse the JSON response; the parsing logic below assumes a specific
+                    // structure.
                     JSONArray jsonArray = new JSONArray(responseBuilder.toString());
                     int GOLD_ROW = 5;
                     int SILVER_ROW = 4;
@@ -316,7 +319,7 @@ public class WidgetManager {
                 }
             });
 
-            return new String[]{goldRate, silverRate, currentTime};
+            return new String[] { goldRate, silverRate, currentTime };
         }
 
         @Override
@@ -326,7 +329,7 @@ public class WidgetManager {
                 views.setTextColor(R.id.gold_rate, Color.parseColor("#FFD700"));
                 views.setTextViewText(R.id.silver_rate, "₹" + result[1]);
                 views.setTextColor(R.id.silver_rate, Color.parseColor("#C0C0C0"));
-                views.setTextViewText(R.id.rates_updated_time, "Updated at " + result[2]);
+                views.setTextViewText(R.id.rates_updated_time, result[2]);
                 appWidgetManager.updateAppWidget(appWidgetId, views);
             } else {
                 views.setTextViewText(R.id.gold_rate, "Error");

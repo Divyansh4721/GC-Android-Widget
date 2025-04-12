@@ -57,7 +57,7 @@ public class RatesGraphsActivity extends AppCompatActivity {
     private MaterialButton buttonBuy, buttonSell;
     private TextView textLow, textHigh;
     private LineChart lineChart;
-    
+
     // New UI Components for Time Range Filtering
     private MaterialButtonToggleGroup toggleTimeRange;
     private MaterialButton buttonOneDay, buttonOneWeek, buttonOneYear;
@@ -77,13 +77,14 @@ public class RatesGraphsActivity extends AppCompatActivity {
     private boolean isBuySelected = true; // true = Buy, false = Sell
 
     // For parsing ISO8601 date coming from API (assumed UTC)
-    private final SimpleDateFormat isoFormat =
-            new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault());
+    private final SimpleDateFormat isoFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
+            Locale.getDefault());
 
     // New enum for time ranges
     private enum TimeRange {
         ONE_DAY, ONE_WEEK, ONE_YEAR
     }
+
     // Default time range selection
     private TimeRange selectedTimeRange = TimeRange.ONE_WEEK;
 
@@ -111,7 +112,7 @@ public class RatesGraphsActivity extends AppCompatActivity {
         textLow = findViewById(R.id.text_low);
         textHigh = findViewById(R.id.text_high);
         lineChart = findViewById(R.id.line_chart);
-        
+
         // Initialize new time range toggle controls
         toggleTimeRange = findViewById(R.id.toggle_time_range);
         buttonOneDay = findViewById(R.id.button_one_day);
@@ -131,8 +132,10 @@ public class RatesGraphsActivity extends AppCompatActivity {
                 selectedSeriesIndex = position;
                 updateUI();
             }
+
             @Override
-            public void onNothingSelected(AdapterView<?> parent) { }
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
         });
     }
 
@@ -145,7 +148,7 @@ public class RatesGraphsActivity extends AppCompatActivity {
             }
         });
     }
-    
+
     private void setupTimeRangeToggle() {
         // Set default selection to "One Week"
         toggleTimeRange.check(R.id.button_one_week);
@@ -174,15 +177,15 @@ public class RatesGraphsActivity extends AppCompatActivity {
         lineChart.setPinchZoom(true);
         // Animate horizontal drawing
         lineChart.animateX(1000);
-        
+
         // Remove any extra offsets so that zooming focuses on the data points.
         lineChart.setExtraOffsets(0f, 0f, 0f, 0f);
-        
+
         // Enable auto-scale based solely on the data.
         lineChart.setAutoScaleMinMaxEnabled(true);
-    
+
         int axisTextColor = isDarkThemeActive() ? Color.WHITE : Color.BLACK;
-        
+
         // X-Axis configuration
         XAxis xAxis = lineChart.getXAxis();
         xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
@@ -198,7 +201,7 @@ public class RatesGraphsActivity extends AppCompatActivity {
                 return "";
             }
         });
-    
+
         // Y-Axis configuration
         YAxis leftAxis = lineChart.getAxisLeft();
         leftAxis.setTextColor(axisTextColor);
@@ -213,7 +216,7 @@ public class RatesGraphsActivity extends AppCompatActivity {
         Calendar calendar = Calendar.getInstance();
         // End date is today's date.
         String endDate = sdf.format(calendar.getTime());
-        
+
         // Adjust calendar for start date based on selected time range.
         switch (selectedTimeRange) {
             case ONE_DAY:
@@ -226,7 +229,7 @@ public class RatesGraphsActivity extends AppCompatActivity {
                 break;
         }
         String startDate = sdf.format(calendar.getTime());
-        
+
         return "https://goldrate.divyanshbansal.com/api/rates?startDate=" + startDate + "&endDate=" + endDate;
     }
 
@@ -237,9 +240,11 @@ public class RatesGraphsActivity extends AppCompatActivity {
         new FetchRatesTask().execute(apiUrl);
     }
 
-    // Updates both the chart and high/low TextViews based on API data, selected series, toggle, and time range.
+    // Updates both the chart and high/low TextViews based on API data, selected
+    // series, toggle, and time range.
     private void updateUI() {
-        if (apiResponse == null) return;
+        if (apiResponse == null)
+            return;
         updateChartWithData();
         updateHighLowText();
     }
@@ -335,28 +340,36 @@ public class RatesGraphsActivity extends AppCompatActivity {
         Price price;
         switch (selectedSeriesIndex) {
             case 0:
-                price = isBuySelected ? apiResponse.getStats().getGolddollar().getBuy() : apiResponse.getStats().getGolddollar().getSell();
+                price = isBuySelected ? apiResponse.getStats().getGolddollar().getBuy()
+                        : apiResponse.getStats().getGolddollar().getSell();
                 break;
             case 1:
-                price = isBuySelected ? apiResponse.getStats().getSilverdollar().getBuy() : apiResponse.getStats().getSilverdollar().getSell();
+                price = isBuySelected ? apiResponse.getStats().getSilverdollar().getBuy()
+                        : apiResponse.getStats().getSilverdollar().getSell();
                 break;
             case 2:
-                price = isBuySelected ? apiResponse.getStats().getDollarinr().getBuy() : apiResponse.getStats().getDollarinr().getSell();
+                price = isBuySelected ? apiResponse.getStats().getDollarinr().getBuy()
+                        : apiResponse.getStats().getDollarinr().getSell();
                 break;
             case 3:
-                price = isBuySelected ? apiResponse.getStats().getGoldfuture().getBuy() : apiResponse.getStats().getGoldfuture().getSell();
+                price = isBuySelected ? apiResponse.getStats().getGoldfuture().getBuy()
+                        : apiResponse.getStats().getGoldfuture().getSell();
                 break;
             case 4:
-                price = isBuySelected ? apiResponse.getStats().getSilverfuture().getBuy() : apiResponse.getStats().getSilverfuture().getSell();
+                price = isBuySelected ? apiResponse.getStats().getSilverfuture().getBuy()
+                        : apiResponse.getStats().getSilverfuture().getSell();
                 break;
             case 5:
-                price = isBuySelected ? apiResponse.getStats().getGold().getBuy() : apiResponse.getStats().getGold().getSell();
+                price = isBuySelected ? apiResponse.getStats().getGold().getBuy()
+                        : apiResponse.getStats().getGold().getSell();
                 break;
             case 6:
-                price = isBuySelected ? apiResponse.getStats().getGoldrefine().getBuy() : apiResponse.getStats().getGoldrefine().getSell();
+                price = isBuySelected ? apiResponse.getStats().getGoldrefine().getBuy()
+                        : apiResponse.getStats().getGoldrefine().getSell();
                 break;
             case 7:
-                price = isBuySelected ? apiResponse.getStats().getGoldrtgs().getBuy() : apiResponse.getStats().getGoldrtgs().getSell();
+                price = isBuySelected ? apiResponse.getStats().getGoldrtgs().getBuy()
+                        : apiResponse.getStats().getGoldrtgs().getSell();
                 break;
             default:
                 price = null;
@@ -371,15 +384,18 @@ public class RatesGraphsActivity extends AppCompatActivity {
         }
     }
 
-    // Custom ValueFormatter: shows date (dd/MM) or time (HH:mm) based on the zoom level.
+    // Custom ValueFormatter: shows date (dd/MM) or time (HH:mm) based on the zoom
+    // level.
     private class DateTimeValueFormatter extends ValueFormatter {
         private final SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM", Locale.getDefault());
         private final SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
         private final float zoomThreshold = 5f;
+
         @Override
         public String getAxisLabel(float value, AxisBase axis) {
             int index = (int) value;
-            if (index < 0 || index >= dataPointDates.size()) return "";
+            if (index < 0 || index >= dataPointDates.size())
+                return "";
             Date d = dataPointDates.get(index);
             float scaleX = lineChart.getViewPortHandler().getScaleX();
             if (scaleX > zoomThreshold) {
@@ -414,7 +430,8 @@ public class RatesGraphsActivity extends AppCompatActivity {
                     String responseStr = response.toString();
                     Log.d(TAG, "Full Response: " + responseStr);
                     Gson gson = new Gson();
-                    Type responseType = new TypeToken<ApiResponse>() {}.getType();
+                    Type responseType = new TypeToken<ApiResponse>() {
+                    }.getType();
                     return gson.fromJson(responseStr, responseType);
                 } else {
                     Log.e(TAG, "HTTP error code: " + responseCode);
@@ -422,10 +439,12 @@ public class RatesGraphsActivity extends AppCompatActivity {
             } catch (Exception e) {
                 Log.e(TAG, "Error fetching rates", e);
             } finally {
-                if (connection != null) connection.disconnect();
+                if (connection != null)
+                    connection.disconnect();
             }
             return null;
         }
+
         @Override
         protected void onPostExecute(ApiResponse result) {
             if (result == null || result.getData() == null || result.getData().isEmpty()) {
@@ -441,15 +460,29 @@ public class RatesGraphsActivity extends AppCompatActivity {
     private static class ApiResponse {
         private List<DataItem> data;
         private Stats stats;
-        public List<DataItem> getData() { return data; }
-        public Stats getStats() { return stats; }
+
+        public List<DataItem> getData() {
+            return data;
+        }
+
+        public Stats getStats() {
+            return stats;
+        }
     }
+
     private static class DataItem {
-        private String data;       // JSON string representing an array of arrays
-        private String createdAt;  // ISO date string
-        public String getData() { return data; }
-        public String getCreatedAt() { return createdAt; }
+        private String data; // JSON string representing an array of arrays
+        private String createdAt; // ISO date string
+
+        public String getData() {
+            return data;
+        }
+
+        public String getCreatedAt() {
+            return createdAt;
+        }
     }
+
     private static class Stats {
         private RateInfo golddollar;
         private RateInfo silverdollar;
@@ -459,26 +492,64 @@ public class RatesGraphsActivity extends AppCompatActivity {
         private RateInfo gold;
         private RateInfo goldrefine;
         private RateInfo goldrtgs;
-        public RateInfo getGolddollar() { return golddollar; }
-        public RateInfo getSilverdollar() { return silverdollar; }
-        public RateInfo getDollarinr() { return dollarinr; }
-        public RateInfo getGoldfuture() { return goldfuture; }
-        public RateInfo getSilverfuture() { return silverfuture; }
-        public RateInfo getGold() { return gold; }
-        public RateInfo getGoldrefine() { return goldrefine; }
-        public RateInfo getGoldrtgs() { return goldrtgs; }
+
+        public RateInfo getGolddollar() {
+            return golddollar;
+        }
+
+        public RateInfo getSilverdollar() {
+            return silverdollar;
+        }
+
+        public RateInfo getDollarinr() {
+            return dollarinr;
+        }
+
+        public RateInfo getGoldfuture() {
+            return goldfuture;
+        }
+
+        public RateInfo getSilverfuture() {
+            return silverfuture;
+        }
+
+        public RateInfo getGold() {
+            return gold;
+        }
+
+        public RateInfo getGoldrefine() {
+            return goldrefine;
+        }
+
+        public RateInfo getGoldrtgs() {
+            return goldrtgs;
+        }
     }
+
     private static class RateInfo {
         private Price buy;
         private Price sell;
-        public Price getBuy() { return buy; }
-        public Price getSell() { return sell; }
+
+        public Price getBuy() {
+            return buy;
+        }
+
+        public Price getSell() {
+            return sell;
+        }
     }
+
     private static class Price {
         private float high;
         private float low;
-        public float getHigh() { return high; }
-        public float getLow() { return low; }
+
+        public float getHigh() {
+            return high;
+        }
+
+        public float getLow() {
+            return low;
+        }
     }
 
     // Helper method to detect dark mode.
@@ -487,10 +558,12 @@ public class RatesGraphsActivity extends AppCompatActivity {
         return currentNightMode == Configuration.UI_MODE_NIGHT_YES;
     }
 
-    // Custom MarkerView to display details (rate, date, time) when the user taps a point.
+    // Custom MarkerView to display details (rate, date, time) when the user taps a
+    // point.
     private class CustomMarkerView extends MarkerView {
         private final TextView tvContent;
         private final SimpleDateFormat markerFormat = new SimpleDateFormat("dd/MM HH:mm", Locale.getDefault());
+
         public CustomMarkerView(Context context) {
             // Use a built-in simple layout to avoid inflating our own XML.
             super(context, android.R.layout.simple_list_item_1);
@@ -499,6 +572,7 @@ public class RatesGraphsActivity extends AppCompatActivity {
             tvContent.setBackgroundColor(Color.DKGRAY);
             tvContent.setPadding(10, 10, 10, 10);
         }
+
         @Override
         public void refreshContent(Entry e, Highlight highlight) {
             int index = (int) e.getX();
@@ -509,6 +583,7 @@ public class RatesGraphsActivity extends AppCompatActivity {
             tvContent.setText("Rate: " + e.getY() + "\n" + dateStr);
             super.refreshContent(e, highlight);
         }
+
         @Override
         public MPPointF getOffset() {
             return new MPPointF(-(getWidth() / 2f), -getHeight());
