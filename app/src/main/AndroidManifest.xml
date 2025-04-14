@@ -77,5 +77,8 @@
                 android:resource="@xml/rates_widget_info" />
         </receiver>
 
+        <activity android:name=".RateCheckActivity" />
+
+
     </application>
 </manifest>

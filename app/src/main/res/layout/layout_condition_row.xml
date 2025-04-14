@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/card_condition"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="16dp"
+    android:layout_marginVertical="8dp"
+    app:cardCornerRadius="8dp"
+    app:cardElevation="4dp"
+    app:strokeColor="@android:color/darker_gray"
+    app:strokeWidth="1dp">
+
+    <!-- Outer container with vertical orientation -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- First row: spinners and threshold -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <!-- Spinner for choosing metal (e.g., Gold, Silver) -->
+            <Spinner
+                android:id="@+id/spinner_metal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp" />
+
+            <!-- Spinner for choosing condition type (Match, Above, Below) -->
+            <Spinner
+                android:id="@+id/spinner_condition"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp" />
+
+            <!-- Text input field for threshold -->
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/edt_threshold"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="Threshold"
+                android:inputType="numberDecimal"/>
+        </LinearLayout>
+
+        <!-- Second row: Remove button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_remove"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Remove" />
+
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>

@@ -1,8 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
- A vertical LinearLayout with a Spinner, Buy/Sell toggle,
- two TextViews for Low/High values, and a full-page LineChart.
--->
+<!-- Vertical LinearLayout with updated time range controls -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
@@ -10,14 +7,14 @@
     android:orientation="vertical"
     android:padding="16dp">
 
-    <!-- Series selector -->
+    <!-- Series Selector -->
     <Spinner
         android:id="@+id/spinner_series"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:spinnerMode="dropdown" />
 
-    <!-- Buy/Sell toggle buttons -->
+    <!-- Buy/Sell Toggle -->
     <com.google.android.material.button.MaterialButtonToggleGroup
         android:id="@+id/toggle_buy_sell"
         android:layout_width="match_parent"
@@ -67,35 +64,57 @@
             android:gravity="end" />
     </LinearLayout>
 
-    <!-- Time Range Toggle: One Day, One Week, One Year -->
+    <!-- Time Range Toggle: Day, Week, Month, Year, Custom -->
     <com.google.android.material.button.MaterialButtonToggleGroup
         android:id="@+id/toggle_time_range"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:singleSelection="true"
+        app:selectionRequired="true"
+        android:orientation="horizontal"
         android:layout_marginTop="8dp">
 
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/button_one_day"
+            android:id="@+id/button_day"
             android:layout_width="0dp"
             android:layout_weight="1"
             android:layout_height="wrap_content"
-            android:text="One Day" />
+            android:text="Day"
+            android:textSize="12sp" />
 
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/button_one_week"
+            android:id="@+id/button_week"
             android:layout_width="0dp"
             android:layout_weight="1"
             android:layout_height="wrap_content"
-            android:text="One Week" />
+            android:text="Week"
+            android:textSize="12sp" />
 
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/button_one_year"
+            android:id="@+id/button_month"
             android:layout_width="0dp"
             android:layout_weight="1"
             android:layout_height="wrap_content"
-            android:text="One Year" />
+            android:text="Month"
+            android:textSize="12sp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/button_year"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:text="Year"
+            android:textSize="12sp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/button_custom"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:text="Custom"
+            android:textSize="12sp" />
     </com.google.android.material.button.MaterialButtonToggleGroup>
+
 
     <!-- Full-page LineChart -->
     <com.github.mikephil.charting.charts.LineChart

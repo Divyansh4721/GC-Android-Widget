@@ -16,6 +16,7 @@ import android.os.PowerManager;
 import android.provider.Settings;
 import android.util.Log;
 import android.widget.ImageView;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
@@ -114,6 +115,14 @@ public class MainActivity extends AppCompatActivity {
             startActivity(new Intent(this, SignInActivity.class));
             finish();
         }
+
+        MaterialButton rateAlertsButton = findViewById(R.id.switch_rate_alerts);
+        rateAlertsButton.setOnClickListener(v -> {
+            // Launch the RateCheckActivity when the button is clicked
+            Intent intent = new Intent(MainActivity.this, RateCheckActivity.class);
+            startActivity(intent);
+        });
+
     }
 
     private void initializeViews() {

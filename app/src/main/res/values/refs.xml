@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <drawable name="ic_notification" />
+    <item name="switch_enable_alerts" type="id" />
+    <item name="button_add_condition" type="id" />
+    <item name="button_save_conditions" type="id" />
+    <item name="fab_add_condition" type="id" />
+</resources>
