@@ -16,12 +16,15 @@ import android.os.PowerManager;
 import android.provider.Settings;
 import android.util.Log;
 import android.widget.ImageView;
-import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
+
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
@@ -31,7 +34,9 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
+
 import org.json.JSONArray;
+
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
@@ -43,6 +48,11 @@ import java.util.Locale;
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
 
+    // Drawer variables
+    private DrawerLayout drawerLayout;
+    private ActionBarDrawerToggle drawerToggle;
+
+    // UI Components from the navigation drawer and main content
     private SwitchMaterial batteryOptSwitch;
     private SwitchMaterial widgetRefreshSwitch;
     private MaterialButton logoutButton;
@@ -51,33 +61,43 @@ public class MainActivity extends AppCompatActivity {
     private ImageView userProfileImage;
     private TextView goldRateText;
     private TextView silverPriceText;
-    private TextView dateTimeText;
     private TextView ratesUpdatedTimeText;
 
+    // Firebase & Google Sign-In
     private FirebaseAuth mAuth;
     private GoogleSignInClient googleSignInClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // Ensure you are using the updated layout file with the new drawer configuration.
         setContentView(R.layout.activity_main);
 
         try {
-            // Initialize the Toolbar
+            // Initialize Toolbar and set as the ActionBar
             Toolbar toolbar = findViewById(R.id.toolbar);
             setSupportActionBar(toolbar);
             if (getSupportActionBar() != null) {
                 getSupportActionBar().setTitle(R.string.app_name);
                 getSupportActionBar().setDisplayShowTitleEnabled(true);
             }
-
-            // Explicitly set title text color based on UI mode
             int currentNightMode = getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
             if (currentNightMode == Configuration.UI_MODE_NIGHT_YES) {
                 toolbar.setTitleTextColor(ContextCompat.getColor(this, android.R.color.white));
             } else {
                 toolbar.setTitleTextColor(ContextCompat.getColor(this, android.R.color.black));
             }
+
+            // Setup DrawerLayout and ActionBarDrawerToggle for hamburger icon
+            drawerLayout = findViewById(R.id.drawer_layout);
+            drawerToggle = new ActionBarDrawerToggle(
+                    this,
+                    drawerLayout,
+                    toolbar,
+                    R.string.navigation_drawer_open,
+                    R.string.navigation_drawer_close);
+            drawerLayout.addDrawerListener(drawerToggle);
+            drawerToggle.syncState();
 
             // Initialize Firebase Authentication and configure Google Sign-In
             mAuth = FirebaseAuth.getInstance();
@@ -88,18 +108,16 @@ public class MainActivity extends AppCompatActivity {
                     .build();
             googleSignInClient = GoogleSignIn.getClient(this, gso);
 
-            // Redirect to sign-in if there is no logged-in user
+            // Redirect to sign-in if no user is logged in
             if (currentUser == null) {
                 Log.d(TAG, "No user logged in, redirecting to SignInActivity");
-                Intent intent = new Intent(this, SignInActivity.class);
-                startActivity(intent);
+                startActivity(new Intent(this, SignInActivity.class));
                 finish();
                 return;
             }
 
-            // Initialize UI components and set up functionality
+            // Initialize all UI components (views present in the new layout)
             initializeViews();
-            setupDateAndTime();
             setupUserProfile(currentUser);
             setupBatteryOptimizationSwitch();
             setupWidgetRefreshSwitch();
@@ -116,32 +134,31 @@ public class MainActivity extends AppCompatActivity {
             finish();
         }
 
+        // Set click listener for the Rate Alerts button in the navigation drawer
         MaterialButton rateAlertsButton = findViewById(R.id.switch_rate_alerts);
         rateAlertsButton.setOnClickListener(v -> {
-            // Launch the RateCheckActivity when the button is clicked
-            Intent intent = new Intent(MainActivity.this, RateCheckActivity.class);
-            startActivity(intent);
+            // Launch RateCheckActivity when the button is clicked
+            startActivity(new Intent(MainActivity.this, RateCheckActivity.class));
         });
 
+        // Set click listener for the Graph button in the navigation drawer
+        findViewById(R.id.btn_graph).setOnClickListener(v -> {
+            // TODO: Implement navigation for the Graph button; for example:
+            // startActivity(new Intent(MainActivity.this, GraphActivity.class));
+        });
     }
 
     private void initializeViews() {
+        // Look up views from the updated layout.
         batteryOptSwitch = findViewById(R.id.battery_optimization_switch);
         widgetRefreshSwitch = findViewById(R.id.widget_refresh_switch);
         logoutButton = findViewById(R.id.logout_button);
         userName = findViewById(R.id.user_name);
         userEmail = findViewById(R.id.user_email);
         userProfileImage = findViewById(R.id.user_profile_image);
-        dateTimeText = findViewById(R.id.date_time_text);
         ratesUpdatedTimeText = findViewById(R.id.rates_updated_time);
         goldRateText = findViewById(R.id.gold_rate);
         silverPriceText = findViewById(R.id.silver_price);
-    }
-
-    private void setupDateAndTime() {
-        SimpleDateFormat dateFormat = new SimpleDateFormat("EEEE, MMMM d, yyyy | hh:mm a", Locale.getDefault());
-        String currentDateTime = dateFormat.format(new Date());
-        dateTimeText.setText(currentDateTime);
     }
 
     private void setupUserProfile(FirebaseUser user) {
@@ -150,7 +167,6 @@ public class MainActivity extends AppCompatActivity {
             userName.setText(displayName);
             String email = (user.getEmail() != null) ? user.getEmail() : "No email";
             userEmail.setText(email);
-
             if (user.getPhotoUrl() != null) {
                 try {
                     Picasso.get()
@@ -162,7 +178,6 @@ public class MainActivity extends AppCompatActivity {
                                 public void onSuccess() {
                                     Log.d(TAG, "Profile image loaded successfully");
                                 }
-
                                 @Override
                                 public void onError(Exception e) {
                                     Log.e(TAG, "Error loading profile image", e);
@@ -183,11 +198,8 @@ public class MainActivity extends AppCompatActivity {
         try {
             int width = userProfileImage.getWidth();
             int height = userProfileImage.getHeight();
-            if (width <= 0)
-                width = 100;
-            if (height <= 0)
-                height = 100;
-            // Utilize the integrated ProfileImageGenerator functionality.
+            if (width <= 0) width = 100;
+            if (height <= 0) height = 100;
             Bitmap profileBitmap = ProfileImageGenerator.generateCircularProfileImage(displayName, width, height);
             userProfileImage.setImageBitmap(profileBitmap);
         } catch (Exception e) {
@@ -197,6 +209,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupBatteryOptimizationSwitch() {
+        if (batteryOptSwitch == null) {
+            Log.e(TAG, "Battery Optimization Switch not found. Skipping setup.");
+            return;
+        }
         boolean isIgnoringBattery = isIgnoringBatteryOptimization();
         batteryOptSwitch.setChecked(isIgnoringBattery);
         batteryOptSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
@@ -209,6 +225,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupWidgetRefreshSwitch() {
+        if (widgetRefreshSwitch == null) {
+            Log.e(TAG, "Widget Refresh Switch not found. Skipping setup.");
+            return;
+        }
         WidgetManager.RatesWidgetProvider ratesWidgetProvider = new WidgetManager.RatesWidgetProvider();
         boolean isAutoRefreshEnabled = ratesWidgetProvider.isAutoRefreshEnabled(this);
         widgetRefreshSwitch.setChecked(isAutoRefreshEnabled);
@@ -218,8 +238,7 @@ public class MainActivity extends AppCompatActivity {
                     ? WidgetManager.RatesWidgetProvider.ACTION_START_UPDATES
                     : WidgetManager.RatesWidgetProvider.ACTION_STOP_UPDATES);
             sendBroadcast(intent);
-            Toast.makeText(this, isChecked ? "Widget auto-refresh enabled" : "Widget auto-refresh disabled",
-                    Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, isChecked ? "Auto-refresh enabled" : "Auto-refresh disabled", Toast.LENGTH_SHORT).show();
         });
     }
 
@@ -237,7 +256,6 @@ public class MainActivity extends AppCompatActivity {
                 silverPriceText.setText("₹" + silverRate);
                 ratesUpdatedTimeText.setText("Updated at " + lastUpdated);
             }
-
             @Override
             public void onError(String errorMessage) {
                 goldRateText.setText("Error");
@@ -290,9 +308,11 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(android.view.MenuItem item) {
+        if (drawerToggle.onOptionsItemSelected(item)) {
+            return true;
+        }
         if (item.getItemId() == R.id.action_rates_graphs) {
-            Intent intent = new Intent(this, RatesGraphsActivity.class);
-            startActivity(intent);
+            startActivity(new Intent(this, RatesGraphsActivity.class));
             return true;
         }
         return super.onOptionsItemSelected(item);
@@ -301,10 +321,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        if (batteryOptSwitch != null) {
-            batteryOptSwitch.setChecked(isIgnoringBatteryOptimization());
-        }
-        setupDateAndTime();
         fetchCurrentRates();
     }
 
@@ -313,10 +329,8 @@ public class MainActivity extends AppCompatActivity {
     // -------------------------------------------------------------------------
     public static class ProfileImageGenerator {
         public static Bitmap generateCircularProfileImage(String name, int width, int height) {
-            if (width <= 0)
-                width = 100;
-            if (height <= 0)
-                height = 100;
+            if (width <= 0) width = 100;
+            if (height <= 0) height = 100;
             Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
             Canvas canvas = new Canvas(bitmap);
             Paint backgroundPaint = new Paint();
@@ -331,8 +345,7 @@ public class MainActivity extends AppCompatActivity {
             String initials = getInitials(name);
             Rect textBounds = new Rect();
             textPaint.getTextBounds(initials, 0, initials.length(), textBounds);
-            canvas.drawText(initials, width / 2f, height / 2f + textBounds.height() / 2f - textBounds.bottom,
-                    textPaint);
+            canvas.drawText(initials, width / 2f, height / 2f + textBounds.height() / 2f - textBounds.bottom, textPaint);
             return bitmap;
         }
 
@@ -350,11 +363,11 @@ public class MainActivity extends AppCompatActivity {
             if (name == null || name.isEmpty())
                 return Color.GRAY;
             int[] goldenColors = {
-                    Color.rgb(255, 215, 0), // Gold
-                    Color.rgb(218, 165, 32), // Goldenrod
-                    Color.rgb(238, 232, 170), // Pale Goldenrod
-                    Color.rgb(189, 183, 107), // Dark Khaki
-                    Color.rgb(240, 230, 140) // Khaki
+                    Color.rgb(255, 215, 0),
+                    Color.rgb(218, 165, 32),
+                    Color.rgb(238, 232, 170),
+                    Color.rgb(189, 183, 107),
+                    Color.rgb(240, 230, 140)
             };
             return goldenColors[Math.abs(name.hashCode()) % goldenColors.length];
         }
@@ -372,7 +385,6 @@ public class MainActivity extends AppCompatActivity {
 
         public interface RatesFetchListener {
             void onRatesFetched(String goldRate, String silverRate, String lastUpdated);
-
             void onError(String errorMessage);
         }
 
@@ -431,7 +443,6 @@ public class MainActivity extends AppCompatActivity {
                 final String silverRate = (rates[1] != null) ? rates[1] : "N/A";
                 final boolean finalHasError = hasError;
                 final String finalErrorMessage = errorMessage;
-                // Run on UI thread
                 ((MainActivity) context).runOnUiThread(() -> {
                     if (finalHasError) {
                         listener.onError(finalErrorMessage);

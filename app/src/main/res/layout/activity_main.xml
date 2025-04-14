@@ -1,303 +1,283 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.drawerlayout.widget.DrawerLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/drawer_layout"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:layout_height="match_parent">
 
-
-    <androidx.appcompat.widget.Toolbar
-        android:id="@+id/toolbar"
+    <!-- Main Content: Only the Rates Card remains visible -->
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
-        style="?attr/toolbarStyle"
-        android:background="?attr/colorPrimary"
-        app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
+        <!-- Toolbar with Hamburger Icon -->
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="?attr/colorPrimary"
+            app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
 
-    <ScrollView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        <!-- Main Content ScrollView -->
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
 
-        <LinearLayout
+                <!-- Rates Card (remains visible on the main page) -->
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/rates_card"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:cardBackgroundColor="?attr/colorSurface"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="2dp"
+                    android:layout_marginBottom="16dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:layout_marginBottom="8dp">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="Today's Rates"
+                                android:textColor="?attr/colorPrimary"
+                                android:textSize="18sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/rates_updated_time"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Updated at 02:45 PM"
+                                android:textColor="?attr/colorOnSurface"
+                                android:textSize="14sp" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:layout_marginBottom="8dp">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="Gold 995"
+                                android:textColor="?attr/colorPrimary"
+                                android:textSize="18sp" />
+
+                            <TextView
+                                android:id="@+id/gold_rate"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="₹0000"
+                                android:textColor="?attr/colorPrimary"
+                                android:textSize="26sp"
+                                android:textStyle="bold"
+                                android:layout_marginTop="2dp" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="Silver 999"
+                                android:textColor="?attr/colorSecondary"
+                                android:textSize="18sp" />
+
+                            <TextView
+                                android:id="@+id/silver_price"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="₹0000"
+                                android:textColor="?attr/colorSecondary"
+                                android:textSize="26sp" />
+                        </LinearLayout>
+
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+
+            </LinearLayout>
+        </ScrollView>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/nav_drawer"
+        android:layout_width="320dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="start"
+        android:background="@android:color/white"
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:paddingTop="24dp">
+
+        <!-- User Profile Card -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/profile_card"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="16dp">
+            app:cardBackgroundColor="?attr/colorSurface"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="2dp"
+            android:layout_marginBottom="16dp">
 
-            <!-- Profile Card -->
-            <androidx.cardview.widget.CardView
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardBackgroundColor="?attr/colorSurface"
-                app:cardElevation="2dp"
-                app:cardCornerRadius="16dp"
-                android:layout_marginBottom="16dp">
+                android:orientation="horizontal"
+                android:padding="16dp"
+                android:gravity="center_vertical">
+
+                <de.hdodenhof.circleimageview.CircleImageView
+                    android:id="@+id/user_profile_image"
+                    android:layout_width="64dp"
+                    android:layout_height="64dp"
+                    android:src="@drawable/ic_default_profile"
+                    android:contentDescription="User Profile Image"
+                    android:layout_marginEnd="16dp" />
 
                 <LinearLayout
-                    android:layout_width="match_parent"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:padding="16dp"
-                    android:gravity="center_vertical">
-
-                    <de.hdodenhof.circleimageview.CircleImageView
-                        android:id="@+id/user_profile_image"
-                        android:layout_width="64dp"
-                        android:layout_height="64dp"
-                        android:src="@drawable/ic_default_profile"
-                        android:layout_marginEnd="16dp" />
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:id="@+id/user_name"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="John Doe"
-                            android:textColor="?attr/colorPrimary"
-                            android:textSize="18sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:id="@+id/user_email"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="johndoe@gcjewellers.com"
-                            android:textColor="?attr/colorOnSurface"
-                            android:textSize="14sp" />
-                    </LinearLayout>
-                </LinearLayout>
-            </androidx.cardview.widget.CardView>
-
-            <!-- Date and Time -->
-            <TextView
-                android:id="@+id/date_time_text"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Monday, March 11, 2024 | 02:45 PM"
-                android:textColor="?attr/colorOnSurface"
-                android:textSize="16sp"
-                android:gravity="center"
-                android:layout_marginBottom="16dp" />
-
-            <!-- Rates Card -->
-            <androidx.cardview.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                app:cardBackgroundColor="?attr/colorSurface"
-                app:cardElevation="2dp"
-                app:cardCornerRadius="16dp"
-                android:layout_marginBottom="16dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:layout_marginBottom="8dp">
-
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Today's Rates"
-                            android:textColor="?attr/colorPrimary"
-                            android:textSize="18sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:id="@+id/rates_updated_time"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Updated at 02:45 PM"
-                            android:textColor="?attr/colorOnSurface"
-                            android:textSize="14sp" />
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:layout_marginBottom="8dp">
-
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Gold 995"
-                            android:textColor="?attr/colorPrimary"
-                            android:textSize="18sp" />
-
-                        <TextView
-                            android:id="@+id/gold_rate"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="₹0000"
-                            android:textColor="?attr/colorPrimary"
-                            android:textSize="26sp"
-                            android:textStyle="bold"
-                            android:layout_marginTop="2dp" />
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal">
-
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Silver 999"
-                            android:textColor="?attr/colorSecondary"
-                            android:textSize="18sp" />
-
-                        <TextView
-                            android:id="@+id/silver_price"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="₹0000"
-                            android:textColor="?attr/colorSecondary"
-                            android:textSize="26sp" />
-                    </LinearLayout>
-                </LinearLayout>
-            </androidx.cardview.widget.CardView>
-
-            <!-- Widget Controls Card -->
-            <androidx.cardview.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                app:cardBackgroundColor="?attr/colorSurface"
-                app:cardElevation="2dp"
-                app:cardCornerRadius="16dp"
-                android:layout_marginBottom="24dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="20dp">
+                    android:layout_weight="1"
+                    android:orientation="vertical">
 
                     <TextView
-                        android:layout_width="match_parent"
+                        android:id="@+id/user_name"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Widget Settings"
-                        android:textColor="?attr/colorOnSurface"
+                        android:text="John Doe"
+                        android:textColor="?attr/colorPrimary"
                         android:textSize="18sp"
-                        android:textStyle="bold"
-                        android:layout_marginBottom="12dp" />
+                        android:textStyle="bold" />
 
-                    <!-- Battery Optimization -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
+                    <TextView
+                        android:id="@+id/user_email"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:layout_marginBottom="16dp">
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:orientation="vertical">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Battery Optimization"
-                                android:textColor="?attr/colorOnSurface"
-                                android:textSize="16sp" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Allow app to run in background"
-                                android:textColor="?attr/colorOnSurface"
-                                android:textSize="14sp" />
-                        </LinearLayout>
-
-                        <com.google.android.material.switchmaterial.SwitchMaterial
-                            android:id="@+id/battery_optimization_switch"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content" />
-                    </LinearLayout>
-
-                    <!-- Widget Refresh -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical">
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:orientation="vertical">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Auto Refresh Widget"
-                                android:textColor="?attr/colorOnSurface"
-                                android:textSize="16sp" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Periodically update rates"
-                                android:textColor="?attr/colorOnSurface"
-                                android:textSize="14sp" />
-
-                        </LinearLayout>
-
-                        <com.google.android.material.switchmaterial.SwitchMaterial
-                            android:id="@+id/widget_refresh_switch"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content" />
-                    </LinearLayout>
+                        android:text="johndoe@gcjewellers.com"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textSize="14sp" />
                 </LinearLayout>
-            </androidx.cardview.widget.CardView>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/switch_rate_alerts"
-                style="@style/Widget.App.Button"
+        <!-- Battery Optimization Toggle -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardBackgroundColor="?attr/colorPrimary"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="2dp"
+            android:layout_marginBottom="8dp">
+
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Configure Rate Alerts"
-                android:textAllCaps="false"
-                android:layout_marginBottom="16dp" />
+                android:orientation="horizontal"
+                android:padding="12dp"
+                android:gravity="center_vertical">
 
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Battery Optimization"
+                    android:textSize="16sp"
+                    android:textColor="@android:color/white" />
 
-            <!-- Sign Out Button -->
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/logout_button"
-                style="@style/Widget.App.Button.Gold"
+                <com.google.android.material.switchmaterial.SwitchMaterial
+                    android:id="@+id/battery_optimization_switch"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Auto Refresh Toggle -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardBackgroundColor="?attr/colorPrimary"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="2dp"
+            android:layout_marginBottom="8dp">
+
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Sign Out"
-                android:textAllCaps="false"
-                android:layout_marginBottom="16dp" />
+                android:orientation="horizontal"
+                android:padding="12dp"
+                android:gravity="center_vertical">
 
-            <!-- Footer -->
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:text="Add widget to home screen to view rates"
-                android:textColor="?attr/colorOnSurface"
-                android:textSize="14sp" />
-        </LinearLayout>
-    </ScrollView>
-</LinearLayout>
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Auto Refresh"
+                    android:textSize="16sp"
+                    android:textColor="@android:color/white" />
+
+                <com.google.android.material.switchmaterial.SwitchMaterial
+                    android:id="@+id/widget_refresh_switch"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Graph Button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_graph"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:text="Graph"
+            android:backgroundTint="?attr/colorPrimary"
+            android:textColor="@android:color/white" />
+
+        <!-- Configure Rate Alerts Button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/switch_rate_alerts"
+            style="@style/Widget.App.Button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Configure Rate Alerts"
+            android:textAllCaps="false"
+            android:layout_marginBottom="8dp" />
+
+        <!-- Sign Out Button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/logout_button"
+            style="@style/Widget.App.Button.Gold"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Sign Out"
+            android:textAllCaps="false"
+            android:layout_marginBottom="8dp" />
+
+    </LinearLayout>
+
+</androidx.drawerlayout.widget.DrawerLayout>

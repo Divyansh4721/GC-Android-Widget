@@ -5,4 +5,8 @@
     <item name="button_month" type="id" />
     <item name="button_year" type="id" />
     <item name="button_custom" type="id" />
+    <item name="battery_optimization_switch" type="id" />
+    <item name="widget_refresh_switch" type="id" />
+
+    
 </resources>
