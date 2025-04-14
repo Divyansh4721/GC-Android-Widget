@@ -4,8 +4,9 @@ import android.app.DatePickerDialog;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.graphics.Color;
-import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
@@ -48,6 +49,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class RatesGraphsActivity extends AppCompatActivity {
 
@@ -68,7 +71,7 @@ public class RatesGraphsActivity extends AppCompatActivity {
     // List to hold Date objects corresponding to each DataItem's createdAt field.
     private final List<Date> dataPointDates = new ArrayList<>();
 
-    // Series options in order
+    // Series options
     private final String[] seriesOptions = {
             "golddollar", "silverdollar", "dollarinr", "goldfuture",
             "silverfuture", "gold", "goldrefine", "goldrtgs"
@@ -78,15 +81,12 @@ public class RatesGraphsActivity extends AppCompatActivity {
     private boolean isBuySelected = true; // true = Buy, false = Sell
 
     // For parsing ISO8601 date coming from API (assumed UTC)
-    private final SimpleDateFormat isoFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
-            Locale.getDefault());
+    private final SimpleDateFormat isoFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault());
 
-    // Extend the enum to support new time ranges
+    // Time range options
     private enum TimeRange {
         ONE_DAY, ONE_WEEK, ONE_MONTH, ONE_YEAR, CUSTOM
     }
-
-    // Default time range selection
     private TimeRange selectedTimeRange = TimeRange.ONE_WEEK;
 
     // Variables to hold custom date selections
@@ -102,81 +102,58 @@ public class RatesGraphsActivity extends AppCompatActivity {
         initializeViews();
         setupSpinner();
         setupToggleButtons();
-        setupTimeRangeToggle(); // Setup the new time-range toggle functionality
+        setupTimeRangeToggle(); // Set up time-range toggle functionality
         setupChart();
-        // Set our custom marker view (using a built-in system layout)
+
+        // Set our custom marker view
         lineChart.setMarker(new CustomMarkerView(this));
+
+        // Fetch API data using our modern asynchronous approach.
         fetchRatesData();
     }
 
     private void setupChart() {
-        // Determine colors based on dark mode.
-        // In dark mode, we want white text; in light mode, black.
+        // ... existing chart config ...
         int axisTextColor = isDarkThemeActive() ? Color.WHITE : Color.BLACK;
-        // Use a medium gray for grid lines so they are visible but not overwhelming.
         int gridColor = isDarkThemeActive() ? Color.GRAY : Color.LTGRAY;
-        // Set the chart background to match the theme (e.g., black for dark mode).
-        int chartBackgroundColor = isDarkThemeActive() ? Color.BLACK : Color.WHITE;
 
-        // Set the chart background.
-        lineChart.setBackgroundColor(chartBackgroundColor);
-
-        // Configure X-Axis.
+        // X-Axis configuration
         XAxis xAxis = lineChart.getXAxis();
         xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
         xAxis.setTextColor(axisTextColor);
         xAxis.setDrawGridLines(true);
         xAxis.setGridColor(gridColor);
-        xAxis.setGranularity(1f);
-        xAxis.setSpaceMin(0f);
-        xAxis.setSpaceMax(0f);
-        xAxis.setValueFormatter(new ValueFormatter() {
-            @Override
-            public String getAxisLabel(float value, AxisBase axis) {
-                // Your existing formatting logic remains here.
-                int index = (int) value;
-                if (index < 0 || index >= dataPointDates.size())
-                    return "";
-                Date d = dataPointDates.get(index);
-                float scaleX = lineChart.getViewPortHandler().getScaleX();
-                // Return time format if zoomed in, date format if zoomed out.
-                return scaleX > 5f ? new SimpleDateFormat("HH:mm", Locale.getDefault()).format(d)
-                        : new SimpleDateFormat("dd/MM", Locale.getDefault()).format(d);
-            }
-        });
 
-        // Configure left Y-Axis.
+        // Y-Axis configuration
         YAxis leftAxis = lineChart.getAxisLeft();
         leftAxis.setTextColor(axisTextColor);
         leftAxis.setDrawGridLines(true);
         leftAxis.setGridColor(gridColor);
-        leftAxis.setGranularity(1f);
 
-        // Disable the right Y-Axis or configure it similarly.
         YAxis rightAxis = lineChart.getAxisRight();
-        rightAxis.setEnabled(false);
+        rightAxis.setEnabled(true);
+        rightAxis.setTextColor(axisTextColor);
+        rightAxis.setDrawGridLines(false);
+        // or true if you want grid lines on the right axis
+        rightAxis.setGridColor(gridColor);
 
-        // Set description text (if used) and its color.
+        // Chart background
+        lineChart.setBackgroundColor(isDarkThemeActive() ? Color.BLACK : Color.WHITE);
+
+        // Description styling (optional)
         lineChart.getDescription().setEnabled(true);
-        lineChart.getDescription().setText("Rate Chart");
+        lineChart.getDescription().setText("Rate Chart"); // or your preferred text
         lineChart.getDescription().setTextColor(axisTextColor);
 
-        // Configure legend appearance.
+        // Legend styling
         if (lineChart.getLegend() != null) {
             lineChart.getLegend().setTextColor(axisTextColor);
         }
 
-        // Additional chart customizations...
-        lineChart.setTouchEnabled(true);
-        lineChart.setDragEnabled(true);
-        lineChart.setScaleEnabled(true);
-        lineChart.setPinchZoom(true);
-        lineChart.animateX(1000);
-        lineChart.setExtraOffsets(0f, 0f, 0f, 0f);
-        lineChart.setAutoScaleMinMaxEnabled(true);
-
+        // ...
         lineChart.invalidate();
     }
+
 
     private void initializeViews() {
         spinnerSeries = findViewById(R.id.spinner_series);
@@ -187,7 +164,7 @@ public class RatesGraphsActivity extends AppCompatActivity {
         textHigh = findViewById(R.id.text_high);
         lineChart = findViewById(R.id.line_chart);
 
-        // Initialize time range toggle controls with updated IDs
+        // Initialize time range toggle controls.
         toggleTimeRange = findViewById(R.id.toggle_time_range);
         buttonDay = findViewById(R.id.button_day);
         buttonWeek = findViewById(R.id.button_week);
@@ -208,10 +185,8 @@ public class RatesGraphsActivity extends AppCompatActivity {
                 selectedSeriesIndex = position;
                 updateUI();
             }
-
             @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-            }
+            public void onNothingSelected(AdapterView<?> parent) { }
         });
     }
 
@@ -231,20 +206,21 @@ public class RatesGraphsActivity extends AppCompatActivity {
         selectedTimeRange = TimeRange.ONE_WEEK;
 
         toggleTimeRange.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
+            // Programmatically update the button appearance for all children.
             for (int i = 0; i < group.getChildCount(); i++) {
-                MaterialButton button = (MaterialButton) group.getChildAt(i);
-                if (button.getId() == checkedId && isChecked) {
-                    // Set the selected visual style (e.g., background color, text color, etc.)
-                    button.setBackgroundColor(ContextCompat.getColor(this,R.color.gold_dark));
-                    button.setTextColor(ContextCompat.getColor(this,R.color.dark_text));
+                MaterialButton btn = (MaterialButton) group.getChildAt(i);
+                if (btn.isChecked()) {
+                    // Selected style: change background and text color.
+                    btn.setBackgroundColor(Color.parseColor("#FFCC00")); // Example: Selected background (yellow)
+                    btn.setTextColor(Color.parseColor("#000000"));       // Example: Selected text color (black)
                 } else {
-                    // Revert to default style
-                    button.setBackgroundColor(ContextCompat.getColor(this,R.color.light_background));
-                    button.setTextColor(ContextCompat.getColor(this,R.color.dark_text));
+                    // Default style: change background and text color.
+                    btn.setBackgroundColor(Color.parseColor("#FFFFFF")); // Example: Default background (white)
+                    btn.setTextColor(Color.parseColor("#000000"));       // Example: Default text color (black)
                 }
             }
 
-            // Existing logic for time range selection:
+            // Handle time-range selection logic.
             if (isChecked) {
                 if (checkedId == R.id.button_day) {
                     selectedTimeRange = TimeRange.ONE_DAY;
@@ -264,52 +240,40 @@ public class RatesGraphsActivity extends AppCompatActivity {
                 }
             }
         });
-
     }
 
     /**
-     * Opens a DatePickerDialog to allow the user to select custom start and end
-     * dates.
+     * Prompts the user for custom start and end dates via DatePickerDialogs.
      */
     private void showCustomDatePicker() {
         final Calendar calendar = Calendar.getInstance();
-        // First, prompt the user for the start date.
+        // Prompt for start date.
         DatePickerDialog startDatePicker = new DatePickerDialog(this,
-                new DatePickerDialog.OnDateSetListener() {
-                    @Override
-                    public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
-                        Calendar startCal = Calendar.getInstance();
-                        startCal.set(year, month, dayOfMonth);
-                        customStartDate = startCal.getTime();
+                (view, year, month, dayOfMonth) -> {
+                    Calendar startCal = Calendar.getInstance();
+                    startCal.set(year, month, dayOfMonth);
+                    customStartDate = startCal.getTime();
 
-                        // Next, prompt for the end date.
-                        DatePickerDialog endDatePicker = new DatePickerDialog(RatesGraphsActivity.this,
-                                new DatePickerDialog.OnDateSetListener() {
-                                    @Override
-                                    public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
-                                        Calendar endCal = Calendar.getInstance();
-                                        endCal.set(year, month, dayOfMonth);
-                                        customEndDate = endCal.getTime();
-                                        // Once both dates are selected, fetch data with the new range.
-                                        fetchRatesData();
-                                    }
-                                },
-                                calendar.get(Calendar.YEAR),
-                                calendar.get(Calendar.MONTH),
-                                calendar.get(Calendar.DAY_OF_MONTH));
-                        endDatePicker.setTitle("Select End Date");
-                        endDatePicker.show();
-                    }
+                    // Prompt for end date.
+                    DatePickerDialog endDatePicker = new DatePickerDialog(RatesGraphsActivity.this,
+                            (view1, year1, month1, dayOfMonth1) -> {
+                                Calendar endCal = Calendar.getInstance();
+                                endCal.set(year1, month1, dayOfMonth1);
+                                customEndDate = endCal.getTime();
+                                // Once both dates are selected, fetch the data.
+                                fetchRatesData();
+                            },
+                            calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH));
+                    endDatePicker.setTitle("Select End Date");
+                    endDatePicker.show();
                 },
-                calendar.get(Calendar.YEAR),
-                calendar.get(Calendar.MONTH),
-                calendar.get(Calendar.DAY_OF_MONTH));
+                calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH));
         startDatePicker.setTitle("Select Start Date");
         startDatePicker.show();
     }
 
     /**
-     * Dynamically builds the API URL using either preset or custom date ranges.
+     * Builds the API URL using preset or custom date ranges.
      */
     private String getApiUrl() {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
@@ -342,14 +306,68 @@ public class RatesGraphsActivity extends AppCompatActivity {
             }
             startDate = sdf.format(calendar.getTime());
         }
-
         return "https://goldrate.divyanshbansal.com/api/rates?startDate=" + startDate + "&endDate=" + endDate;
     }
 
+    /**
+     * Uses ExecutorService with a Handler to fetch API data asynchronously.
+     */
     private void fetchRatesData() {
         String apiUrl = getApiUrl();
         Log.d(TAG, "API being hit: " + apiUrl);
-        new FetchRatesTask().execute(apiUrl);
+
+        ExecutorService executorService = Executors.newSingleThreadExecutor();
+        Handler mainHandler = new Handler(Looper.getMainLooper());
+
+        executorService.execute(() -> {
+            ApiResponse response = fetchRatesFromUrl(apiUrl);
+            mainHandler.post(() -> {
+                if (response == null || response.getData() == null || response.getData().isEmpty()) {
+                    Log.e(TAG, "No data received from API or data empty");
+                    return;
+                }
+                apiResponse = response;
+                updateUI();
+            });
+        });
+    }
+
+    /**
+     * Helper method to perform the network operation.
+     */
+    private ApiResponse fetchRatesFromUrl(String apiUrl) {
+        HttpURLConnection connection = null;
+        try {
+            URL url = new URL(apiUrl);
+            connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
+            connection.setConnectTimeout(10000);
+            connection.setReadTimeout(10000);
+            int responseCode = connection.getResponseCode();
+            Log.d(TAG, "Response Code: " + responseCode);
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                StringBuilder response = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    response.append(line);
+                }
+                reader.close();
+                String responseStr = response.toString();
+                Log.d(TAG, "Full Response: " + responseStr);
+                Gson gson = new Gson();
+                Type responseType = new TypeToken<ApiResponse>() {}.getType();
+                return gson.fromJson(responseStr, responseType);
+            } else {
+                Log.e(TAG, "HTTP error code: " + responseCode);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error fetching rates", e);
+        } finally {
+            if (connection != null)
+                connection.disconnect();
+        }
+        return null;
     }
 
     private void updateUI() {
@@ -360,7 +378,7 @@ public class RatesGraphsActivity extends AppCompatActivity {
     }
 
     /**
-     * Filters the API data based on the selected time range and updates the chart.
+     * Filters API data based on the selected time range and updates the chart.
      */
     private void updateChartWithData() {
         dataPointDates.clear();
@@ -369,9 +387,8 @@ public class RatesGraphsActivity extends AppCompatActivity {
         if (apiResponse == null || apiResponse.getData() == null || apiResponse.getData().isEmpty())
             return;
 
-        // Parse dates from API and store in allDates.
         List<Date> allDates = new ArrayList<>();
-        for (DataItem item : apiResponse.getData()) {
+        for (ApiResponse.DataItem item : apiResponse.getData()) {
             try {
                 Date d = isoFormat.parse(item.getCreatedAt());
                 allDates.add(d);
@@ -381,7 +398,6 @@ public class RatesGraphsActivity extends AppCompatActivity {
             }
         }
 
-        // Establish a filtering window for non-custom ranges.
         Calendar windowStart = Calendar.getInstance();
         if (selectedTimeRange == TimeRange.ONE_DAY) {
             windowStart.add(Calendar.DATE, -1);
@@ -410,10 +426,9 @@ public class RatesGraphsActivity extends AppCompatActivity {
             if (include) {
                 dataPointDates.add(currentDate);
                 try {
-                    DataItem item = apiResponse.getData().get(i);
+                    ApiResponse.DataItem item = apiResponse.getData().get(i);
                     JsonArray outerArray = JsonParser.parseString(item.getData()).getAsJsonArray();
                     JsonArray seriesRow = outerArray.get(selectedSeriesIndex).getAsJsonArray();
-                    // Select Buy (index 0) or Sell (index 1) based on toggle.
                     String valueStr = isBuySelected ? seriesRow.get(0).getAsString() : seriesRow.get(1).getAsString();
                     float value = Float.parseFloat(valueStr);
                     entries.add(new Entry(xIndex, value));
@@ -426,15 +441,18 @@ public class RatesGraphsActivity extends AppCompatActivity {
         }
 
         LineDataSet dataSet = new LineDataSet(entries, "Rates");
-        dataSet.setColor(Color.parseColor("#388E3C")); // Green line
+        // Set colors using ContextCompat.
+        dataSet.setColor(ContextCompat.getColor(this, R.color.green)); // Replace with your color
         dataSet.setLineWidth(2f);
         dataSet.setDrawCircles(true);
-        dataSet.setCircleColor(Color.parseColor("#388E3C"));
+        dataSet.setCircleColor(ContextCompat.getColor(this, R.color.green));
         dataSet.setCircleRadius(3f);
         dataSet.setDrawValues(false);
         dataSet.setMode(LineDataSet.Mode.CUBIC_BEZIER);
         dataSet.setDrawFilled(true);
-        dataSet.setGradientColor(Color.parseColor("#E3F2FD"), Color.parseColor("#BBDEFB"));
+        dataSet.setGradientColor(
+                ContextCompat.getColor(this, R.color.light_blue),
+                ContextCompat.getColor(this, R.color.dark_blue));
         dataSet.setFillAlpha(200);
 
         LineData lineData = new LineData(dataSet);
@@ -444,8 +462,7 @@ public class RatesGraphsActivity extends AppCompatActivity {
     }
 
     /**
-     * Updates the High and Low TextViews based on the selected series and Buy/Sell
-     * toggle.
+     * Updates the High and Low TextViews based on the selected series and Buy/Sell toggle.
      */
     private void updateHighLowText() {
         if (apiResponse.getStats() == null) {
@@ -453,7 +470,7 @@ public class RatesGraphsActivity extends AppCompatActivity {
             textHigh.setText("Highest: N/A");
             return;
         }
-        Price price;
+        ApiResponse.Price price;
         switch (selectedSeriesIndex) {
             case 0:
                 price = isBuySelected ? apiResponse.getStats().getGolddollar().getBuy()
@@ -498,15 +515,14 @@ public class RatesGraphsActivity extends AppCompatActivity {
             textLow.setText("Lowest: N/A");
             textHigh.setText("Highest: N/A");
         }
-
-        // Update text color based on dark mode
+        // Update text colors based on the current theme.
         int textColor = isDarkThemeActive() ? Color.WHITE : Color.BLACK;
         textLow.setTextColor(textColor);
         textHigh.setTextColor(textColor);
     }
 
     /**
-     * Custom ValueFormatter that adapts the X-axis labels based on the zoom level.
+     * Custom ValueFormatter for the X-axis labels.
      */
     private class DateTimeValueFormatter extends ValueFormatter {
         private final SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM", Locale.getDefault());
@@ -520,177 +536,23 @@ public class RatesGraphsActivity extends AppCompatActivity {
                 return "";
             Date d = dataPointDates.get(index);
             float scaleX = lineChart.getViewPortHandler().getScaleX();
-            if (scaleX > zoomThreshold) {
-                return timeFormat.format(d);
-            } else {
-                return dateFormat.format(d);
-            }
+            return scaleX > zoomThreshold ? timeFormat.format(d) : dateFormat.format(d);
         }
     }
 
     /**
-     * AsyncTask to fetch JSON from the API.
-     */
-    private class FetchRatesTask extends AsyncTask<String, Void, ApiResponse> {
-        @Override
-        protected ApiResponse doInBackground(String... params) {
-            HttpURLConnection connection = null;
-            try {
-                URL url = new URL(params[0]);
-                connection = (HttpURLConnection) url.openConnection();
-                connection.setRequestMethod("GET");
-                connection.setConnectTimeout(10000);
-                connection.setReadTimeout(10000);
-                int responseCode = connection.getResponseCode();
-                Log.d(TAG, "Response Code: " + responseCode);
-                if (responseCode == HttpURLConnection.HTTP_OK) {
-                    BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-                    StringBuilder response = new StringBuilder();
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        response.append(line);
-                    }
-                    reader.close();
-                    String responseStr = response.toString();
-                    Log.d(TAG, "Full Response: " + responseStr);
-                    Gson gson = new Gson();
-                    Type responseType = new TypeToken<ApiResponse>() {
-                    }.getType();
-                    return gson.fromJson(responseStr, responseType);
-                } else {
-                    Log.e(TAG, "HTTP error code: " + responseCode);
-                }
-            } catch (Exception e) {
-                Log.e(TAG, "Error fetching rates", e);
-            } finally {
-                if (connection != null)
-                    connection.disconnect();
-            }
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(ApiResponse result) {
-            if (result == null || result.getData() == null || result.getData().isEmpty()) {
-                Log.e(TAG, "No data received from API or data empty");
-                return;
-            }
-            apiResponse = result;
-            updateUI();
-        }
-    }
-
-    // Model classes for JSON parsing
-
-    private static class ApiResponse {
-        private List<DataItem> data;
-        private Stats stats;
-
-        public List<DataItem> getData() {
-            return data;
-        }
-
-        public Stats getStats() {
-            return stats;
-        }
-    }
-
-    private static class DataItem {
-        private String data; // JSON string representing an array of arrays
-        private String createdAt; // ISO date string
-
-        public String getData() {
-            return data;
-        }
-
-        public String getCreatedAt() {
-            return createdAt;
-        }
-    }
-
-    private static class Stats {
-        private RateInfo golddollar;
-        private RateInfo silverdollar;
-        private RateInfo dollarinr;
-        private RateInfo goldfuture;
-        private RateInfo silverfuture;
-        private RateInfo gold;
-        private RateInfo goldrefine;
-        private RateInfo goldrtgs;
-
-        public RateInfo getGolddollar() {
-            return golddollar;
-        }
-
-        public RateInfo getSilverdollar() {
-            return silverdollar;
-        }
-
-        public RateInfo getDollarinr() {
-            return dollarinr;
-        }
-
-        public RateInfo getGoldfuture() {
-            return goldfuture;
-        }
-
-        public RateInfo getSilverfuture() {
-            return silverfuture;
-        }
-
-        public RateInfo getGold() {
-            return gold;
-        }
-
-        public RateInfo getGoldrefine() {
-            return goldrefine;
-        }
-
-        public RateInfo getGoldrtgs() {
-            return goldrtgs;
-        }
-    }
-
-    private static class RateInfo {
-        private Price buy;
-        private Price sell;
-
-        public Price getBuy() {
-            return buy;
-        }
-
-        public Price getSell() {
-            return sell;
-        }
-    }
-
-    private static class Price {
-        private float high;
-        private float low;
-
-        public float getHigh() {
-            return high;
-        }
-
-        public float getLow() {
-            return low;
-        }
-    }
-
-    /**
-     * Custom MarkerView to display details (rate, date, time) when the user taps a
-     * data point.
+     * Custom MarkerView to display details when a data point is tapped.
      */
     private class CustomMarkerView extends MarkerView {
         private final TextView tvContent;
         private final SimpleDateFormat markerFormat = new SimpleDateFormat("dd/MM HH:mm", Locale.getDefault());
 
         public CustomMarkerView(Context context) {
-            // Use a built-in simple layout to avoid inflating our own XML.
             super(context, android.R.layout.simple_list_item_1);
             tvContent = findViewById(android.R.id.text1);
-            tvContent.setTextColor(Color.WHITE);
-            tvContent.setBackgroundColor(Color.DKGRAY);
+            int markerTextColor = isDarkThemeActive() ? Color.WHITE : Color.BLACK;
+            tvContent.setTextColor(markerTextColor);
+            tvContent.setBackgroundColor(isDarkThemeActive() ? Color.DKGRAY : Color.LTGRAY);
             tvContent.setPadding(10, 10, 10, 10);
         }
 
@@ -712,10 +574,93 @@ public class RatesGraphsActivity extends AppCompatActivity {
     }
 
     /**
-     * Helper method to detect dark mode.
+     * Determines whether dark mode is active.
      */
     private boolean isDarkThemeActive() {
         int currentNightMode = getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
         return currentNightMode == Configuration.UI_MODE_NIGHT_YES;
+    }
+
+    // Model classes for JSON parsing
+    public static class ApiResponse {
+        private List<DataItem> data;
+        private Stats stats;
+
+        public List<DataItem> getData() {
+            return data;
+        }
+        public Stats getStats() {
+            return stats;
+        }
+
+        public static class DataItem {
+            private String data;    // JSON string representing an array of arrays
+            private String createdAt; // ISO date string
+
+            public String getData() {
+                return data;
+            }
+            public String getCreatedAt() {
+                return createdAt;
+            }
+        }
+
+        public static class Stats {
+            private RateInfo golddollar;
+            private RateInfo silverdollar;
+            private RateInfo dollarinr;
+            private RateInfo goldfuture;
+            private RateInfo silverfuture;
+            private RateInfo gold;
+            private RateInfo goldrefine;
+            private RateInfo goldrtgs;
+
+            public RateInfo getGolddollar() {
+                return golddollar;
+            }
+            public RateInfo getSilverdollar() {
+                return silverdollar;
+            }
+            public RateInfo getDollarinr() {
+                return dollarinr;
+            }
+            public RateInfo getGoldfuture() {
+                return goldfuture;
+            }
+            public RateInfo getSilverfuture() {
+                return silverfuture;
+            }
+            public RateInfo getGold() {
+                return gold;
+            }
+            public RateInfo getGoldrefine() {
+                return goldrefine;
+            }
+            public RateInfo getGoldrtgs() {
+                return goldrtgs;
+            }
+        }
+
+        public static class RateInfo {
+            private Price buy;
+            private Price sell;
+            public Price getBuy() {
+                return buy;
+            }
+            public Price getSell() {
+                return sell;
+            }
+        }
+
+        public static class Price {
+            private float high;
+            private float low;
+            public float getHigh() {
+                return high;
+            }
+            public float getLow() {
+                return low;
+            }
+        }
     }
 }

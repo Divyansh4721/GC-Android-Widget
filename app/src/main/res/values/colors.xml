@@ -32,12 +32,20 @@
     <color name="splash_background">#FFCC00</color>
 
     <!-- res/values/colors.xml -->
-   
-        <color name="selectedButtonColor">#388E3C</color>
-        <color name="defaultButtonColor">@android:color/transparent</color>
-        <color name="selectedButtonTextColor">#FFFFFF</color>
-        <color name="defaultButtonTextColor">#388E3C</color>
-    
+
+    <color name="selectedButtonColor">#388E3C</color>
+    <color name="defaultButtonColor">@android:color/transparent</color>
+    <color name="selectedButtonTextColor">#FFFFFF</color>
+    <color name="defaultButtonTextColor">#388E3C</color>
+    <color name="green">#4CAF50</color>
+    <color name="light_blue">#21B3F6</color>
+    <color name="dark_blue">#3F51B5</color>
+
+
+    <color name="default_button_bg">#FFFFFF</color> <!-- default background -->
+    <color name="selected_button_bg">#FFCC00</color> <!-- selected background -->
+    <color name="default_button_text">#000000</color> <!-- default text color -->
+    <color name="selected_button_text">#000000</color> <!-- selected text color -->
 
 
 </resources>
