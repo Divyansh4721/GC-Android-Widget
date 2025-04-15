@@ -29,7 +29,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             app:layout_behavior="@string/appbar_scrolling_view_behavior">
-            
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -198,16 +198,16 @@
                                 </LinearLayout>
                             </LinearLayout>
                         </LinearLayout>
-                        
+
                         <!-- Quick Actions Row -->
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:orientation="horizontal"
                             android:layout_marginTop="16dp">
-                            
+
                             <com.google.android.material.button.MaterialButton
-                                android:id="@+id/btn_quick_graph"
+                                android:id="@+id/btn_graph"
                                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
@@ -216,7 +216,7 @@
                                 android:textAllCaps="false"
                                 app:icon="@drawable/ic_graph"
                                 android:layout_marginEnd="8dp" />
-                                
+
                             <com.google.android.material.button.MaterialButton
                                 android:id="@+id/btn_quick_alerts"
                                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
@@ -226,12 +226,12 @@
                                 android:text="Set Alert"
                                 android:textAllCaps="false"
                                 app:icon="@drawable/ic_notification" />
-                                
+
                         </LinearLayout>
 
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
-                
+
                 <!-- Mini Chart Preview Card -->
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/chart_preview_card"
@@ -241,13 +241,13 @@
                     app:cardCornerRadius="16dp"
                     app:cardElevation="4dp"
                     android:layout_marginBottom="16dp">
-                    
+
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:orientation="vertical"
                         android:padding="12dp">
-                        
+
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -255,16 +255,16 @@
                             android:textStyle="bold"
                             android:textSize="16sp"
                             android:layout_marginBottom="8dp" />
-                            
+
                         <com.github.mikephil.charting.charts.LineChart
                             android:id="@+id/mini_line_chart"
                             android:layout_width="match_parent"
                             android:layout_height="match_parent" />
-                            
+
                     </LinearLayout>
-                    
+
                 </com.google.android.material.card.MaterialCardView>
-                
+
                 <!-- News Card -->
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/news_card"
@@ -274,13 +274,13 @@
                     app:cardCornerRadius="16dp"
                     app:cardElevation="4dp"
                     android:layout_marginBottom="16dp">
-                    
+
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
                         android:padding="16dp">
-                        
+
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
@@ -288,19 +288,19 @@
                             android:textStyle="bold"
                             android:textSize="18sp"
                             android:layout_marginBottom="12dp" />
-                            
+
                         <androidx.recyclerview.widget.RecyclerView
                             android:id="@+id/news_recycler_view"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content" />
-                            
+
                     </LinearLayout>
-                    
+
                 </com.google.android.material.card.MaterialCardView>
 
             </LinearLayout>
         </androidx.core.widget.NestedScrollView>
-        
+
         <!-- Floating Action Button for Quick Rate Update -->
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/fab_refresh"
@@ -311,7 +311,7 @@
             android:src="@drawable/ic_refresh"
             app:backgroundTint="?attr/colorPrimary"
             app:tint="@android:color/white" />
-            
+
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
     <!-- Navigation Drawer Content -->
@@ -321,7 +321,7 @@
         android:layout_height="match_parent"
         android:layout_gravity="start"
         android:background="?attr/colorSurface">
-        
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
@@ -389,7 +389,7 @@
                 android:textColor="?attr/colorPrimary"
                 android:layout_marginBottom="8dp"
                 android:layout_marginStart="8dp" />
-                
+
             <!-- Dashboard Button -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_dashboard"
@@ -401,7 +401,7 @@
                 android:gravity="start|center_vertical"
                 app:icon="@drawable/ic_dashboard"
                 android:layout_marginBottom="8dp" />
-                
+
             <!-- Graph Button -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_graph"
@@ -425,7 +425,7 @@
                 android:gravity="start|center_vertical"
                 app:icon="@drawable/ic_notification"
                 android:layout_marginBottom="16dp" />
-                
+
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -510,42 +510,6 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Theme Toggle -->
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                app:cardBackgroundColor="@color/surface_variant_color"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="0dp"
-                android:layout_marginBottom="16dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:padding="12dp"
-                    android:gravity="center_vertical">
-
-                    <ImageView
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        android:src="@drawable/ic_theme"
-                        android:layout_marginEnd="12dp"
-                        android:contentDescription="Theme Icon" />
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Dark Theme"
-                        android:textSize="16sp" />
-
-                    <com.google.android.material.switchmaterial.SwitchMaterial
-                        android:id="@+id/theme_switch"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
 
             <!-- Sign Out Button -->
             <com.google.android.material.button.MaterialButton
@@ -554,8 +518,11 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Sign Out"
+                android:textSize="18sp"
                 android:textAllCaps="false"
                 app:icon="@drawable/ic_logout"
+                android:backgroundTint="@color/log_out"
+                android:textColor="@color/dark_text"
                 android:layout_marginTop="8dp" />
 
         </LinearLayout>

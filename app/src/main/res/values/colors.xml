@@ -57,5 +57,7 @@
     <color name="surface_variant_color">#E7E0EC</color>
     <color name="on_surface_variant_color">#49454F</color>
 
+    <color name="log_out">#FF0000</color>
+
 
 </resources>
