@@ -48,4 +48,14 @@
     <color name="selected_button_text">#000000</color> <!-- selected text color -->
 
 
+    <color name="price_up">#4CAF50</color>
+    <color name="price_down">#F44336</color>
+    <color name="price_unchanged">#757575</color>
+
+    <color name="surface_color">#FFFFFF</color>
+    <color name="on_surface_color">#1C1B1F</color>
+    <color name="surface_variant_color">#E7E0EC</color>
+    <color name="on_surface_variant_color">#49454F</color>
+
+
 </resources>

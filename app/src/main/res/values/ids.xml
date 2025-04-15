@@ -7,6 +7,11 @@
     <item name="button_custom" type="id" />
     <item name="battery_optimization_switch" type="id" />
     <item name="widget_refresh_switch" type="id" />
-
+    <item name="widget_gold_rate" type="id" />
+    <item name="widget_silver_rate" type="id" />
+    <item name="widget_update_time" type="id" />
+    <item name="widget_container" type="id" />
     
+
+
 </resources>

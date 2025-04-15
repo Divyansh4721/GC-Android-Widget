@@ -48,29 +48,31 @@
             </intent-filter>
         </activity>
 
-        <!-- Boot completed receiver referencing inner class -->
+        <!-- Boot completed receiver -->
         <receiver
-            android:name=".WidgetManager$BootCompletedReceiver"
+            android:name=".BootCompletedReceiver"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
 
-        <!-- Widget update service referencing inner class -->
+        <!-- Widget update service -->
         <service
-            android:name=".WidgetManager$WidgetUpdateService"
+            android:name=".WidgetUpdateService"
             android:enabled="true"
             android:exported="false"
             android:permission="android.permission.BIND_JOB_SERVICE" />
 
-        <!-- Widget provider referencing inner class -->
+        <!-- Widget provider -->
         <receiver
-            android:name=".WidgetManager$RatesWidgetProvider"
+            android:name=".RatesWidgetProvider"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
                 <action android:name="com.gcjewellers.rateswidget.ACTION_REFRESH" />
+                <action android:name="com.gcjewellers.rateswidget.START_UPDATES" />
+                <action android:name="com.gcjewellers.rateswidget.STOP_UPDATES" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
@@ -79,6 +81,9 @@
 
         <activity android:name=".RateCheckActivity" />
 
+        <activity
+            android:name=".AnalyticsDashboardActivity"
+            android:exported="false" />
 
     </application>
 </manifest>

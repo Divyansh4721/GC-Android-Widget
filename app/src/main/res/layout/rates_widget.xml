@@ -3,7 +3,7 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/root_layout"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="match_parent"
     android:background="@drawable/widget_background_improved"
     android:padding="6dp">
 
@@ -18,33 +18,45 @@
         android:textStyle="bold"
         android:textSize="14sp" />
 
-    <!-- Updated TextView ID from "last_updated" to "rates_updated_time" -->
     <TextView
         android:id="@+id/rates_updated_time"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
-        android:layout_toEndOf="@id/widget_title"
-        android:layout_toRightOf="@id/widget_title"
-        android:layout_toStartOf="@id/refresh_button"
+        android:layout_toStartOf="@id/refresh_button_container"
+        android:layout_toLeftOf="@id/refresh_button_container"
+        android:layout_marginEnd="8dp"
+        android:layout_marginRight="8dp"
         android:gravity="end"
         android:text="--:--"
         android:textColor="@android:color/white"
         android:textSize="13sp" />
 
-    <ImageButton
-        android:id="@+id/refresh_button"
-        android:layout_width="22dp"
-        android:layout_height="22dp"
+    <FrameLayout
+        android:id="@+id/refresh_button_container"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_alignParentEnd="true"
-        android:layout_alignParentTop="true"
-        android:background="@android:color/transparent"
-        android:src="@drawable/ic_refresh" />
+        android:layout_alignParentTop="true">
+
+        <ImageButton
+            android:id="@+id/refresh_button"
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:background="@android:color/transparent"
+            android:src="@drawable/ic_refresh" />
+            
+        <ProgressBar
+            android:id="@+id/refresh_progress"
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:visibility="gone"/>
+    </FrameLayout>
 
     <LinearLayout
         android:id="@+id/rates_container"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:layout_below="@id/widget_title"
         android:layout_marginTop="2dp"
         android:orientation="horizontal"
