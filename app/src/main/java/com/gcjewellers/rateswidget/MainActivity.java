@@ -22,6 +22,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import androidx.core.view.GravityCompat;
 
+
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -34,12 +35,17 @@ import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity implements ProfileImageGenerator.ProfileImageCallback {
     private static final String TAG = "MainActivity";
@@ -53,34 +59,55 @@ public class MainActivity extends AppCompatActivity implements ProfileImageGener
     private TextView userName;
     private TextView userEmail;
     private ImageView userProfileImage;
-    private TextView goldRateText;
-    private TextView silverPriceText;
-    private TextView ratesUpdatedTimeText;
+
+    // Gold UI elements
+    private TextView goldDate;
+    private TextView goldRate;
+    private TextView goldYesterdayPrice;
     private TextView goldPriceChange;
+
+    // Silver UI elements
+    private TextView silverDate;
+    private TextView silverPrice;
+    private TextView silverYesterdayPrice;
     private TextView silverPriceChange;
+
     private MaterialCardView ratesCard;
+    private FloatingActionButton fabRefresh;
     private View loadingIndicator;
 
     private FirebaseAuth mAuth;
     private GoogleSignInClient googleSignInClient;
 
-    private RatesViewModel ratesViewModel;
+    private RatesRepository ratesRepository;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        ratesViewModel = new ViewModelProvider(this).get(RatesViewModel.class);
-
         try {
             setupToolbar();
             setupAuthentication();
             initializeViews();
             setupUserInterface();
-            observeRatesData();
 
+            // Initialize the rates repository
+            ratesRepository = new RatesRepository(this);
+
+            // Load rates data
             refreshRates();
+
+            // Setup refresh fab
+            // In onCreate method, add this after initializing repository
+            if (fabRefresh != null) {
+                fabRefresh.setOnClickListener(v -> {
+                    refreshRates();
+                    // Add animation to the FAB
+                    v.startAnimation(AnimationUtils.loadAnimation(this, R.anim.rotate_refresh));
+                });
+            }
+
         } catch (Exception e) {
             Log.e(TAG, "Critical error in MainActivity onCreate", e);
             handleFatalError("An error occurred. Please restart the app.");
@@ -104,8 +131,7 @@ public class MainActivity extends AppCompatActivity implements ProfileImageGener
         int titleColor = ContextCompat.getColor(this, R.color.toolbar_title_color);
         toolbar.setTitleTextColor(titleColor);
 
-        // Still setup the drawer toggle for functionality but we'll override its
-        // appearance
+        // Setup the drawer toggle for functionality but override its appearance
         setupNavigationDrawer(toolbar);
         applyThemeAdjustments(toolbar);
     }
@@ -129,19 +155,45 @@ public class MainActivity extends AppCompatActivity implements ProfileImageGener
     }
 
     private void initializeViews() {
-        batteryOptSwitch = findViewById(R.id.battery_optimization_switch);
-        widgetRefreshSwitch = findViewById(R.id.widget_refresh_switch);
-        logoutButton = findViewById(R.id.logout_button);
-        userName = findViewById(R.id.user_name);
-        userEmail = findViewById(R.id.user_email);
-        userProfileImage = findViewById(R.id.user_profile_image);
-        ratesUpdatedTimeText = findViewById(R.id.rates_updated_time);
-        goldRateText = findViewById(R.id.gold_rate);
-        silverPriceText = findViewById(R.id.silver_price);
-        goldPriceChange = findViewById(R.id.gold_price_change);
-        silverPriceChange = findViewById(R.id.silver_price_change);
-        ratesCard = findViewById(R.id.rates_card);
-        loadingIndicator = findViewById(R.id.loading_indicator);
+        try {
+            // Navigation drawer elements
+            batteryOptSwitch = findViewById(R.id.battery_optimization_switch);
+            widgetRefreshSwitch = findViewById(R.id.widget_refresh_switch);
+            logoutButton = findViewById(R.id.logout_button);
+            userName = findViewById(R.id.user_name);
+            userEmail = findViewById(R.id.user_email);
+            userProfileImage = findViewById(R.id.user_profile_image);
+
+            // Gold UI elements
+            goldDate = findViewById(R.id.gold_date);
+            goldRate = findViewById(R.id.gold_rate);
+            goldYesterdayPrice = findViewById(R.id.gold_yesterday_price);
+            goldPriceChange = findViewById(R.id.gold_price_change);
+
+            // Silver UI elements
+            silverDate = findViewById(R.id.silver_date);
+            silverPrice = findViewById(R.id.silver_price);
+            silverYesterdayPrice = findViewById(R.id.silver_yesterday_price);
+            silverPriceChange = findViewById(R.id.silver_price_change);
+
+            ratesCard = findViewById(R.id.rates_card);
+            fabRefresh = findViewById(R.id.fab_refresh);
+            loadingIndicator = findViewById(R.id.loading_indicator);
+
+            // Set current date
+            SimpleDateFormat dateFormat = new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault());
+            String currentDate = dateFormat.format(new Date());
+
+            if (goldDate != null) {
+                goldDate.setText(currentDate);
+            }
+
+            if (silverDate != null) {
+                silverDate.setText(currentDate);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error in initializeViews: " + e.getMessage());
+        }
     }
 
     private void setupUserInterface() {
@@ -156,72 +208,180 @@ public class MainActivity extends AppCompatActivity implements ProfileImageGener
         setupLogoutButton();
         setupNavigationButtons();
         setupGestureListeners();
+
+        // Setup swipe to refresh
+        ratesCard.setOnTouchListener(new SwipeGestureDetector(this, direction -> {
+            if (direction == SwipeGestureDetector.SWIPE_DOWN) {
+                refreshRates();
+                return true;
+            }
+            return false;
+        }));
     }
 
-    private void observeRatesData() {
-        ratesViewModel.getRatesData().observe(this, ratesData -> {
-            if (ratesData != null) {
-                // Always update UI with latest data
-                updateRatesUI(
-                        ratesData.getGoldRate(),
-                        ratesData.getSilverRate(),
-                        ratesData.getLastUpdated(),
-                        ratesData.getGoldChangePercent(),
-                        ratesData.getSilverChangePercent());
+    private void refreshRates() {
+        // Show loading indicator if available
+        if (loadingIndicator != null) {
+            loadingIndicator.setVisibility(View.VISIBLE);
+        }
 
-                // Don't animate for real-time updates since we're not using them for the UI
-                // Only animate for manual refreshes
-                if (!ratesData.isFromRealTimeUpdate()) {
-                    ratesCard.startAnimation(AnimationUtils.loadAnimation(
-                            MainActivity.this, R.anim.rates_update_animation));
+        // Fetch rates data
+        if (ratesRepository != null) {
+            ratesRepository.fetchRates(new RatesRepository.RatesFetchCallback() {
+                @Override
+                public void onSuccess(String goldRate, String silverRate, String lastUpdated,
+                        String yesterdayGoldRate, String yesterdaySilverRate,
+                        String goldChangeValue, String silverChangeValue) {
+                    runOnUiThread(() -> {
+                        updateRatesUI(goldRate, silverRate, yesterdayGoldRate, yesterdaySilverRate,
+                                goldChangeValue, silverChangeValue);
+
+                        if (loadingIndicator != null) {
+                            loadingIndicator.setVisibility(View.GONE);
+                        }
+
+                        // Animate the rates card
+                        if (ratesCard != null) {
+                            ratesCard.startAnimation(AnimationUtils.loadAnimation(MainActivity.this,
+                                    R.anim.rates_update_animation));
+                        }
+
+                        // Update widgets
+                        updateWidgets(goldRate, silverRate, lastUpdated, yesterdayGoldRate,
+                                yesterdaySilverRate, goldChangeValue, silverChangeValue);
+                    });
                 }
 
-                if (loadingIndicator.getVisibility() == View.VISIBLE) {
-                    loadingIndicator.setVisibility(View.GONE);
+                @Override
+                public void onError(String errorMessage) {
+                    runOnUiThread(() -> {
+                        if (loadingIndicator != null) {
+                            loadingIndicator.setVisibility(View.GONE);
+                        }
+
+                        if (findViewById(R.id.drawer_layout) != null) {
+                            Snackbar.make(findViewById(R.id.drawer_layout),
+                                    "Error: " + errorMessage, Snackbar.LENGTH_LONG)
+                                    .setAction("Retry", v -> refreshRates())
+                                    .show();
+                        }
+                    });
                 }
-
-                // Update widget with latest data, keeping its auto-refresh settings intact
-                updateWidget(ratesData);
-            }
-        });
-
-        ratesViewModel.getError().observe(this, errorMessage -> {
-            if (errorMessage != null && !errorMessage.isEmpty()) {
-                goldRateText.setText("Error");
-                silverPriceText.setText("Check connection");
-                ratesUpdatedTimeText.setText("Update Failed");
-
-                if (loadingIndicator.getVisibility() == View.VISIBLE) {
-                    loadingIndicator.setVisibility(View.GONE);
-                }
-
-                Snackbar.make(findViewById(R.id.drawer_layout),
-                        errorMessage, Snackbar.LENGTH_LONG)
-                        .setAction("Retry", v -> refreshRates())
-                        .show();
-            }
-        });
+            });
+        }
     }
 
-    private void updateWidget(RatesViewModel.RatesData ratesData) {
-        // Update widget with latest data (keep auto-refresh settings intact)
+    private void updateWidgets(String goldRate, String silverRate, String lastUpdated,
+            String yesterdayGoldRate, String yesterdaySilverRate,
+            String goldChangeValue, String silverChangeValue) {
+        // Create intent to update widgets
         Intent updateIntent = new Intent(this, RatesWidgetProvider.class);
-        // Use standard AppWidget update action
         updateIntent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
 
-        // Add required AppWidgetManager extras
+        // Get all widget IDs
         AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(this);
         int[] appWidgetIds = appWidgetManager.getAppWidgetIds(
                 new ComponentName(this, RatesWidgetProvider.class));
         updateIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, appWidgetIds);
 
-        // Add our rates data
-        updateIntent.putExtra("goldRate", ratesData.getGoldRate());
-        updateIntent.putExtra("silverRate", ratesData.getSilverRate());
-        updateIntent.putExtra("lastUpdated", ratesData.getLastUpdated());
-        updateIntent.putExtra("goldChangePercent", ratesData.getGoldChangePercent());
-        updateIntent.putExtra("silverChangePercent", ratesData.getSilverChangePercent());
+        // Add rates data
+        updateIntent.putExtra("goldRate", goldRate);
+        updateIntent.putExtra("silverRate", silverRate);
+        updateIntent.putExtra("lastUpdated", lastUpdated);
+        updateIntent.putExtra("yesterdayGoldRate", yesterdayGoldRate);
+        updateIntent.putExtra("yesterdaySilverRate", yesterdaySilverRate);
+        updateIntent.putExtra("goldChangeValue", goldChangeValue);
+        updateIntent.putExtra("silverChangeValue", silverChangeValue);
 
+        // Send the broadcast
+        sendBroadcast(updateIntent);
+    }
+
+    private void updateRatesUI(String goldRateValue, String silverRateValue,
+            String yesterdayGoldRateValue, String yesterdaySilverRateValue,
+            String goldChangeValue, String silverChangeValue) {
+        // Set gold values
+        if (goldRate != null) {
+            goldRate.setText("₹" + goldRateValue);
+        }
+        if (goldYesterdayPrice != null) {
+            goldYesterdayPrice.setText("₹" + yesterdayGoldRateValue);
+        }
+
+        // Set silver values
+        if (silverPrice != null) {
+            silverPrice.setText("₹" + silverRateValue);
+        }
+        if (silverYesterdayPrice != null) {
+            silverYesterdayPrice.setText("₹" + yesterdaySilverRateValue);
+        }
+
+        // Set price changes with proper sign and color
+        try {
+            int goldChange = Integer.parseInt(goldChangeValue);
+            int silverChange = Integer.parseInt(silverChangeValue);
+
+            // Format gold change with sign
+            String formattedGoldChange = (goldChange >= 0 ? "+" : "") + goldChange;
+            if (goldPriceChange != null) {
+                goldPriceChange.setText(formattedGoldChange);
+                goldPriceChange.setTextColor(ContextCompat.getColor(this,
+                        goldChange >= 0 ? R.color.price_up : R.color.price_down));
+                goldPriceChange.setCompoundDrawablesWithIntrinsicBounds(
+                        goldChange >= 0 ? R.drawable.ic_arrow_up : R.drawable.ic_arrow_down,
+                        0, 0, 0);
+            }
+
+            // Format silver change with sign
+            String formattedSilverChange = (silverChange >= 0 ? "+" : "") + silverChange;
+            if (silverPriceChange != null) {
+                silverPriceChange.setText(formattedSilverChange);
+                silverPriceChange.setTextColor(ContextCompat.getColor(this,
+                        silverChange >= 0 ? R.color.price_up : R.color.price_down));
+                silverPriceChange.setCompoundDrawablesWithIntrinsicBounds(
+                        silverChange >= 0 ? R.drawable.ic_arrow_up : R.drawable.ic_arrow_down,
+                        0, 0, 0);
+            }
+        } catch (NumberFormatException e) {
+            Log.e(TAG, "Error formatting price changes", e);
+
+            // Default values if parsing fails
+            if (goldPriceChange != null) {
+                goldPriceChange.setText("+0");
+                goldPriceChange.setTextColor(ContextCompat.getColor(this, R.color.price_unchanged));
+                goldPriceChange.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_arrow_up, 0, 0, 0);
+            }
+
+            if (silverPriceChange != null) {
+                silverPriceChange.setText("+0");
+                silverPriceChange.setTextColor(ContextCompat.getColor(this, R.color.price_unchanged));
+                silverPriceChange.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_arrow_up, 0, 0, 0);
+            }
+        }
+    }
+
+    private void updateWidgets(String goldRate, String silverRate,
+            String yesterdayGoldRate, String yesterdaySilverRate,
+            String goldChangeValue, String silverChangeValue) {
+        // Create intent to update widgets
+        Intent updateIntent = new Intent(this, RatesWidgetProvider.class);
+        updateIntent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
+
+        // Get all widget IDs
+        AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(this);
+        int[] appWidgetIds = appWidgetManager.getAppWidgetIds(
+                new ComponentName(this, RatesWidgetProvider.class));
+        updateIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, appWidgetIds);
+
+        // Add rates data
+        updateIntent.putExtra("goldRate", goldRate);
+        updateIntent.putExtra("silverRate", silverRate);
+        updateIntent.putExtra("yesterdayGoldRate", yesterdayGoldRate);
+        updateIntent.putExtra("yesterdaySilverRate", yesterdaySilverRate);
+        updateIntent.putExtra("goldChangeValue", goldChangeValue);
+        updateIntent.putExtra("silverChangeValue", silverChangeValue);
+
+        // Send the broadcast
         sendBroadcast(updateIntent);
     }
 
@@ -252,8 +412,8 @@ public class MainActivity extends AppCompatActivity implements ProfileImageGener
                 ContextCompat.getColor(this, R.color.drawer_icon_color));
 
         // Use more moderate size adjustments
-        drawerToggle.getDrawerArrowDrawable().setBarLength(30f); // Reduced from 100f
-        drawerToggle.getDrawerArrowDrawable().setBarThickness(4f); // Reduced from 8f
+        drawerToggle.getDrawerArrowDrawable().setBarLength(30f);
+        drawerToggle.getDrawerArrowDrawable().setBarThickness(4f);
 
         drawerLayout.addDrawerListener(drawerToggle);
         drawerLayout.addDrawerListener(new DrawerLayout.SimpleDrawerListener() {
@@ -270,18 +430,7 @@ public class MainActivity extends AppCompatActivity implements ProfileImageGener
     }
 
     private void setupGestureListeners() {
-        ratesCard.setOnTouchListener(new SwipeGestureDetector(this, direction -> {
-            if (direction == SwipeGestureDetector.SWIPE_DOWN) {
-                refreshRates();
-                return true;
-            }
-            return false;
-        }));
-    }
-
-    private void refreshRates() {
-        loadingIndicator.setVisibility(View.VISIBLE);
-        ratesViewModel.refreshRates();
+        // Already setup in setupUserInterface for swipe-to-refresh
     }
 
     private void setupUserProfile(FirebaseUser user) {
@@ -369,7 +518,7 @@ public class MainActivity extends AppCompatActivity implements ProfileImageGener
                     : RatesWidgetProvider.ACTION_STOP_UPDATES);
             sendBroadcast(intent);
 
-            // Show feedback with more engaging UI
+            // Show feedback
             Snackbar.make(findViewById(R.id.drawer_layout),
                     isChecked ? "Auto-refresh enabled for widget" : "Auto-refresh disabled for widget",
                     Snackbar.LENGTH_SHORT).show();
@@ -377,62 +526,47 @@ public class MainActivity extends AppCompatActivity implements ProfileImageGener
     }
 
     private void setupNavigationButtons() {
-        findViewById(R.id.switch_rate_alerts).setOnClickListener(v -> {
-            startActivity(new Intent(MainActivity.this, RateCheckActivity.class));
-            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
-        });
+        try {
+            // Check if each view exists before setting click listeners
+            View switchRateAlertsBtn = findViewById(R.id.switch_rate_alerts);
+            if (switchRateAlertsBtn != null) {
+                switchRateAlertsBtn.setOnClickListener(v -> {
+                    startActivity(new Intent(MainActivity.this, RateCheckActivity.class));
+                    overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
+                });
+            }
 
-        findViewById(R.id.btn_graph).setOnClickListener(v -> {
-            startActivity(new Intent(MainActivity.this, RatesGraphsActivity.class));
-            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
-        });
+            View btnGraph = findViewById(R.id.btn_graph);
+            if (btnGraph != null) {
+                btnGraph.setOnClickListener(v -> {
+                    startActivity(new Intent(MainActivity.this, RatesGraphsActivity.class));
+                    overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
+                });
+            }
 
-        findViewById(R.id.btn_graph_2).setOnClickListener(v -> {
-            startActivity(new Intent(MainActivity.this, RatesGraphsActivity.class));
-            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
-        });
+            View btnGraph2 = findViewById(R.id.btn_graph_2);
+            if (btnGraph2 != null) {
+                btnGraph2.setOnClickListener(v -> {
+                    startActivity(new Intent(MainActivity.this, RatesGraphsActivity.class));
+                    overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
+                });
+            }
 
-        findViewById(R.id.btn_dashboard).setOnClickListener(v -> {
-            startActivity(new Intent(MainActivity.this, AnalyticsDashboardActivity.class));
-            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
-        });
+            View btnDashboard = findViewById(R.id.btn_dashboard);
+            if (btnDashboard != null) {
+                btnDashboard.setOnClickListener(v -> {
+                    startActivity(new Intent(MainActivity.this, AnalyticsDashboardActivity.class));
+                    overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
+                });
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error in setupNavigationButtons: " + e.getMessage());
+            // Continue gracefully without crashing
+        }
     }
 
     private void setupLogoutButton() {
         logoutButton.setOnClickListener(v -> logout());
-    }
-
-    private void updateRatesUI(String goldRate, String silverRate, String lastUpdated,
-            double goldChangePercent, double silverChangePercent) {
-        goldRateText.setText("₹" + goldRate);
-        silverPriceText.setText("₹" + silverRate);
-        ratesUpdatedTimeText.setText("Updated at " + lastUpdated);
-
-        String goldChangeText = String.format(java.util.Locale.getDefault(), "%.2f%%", goldChangePercent);
-        String silverChangeText = String.format(java.util.Locale.getDefault(), "%.2f%%", silverChangePercent);
-
-        goldPriceChange.setText(goldChangeText);
-        silverPriceChange.setText(silverChangeText);
-
-        goldPriceChange.setTextColor(getChangeColor(goldChangePercent));
-        silverPriceChange.setTextColor(getChangeColor(silverChangePercent));
-
-        goldPriceChange.setCompoundDrawablesWithIntrinsicBounds(
-                goldChangePercent >= 0 ? R.drawable.ic_arrow_up : R.drawable.ic_arrow_down,
-                0, 0, 0);
-        silverPriceChange.setCompoundDrawablesWithIntrinsicBounds(
-                silverChangePercent >= 0 ? R.drawable.ic_arrow_up : R.drawable.ic_arrow_down,
-                0, 0, 0);
-    }
-
-    private int getChangeColor(double changePercent) {
-        if (changePercent > 0) {
-            return ContextCompat.getColor(this, R.color.price_up);
-        } else if (changePercent < 0) {
-            return ContextCompat.getColor(this, R.color.price_down);
-        } else {
-            return ContextCompat.getColor(this, R.color.price_unchanged);
-        }
     }
 
     private boolean isIgnoringBatteryOptimization() {
@@ -470,12 +604,6 @@ public class MainActivity extends AppCompatActivity implements ProfileImageGener
     }
 
     @Override
-    public boolean onCreateOptionsMenu(android.view.Menu menu) {
-        // getMenuInflater().inflate(R.menu.main_activity_menu, menu);
-        return true;
-    }
-
-    @Override
     public boolean onOptionsItemSelected(android.view.MenuItem item) {
         // Handle the custom double chevron icon click
         if (item.getItemId() == android.R.id.home) {
@@ -486,34 +614,14 @@ public class MainActivity extends AppCompatActivity implements ProfileImageGener
             }
             return true;
         }
-
-        if (item.getItemId() == R.id.action_rates_graphs) {
-            startActivity(new Intent(this, RatesGraphsActivity.class));
-            return true;
-        }
         return super.onOptionsItemSelected(item);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        // Just refresh rates once when app is resumed, without auto-refresh for the app
-        // UI
+        // Refresh rates when app is resumed
         refreshRates();
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        // We don't need to do anything here since we're not starting any updates for
-        // the UI
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        // We don't need to do anything here since we're not starting any updates for
-        // the UI
     }
 
     private void handleFatalError(String message) {

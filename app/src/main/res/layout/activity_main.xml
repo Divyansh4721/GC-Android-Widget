@@ -28,7 +28,8 @@
         <androidx.core.widget.NestedScrollView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            app:layout_behavior="@string/appbar_scrolling_view_behavior">
+            app:layout_behavior="@string/appbar_scrolling_view_behavior"
+            android:background="@color/black">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -41,9 +42,11 @@
                     android:id="@+id/rates_card"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    app:cardBackgroundColor="?attr/card_Surface"
-                    app:cardCornerRadius="16dp"
+                    app:cardBackgroundColor="@color/dark_background"
+                    app:cardCornerRadius="24dp"
                     app:cardElevation="4dp"
+                    app:strokeColor="@color/gold"
+                    app:strokeWidth="2dp"
                     android:layout_marginBottom="16dp">
 
                     <LinearLayout
@@ -52,258 +55,234 @@
                         android:orientation="vertical"
                         android:padding="16dp">
 
-                        <!-- Card Header with Loading Indicator -->
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:gravity="center_vertical"
-                            android:layout_marginBottom="12dp">
-
-                            <TextView
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:text="Today's Rates"
-                                android:textColor="?attr/tc"
-                                android:textSize="20sp"
-                                android:textStyle="bold" />
-
-                            <ProgressBar
-                                android:id="@+id/loading_indicator"
-                                android:layout_width="24dp"
-                                android:layout_height="24dp"
-                                android:visibility="gone"
-                                android:layout_marginEnd="8dp" />
-
-                            <TextView
-                                android:id="@+id/rates_updated_time"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Updated at 02:45 PM"
-                                android:textColor="?attr/colorOnSurface"
-                                android:textSize="14sp" />
-                        </LinearLayout>
-
-                        <!-- Gold Rates Section -->
+                        <!-- Gold Section -->
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:orientation="vertical"
-                            android:layout_marginBottom="16dp"
-                            android:background="@drawable/rounded_corners_gold"
-                            app:cardElevation="4dp"
-                            android:padding="12dp">
+                            android:layout_marginBottom="24dp">
 
+                            <!-- Gold Header -->
                             <LinearLayout
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:orientation="horizontal"
-                                android:gravity="center_vertical">
+                                android:layout_marginBottom="16dp">
 
                                 <ImageView
-                                    android:layout_width="36dp"
-                                    android:layout_height="36dp"
+                                    android:layout_width="48dp"
+                                    android:layout_height="48dp"
                                     android:src="@drawable/ic_gold"
-                                    android:layout_marginEnd="12dp"
+                                    android:background="@drawable/circular_gold_background"
+                                    android:padding="8dp"
+                                    android:layout_marginEnd="16dp"
                                     android:contentDescription="Gold Icon" />
-
-                                <TextView
-                                    android:layout_width="0dp"
-                                    android:layout_height="wrap_content"
-                                    android:layout_weight="1"
-                                    android:text="Gold 995"
-                                    android:textColor="?attr/colorPrimary"
-                                    android:textSize="18sp" />
 
                                 <LinearLayout
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:orientation="vertical"
-                                    android:gravity="end">
+                                    android:orientation="vertical">
 
                                     <TextView
-                                        android:id="@+id/gold_rate"
                                         android:layout_width="wrap_content"
                                         android:layout_height="wrap_content"
-                                        android:text="₹0000"
-                                        android:textColor="?attr/colorPrimary"
-                                        android:textSize="26sp"
+                                        android:text="Gold"
+                                        android:textColor="@color/gold"
+                                        android:textSize="24sp"
                                         android:textStyle="bold" />
 
                                     <TextView
-                                        android:id="@+id/gold_price_change"
+                                        android:id="@+id/gold_date"
                                         android:layout_width="wrap_content"
                                         android:layout_height="wrap_content"
-                                        android:text="0.00%"
-                                        android:textSize="14sp"
-                                        android:drawablePadding="4dp"
-                                        android:gravity="center_vertical"
-                                        android:layout_marginTop="4dp" />
+                                        android:text="Apr 16, 2025"
+                                        android:textColor="@color/gray_text" />
                                 </LinearLayout>
                             </LinearLayout>
-                        </LinearLayout>
 
-                        <!-- Silver Rates Section -->
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="vertical"
-                            android:background="@drawable/rounded_corners_silver"
-                            app:cardElevation="4dp"
-                            android:padding="12dp">
+                            <!-- Gold Price -->
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:background="@color/pure_black"
+                                android:layout_marginBottom="16dp"
+                                android:padding="12dp"
+                                android:gravity="center">
 
+                                <TextView
+                                    android:id="@+id/gold_rate"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="₹8,816.00"
+                                    android:textColor="@color/white"
+                                    android:textSize="24sp"
+                                    android:textStyle="bold" />
+                            </LinearLayout>
+
+                            <!-- Yesterday Gold Price -->
                             <LinearLayout
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:orientation="horizontal"
-                                android:gravity="center_vertical">
-
-                                <ImageView
-                                    android:layout_width="36dp"
-                                    android:layout_height="36dp"
-                                    android:src="@drawable/ic_silver"
-                                    android:layout_marginEnd="12dp"
-                                    android:contentDescription="Silver Icon" />
+                                android:layout_marginTop="8dp">
 
                                 <TextView
                                     android:layout_width="0dp"
                                     android:layout_height="wrap_content"
                                     android:layout_weight="1"
-                                    android:text="Silver 999"
-                                    android:textColor="?attr/colorSecondary"
-                                    android:textSize="18sp" />
+                                    android:text="Yesterday Gold Price:"
+                                    android:textColor="@color/gray_text" />
+
+                                <TextView
+                                    android:id="@+id/gold_yesterday_price"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="₹8,725.25"
+                                    android:textColor="@color/white"
+                                    android:textStyle="bold" />
+                            </LinearLayout>
+
+                            <!-- Gold Price Change -->
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:layout_marginTop="8dp">
+
+                                <TextView
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:text="Price increased by"
+                                    android:textColor="@color/gray_text" />
+
+                                <TextView
+                                    android:id="@+id/gold_price_change"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="+90"
+                                    android:textColor="@color/price_up"
+                                    android:textStyle="bold"
+                                    android:drawableEnd="@drawable/ic_arrow_up"
+                                    android:drawablePadding="4dp" />
+                            </LinearLayout>
+                        </LinearLayout>
+
+                        <!-- Silver Section -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical">
+
+                            <!-- Silver Header -->
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:layout_marginBottom="16dp">
+
+                                <ImageView
+                                    android:layout_width="48dp"
+                                    android:layout_height="48dp"
+                                    android:src="@drawable/ic_silver"
+                                    android:background="@drawable/circular_silver_background"
+                                    android:padding="8dp"
+                                    android:layout_marginEnd="16dp"
+                                    android:contentDescription="Silver Icon" />
 
                                 <LinearLayout
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:orientation="vertical"
-                                    android:gravity="end">
+                                    android:orientation="vertical">
 
                                     <TextView
-                                        android:id="@+id/silver_price"
                                         android:layout_width="wrap_content"
                                         android:layout_height="wrap_content"
-                                        android:text="₹0000"
-                                        android:textColor="?attr/colorSecondary"
-                                        android:textSize="26sp" />
+                                        android:text="Silver"
+                                        android:textColor="@color/silver"
+                                        android:textSize="24sp"
+                                        android:textStyle="bold" />
 
                                     <TextView
-                                        android:id="@+id/silver_price_change"
+                                        android:id="@+id/silver_date"
                                         android:layout_width="wrap_content"
                                         android:layout_height="wrap_content"
-                                        android:text="0.00%"
-                                        android:textSize="14sp"
-                                        android:drawablePadding="4dp"
-                                        android:gravity="center_vertical"
-                                        android:layout_marginTop="4dp" />
+                                        android:text="Apr 16, 2025"
+                                        android:textColor="@color/gray_text" />
                                 </LinearLayout>
                             </LinearLayout>
-                        </LinearLayout>
 
-                        <!-- Quick Actions Row -->
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:layout_marginTop="16dp">
-
-                            <com.google.android.material.button.MaterialButton
-                                android:id="@+id/btn_graph"
-                                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                                android:layout_width="0dp"
+                            <!-- Silver Price -->
+                            <LinearLayout
+                                android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:text="View Graph"
-                                android:textColor="?attr/tc"
-                                android:textAllCaps="false"
-                                app:icon="@drawable/ic_graph"
-                                android:textSize="12sp"
-                                android:layout_marginEnd="8dp" />
+                                android:orientation="vertical"
+                                android:background="@color/pure_black"
+                                android:layout_marginBottom="16dp"
+                                android:padding="12dp"
+                                android:gravity="center">
 
-                            <com.google.android.material.button.MaterialButton
-                                android:id="@+id/btn_quick_alerts"
-                                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                                android:layout_width="0dp"
+                                <TextView
+                                    android:id="@+id/silver_price"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="₹110,000.00"
+                                    android:textColor="@color/white"
+                                    android:textSize="24sp"
+                                    android:textStyle="bold" />
+                            </LinearLayout>
+
+                            <!-- Yesterday Silver Price -->
+                            <LinearLayout
+                                android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:text="Set Alert"
-                                android:textColor="?attr/tc"
-                                android:textSize="12sp"
-                                android:textAllCaps="false"
-                                app:icon="@drawable/ic_notification" />
+                                android:orientation="horizontal"
+                                android:layout_marginTop="8dp">
 
+                                <TextView
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:text="Yesterday Silver Price:"
+                                    android:textColor="@color/gray_text" />
+
+                                <TextView
+                                    android:id="@+id/silver_yesterday_price"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="₹109,800.00"
+                                    android:textColor="@color/white"
+                                    android:textStyle="bold" />
+                            </LinearLayout>
+
+                            <!-- Silver Price Change -->
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:layout_marginTop="8dp">
+
+                                <TextView
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:text="Price increased by"
+                                    android:textColor="@color/gray_text" />
+
+                                <TextView
+                                    android:id="@+id/silver_price_change"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="+200"
+                                    android:textColor="@color/price_up"
+                                    android:textStyle="bold"
+                                    android:drawableEnd="@drawable/ic_arrow_up"
+                                    android:drawablePadding="4dp" />
+                            </LinearLayout>
                         </LinearLayout>
-
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
-
-                <!-- Mini Chart Preview Card -->
-                <com.google.android.material.card.MaterialCardView
-                    android:id="@+id/chart_preview_card"
-                    android:layout_width="match_parent"
-                    android:layout_height="200dp"
-                    app:cardBackgroundColor="?attr/card_Surface"
-                    app:cardCornerRadius="16dp"
-                    app:cardElevation="4dp"
-                    android:layout_marginBottom="16dp">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:orientation="vertical"
-                        android:padding="12dp">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="7-Day Trend"
-                            android:textStyle="bold"
-                            android:textSize="16sp"
-                            android:layout_marginBottom="8dp" />
-
-                        <com.github.mikephil.charting.charts.LineChart
-                            android:id="@+id/mini_line_chart"
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent" />
-
-                    </LinearLayout>
-
-                </com.google.android.material.card.MaterialCardView>
-
-                <!-- News Card -->
-                <com.google.android.material.card.MaterialCardView
-                    android:id="@+id/news_card"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    app:cardBackgroundColor="?attr/card_Surface"
-                    app:cardCornerRadius="16dp"
-                    app:cardElevation="4dp"
-                    android:layout_marginBottom="16dp">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:padding="16dp">
-
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="Market News"
-                            android:textStyle="bold"
-                            android:textSize="18sp"
-                            android:layout_marginBottom="12dp" />
-
-                        <androidx.recyclerview.widget.RecyclerView
-                            android:id="@+id/news_recycler_view"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content" />
-
-                    </LinearLayout>
-
-                </com.google.android.material.card.MaterialCardView>
-
             </LinearLayout>
         </androidx.core.widget.NestedScrollView>
 
@@ -315,7 +294,7 @@
             android:layout_gravity="bottom|end"
             android:layout_margin="16dp"
             android:src="@drawable/ic_refresh"
-            app:backgroundTint="?attr/colorPrimary"
+            app:backgroundTint="@color/gold"
             app:tint="@android:color/white" />
 
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
@@ -328,6 +307,7 @@
         android:layout_gravity="start"
         android:background="?attr/ndc">
 
+        <!-- Place drawer content directly here instead of using include -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
@@ -378,7 +358,7 @@
                             android:id="@+id/user_email"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="johndoe@gcjewellers.com"
+                            android:text="johndoe@example.com"
                             android:textColor="?attr/colorOnSurfaceVariant"
                             android:textSize="14sp" />
                     </LinearLayout>
@@ -440,7 +420,6 @@
                 app:backgroundTint="?attr/card_Surface"
                 app:cardElevation="2dp"
                 android:layout_marginBottom="16dp" />
-
 
             <TextView
                 android:layout_width="match_parent"
@@ -528,7 +507,6 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-
             <!-- Sign Out Button -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/logout_button"
@@ -543,7 +521,7 @@
                 android:backgroundTint="@color/log_out"
                 android:textColor="?attr/tc"
                 android:layout_marginTop="8dp" />
-
+                
         </LinearLayout>
     </com.google.android.material.navigation.NavigationView>
 

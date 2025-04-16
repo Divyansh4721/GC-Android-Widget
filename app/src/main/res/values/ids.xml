@@ -11,7 +11,16 @@
     <item name="widget_silver_rate" type="id" />
     <item name="widget_update_time" type="id" />
     <item name="widget_container" type="id" />
-    
+    <item name="loading_indicator" type="id" />
+    <item name="btn_graph" type="id" />
+    <item name="widget_last_updated" type="id" />
+    <item name="widget_gold_change" type="id" />
+    <item name="widget_silver_change" type="id" />
+    <item name="widget_gold_arrow" type="id" />
+    <item name="widget_silver_arrow" type="id" />
+    <item name="widget_refresh_button" type="id" />
+    <item name="widget_loading" type="id" />
+    <item name="widget_content" type="id" />
 
 
 </resources>

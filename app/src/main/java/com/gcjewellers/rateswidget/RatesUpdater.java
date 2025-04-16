@@ -65,7 +65,12 @@ public class RatesUpdater {
                             goldChangePercent, silverChangePercent);
                 }
             }
-            
+
+            @Override
+            public void onSuccess(String goldRate, String silverRate, String lastUpdated, String yesterdayGoldRate, String yesterdaySilverRate, String goldChangeValue, String silverChangeValue) {
+
+            }
+
             public void onError(String errorMessage) {
                 if (listener != null) {
                     listener.onError(errorMessage);

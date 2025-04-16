@@ -1,62 +1,80 @@
 package com.gcjewellers.rateswidget;
 
-import android.app.job.JobParameters;
-import android.app.job.JobService;
+import android.app.Service;
+import android.appwidget.AppWidgetManager;
+import android.content.ComponentName;
 import android.content.Intent;
+import android.os.IBinder;
 import android.util.Log;
 
-/**
- * JobService for updating widget in the background
- */
-public class WidgetUpdateService extends JobService {
+public class WidgetUpdateService extends Service {
     private static final String TAG = "WidgetUpdateService";
-    
+
     @Override
-    public boolean onStartJob(JobParameters params) {
-        Log.d(TAG, "WidgetUpdateService: onStartJob");
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        Log.d(TAG, "Service started to update widgets");
         
-        // Perform widget update in background thread
-        new Thread(() -> {
-            try {
-                RatesRepository repository = new RatesRepository(getApplicationContext());
-                repository.fetchRates(new RatesRepository.RatesFetchCallback() {
-                    @Override
-                    public void onSuccess(String goldRate, String silverRate, String lastUpdated,
-                                         double goldChangePercent, double silverChangePercent) {
-                        // Create update intent
-                        Intent updateIntent = new Intent(getApplicationContext(), RatesWidgetProvider.class);
-                        updateIntent.setAction(RatesWidgetProvider.ACTION_REFRESH);
-                        updateIntent.putExtra("GOLD_RATE", goldRate);
-                        updateIntent.putExtra("SILVER_RATE", silverRate);
-                        updateIntent.putExtra("LAST_UPDATED", lastUpdated);
-                        
-                        // Send broadcast to update widget
-                        sendBroadcast(updateIntent);
-                        
-                        // Job finished
-                        jobFinished(params, false);
-                    }
-                    
-                    @Override
-                    public void onError(String errorMessage) {
-                        Log.e(TAG, "WidgetUpdateService error: " + errorMessage);
-                        // Reschedule on failure
-                        jobFinished(params, true);
-                    }
-                });
-            } catch (Exception e) {
-                Log.e(TAG, "Error in WidgetUpdateService", e);
-                jobFinished(params, true);
+        // Create repository and fetch latest rates
+        RatesRepository repository = new RatesRepository(this);
+        
+        repository.fetchRates(new RatesRepository.RatesFetchCallback() {
+            @Override
+            public void onSuccess(String goldRate, String silverRate, String lastUpdated,
+                                 String yesterdayGoldRate, String yesterdaySilverRate,
+                                 String goldChangeValue, String silverChangeValue) {
+                
+                Log.d(TAG, "Got rates in service: Gold=" + goldRate + ", Silver=" + silverRate);
+                
+                // Create the update intent with the new data
+                Intent updateIntent = new Intent(WidgetUpdateService.this, RatesWidgetProvider.class);
+                updateIntent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
+                
+                // Add the AppWidget IDs to be updated
+                AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(WidgetUpdateService.this);
+                int[] appWidgetIds = appWidgetManager.getAppWidgetIds(
+                        new ComponentName(WidgetUpdateService.this, RatesWidgetProvider.class));
+                updateIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, appWidgetIds);
+                
+                // Add rates data
+                updateIntent.putExtra("goldRate", goldRate);
+                updateIntent.putExtra("silverRate", silverRate);
+                updateIntent.putExtra("lastUpdated", lastUpdated);
+                updateIntent.putExtra("yesterdayGoldRate", yesterdayGoldRate);
+                updateIntent.putExtra("yesterdaySilverRate", yesterdaySilverRate);
+                updateIntent.putExtra("goldChangeValue", goldChangeValue);
+                updateIntent.putExtra("silverChangeValue", silverChangeValue);
+                
+                // Send the broadcast to update widgets
+                sendBroadcast(updateIntent);
+                
+                Log.d(TAG, "Widget update broadcast sent with new rates");
+                stopSelf(startId);
             }
-        }).start();
+            
+            @Override
+            public void onError(String errorMessage) {
+                Log.e(TAG, "Error fetching rates in service: " + errorMessage);
+                
+                // Even with an error, we should still broadcast to show error state
+                Intent updateIntent = new Intent(WidgetUpdateService.this, RatesWidgetProvider.class);
+                updateIntent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
+                
+                AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(WidgetUpdateService.this);
+                int[] appWidgetIds = appWidgetManager.getAppWidgetIds(
+                        new ComponentName(WidgetUpdateService.this, RatesWidgetProvider.class));
+                updateIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, appWidgetIds);
+                
+                sendBroadcast(updateIntent);
+                
+                stopSelf(startId);
+            }
+        });
         
-        // Return true as we're handling the job in a separate thread
-        return true;
+        return START_NOT_STICKY;
     }
-    
+
     @Override
-    public boolean onStopJob(JobParameters params) {
-        // Return true to reschedule the job
-        return true;
+    public IBinder onBind(Intent intent) {
+        return null;
     }
 }
