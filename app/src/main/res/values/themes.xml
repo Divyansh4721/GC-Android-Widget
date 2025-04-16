@@ -38,6 +38,12 @@
         <item name="android:windowBackground">@color/light_background</item>
         <item name="android:windowNoTitle">true</item>
     </style>
+
+    <style>
+        <item name="logout">@color/log_out</item>
+        <item name="forgold">@color/for_gold</item>
+        <item name="forsilver">@color/for_silver</item>
+    </style>
     
     <!-- Other styles... -->
 </resources>

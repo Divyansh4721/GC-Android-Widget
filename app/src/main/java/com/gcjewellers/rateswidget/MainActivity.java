@@ -336,6 +336,11 @@ public class MainActivity extends AppCompatActivity implements ProfileImageGener
             overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
         });
 
+        findViewById(R.id.btn_graph_2).setOnClickListener(v -> {
+            startActivity(new Intent(MainActivity.this, RatesGraphsActivity.class));
+            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
+        });
+
         findViewById(R.id.btn_dashboard).setOnClickListener(v -> {
             startActivity(new Intent(MainActivity.this, AnalyticsDashboardActivity.class));
             overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);

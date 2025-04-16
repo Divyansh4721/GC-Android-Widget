@@ -91,7 +91,7 @@
                             android:layout_height="wrap_content"
                             android:orientation="vertical"
                             android:layout_marginBottom="16dp"
-                            android:background="@drawable/rates_section_background"
+                            android:background="@color/for_gold"
                             android:padding="12dp">
 
                             <LinearLayout
@@ -148,7 +148,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:orientation="vertical"
-                            android:background="@drawable/rates_section_background"
+                            android:background="@color/for_silver"
                             android:padding="12dp">
 
                             <LinearLayout
@@ -404,7 +404,7 @@
 
             <!-- Graph Button -->
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_graph"
+                android:id="@+id/btn_graph_2"
                 style="@style/Widget.MaterialComponents.Button.TextButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
