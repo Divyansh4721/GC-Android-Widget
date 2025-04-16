@@ -17,6 +17,11 @@
         <item name="colorSurface">@color/white</item>
         <item name="colorOnSurface">@color/dark_text</item>
         <item name="colorOnBackground">@color/medium_text</item>
+        <item name="card_Surface">@color/white</item>
+        <item name="ndc">@color/white</item>
+        <item name="tc">@color/black</item>
+        
+        
 
         <!-- Add these M3 attributes -->
         <item name="colorSurfaceVariant">@color/surface_variant_color</item>
@@ -43,6 +48,7 @@
         <item name="logout">@color/log_out</item>
         <item name="forgold">@color/for_gold</item>
         <item name="forsilver">@color/for_silver</item>
+        <item name="widgetbg">@color/widget_bg</item>
     </style>
     
     <!-- Other styles... -->

@@ -32,16 +32,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Single-file implementation for Rate Alerts Configuration updated with real‑time rate support.
- *
- * Key updates include:
- * 1. Fetching live rates via fetchRealTimeRates() on startup.
- * 2. Using currentGoldRate and currentSilverRate to auto‑populate the threshold field on spinner changes.
- * 3. Updating the threshold if the user changes from Gold to Silver (or vice versa) while the field is empty.
- *
- * NOTE: The XML layouts (activity_rate_check.xml and layout_condition_row.xml) must be maintained.
- */
+
 public class RateCheckActivity extends AppCompatActivity {
 
     // SharedPreferences keys

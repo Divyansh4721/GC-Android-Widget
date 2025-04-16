@@ -22,8 +22,12 @@
 
         <!-- Background colors -->
         <item name="android:windowBackground">@color/black</item>
-        <item name="colorSurface">@color/black.1</item>
+        <item name="colorSurface">@color/black_1</item>
         <item name="colorOnSurface">@android:color/white</item>
+
+        <item name="card_Surface">@color/Surface</item>
+        <item name="ndc">@color/black</item>
+        <item name="tc">@color/white</item>
 
         <!-- Button styles -->
         <item name="materialButtonStyle">@style/Widget.App.Button</item>
@@ -57,6 +61,7 @@
     <style name="Widget.App.Button.Gold" parent="Widget.App.Button">
         <item name="backgroundTint">@color/gold_primary</item>
         <item name="android:textColor">@android:color/black</item>
-
+       
+        
     </style>
 </resources>

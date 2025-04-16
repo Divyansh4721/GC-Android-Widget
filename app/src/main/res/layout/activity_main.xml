@@ -41,7 +41,7 @@
                     android:id="@+id/rates_card"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    app:cardBackgroundColor="?attr/colorSurface"
+                    app:cardBackgroundColor="?attr/card_Surface"
                     app:cardCornerRadius="16dp"
                     app:cardElevation="4dp"
                     android:layout_marginBottom="16dp">
@@ -65,7 +65,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
                                 android:text="Today's Rates"
-                                android:textColor="?attr/colorPrimary"
+                                android:textColor="?attr/tc"
                                 android:textSize="20sp"
                                 android:textStyle="bold" />
 
@@ -91,7 +91,8 @@
                             android:layout_height="wrap_content"
                             android:orientation="vertical"
                             android:layout_marginBottom="16dp"
-                            android:background="@color/for_gold"
+                            android:background="@drawable/rounded_corners_gold"
+                            app:cardElevation="4dp"
                             android:padding="12dp">
 
                             <LinearLayout
@@ -148,7 +149,8 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:orientation="vertical"
-                            android:background="@color/for_silver"
+                            android:background="@drawable/rounded_corners_silver"
+                            app:cardElevation="4dp"
                             android:padding="12dp">
 
                             <LinearLayout
@@ -213,8 +215,10 @@
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
                                 android:text="View Graph"
+                                android:textColor="?attr/tc"
                                 android:textAllCaps="false"
                                 app:icon="@drawable/ic_graph"
+                                android:textSize="12sp"
                                 android:layout_marginEnd="8dp" />
 
                             <com.google.android.material.button.MaterialButton
@@ -224,6 +228,8 @@
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
                                 android:text="Set Alert"
+                                android:textColor="?attr/tc"
+                                android:textSize="12sp"
                                 android:textAllCaps="false"
                                 app:icon="@drawable/ic_notification" />
 
@@ -237,7 +243,7 @@
                     android:id="@+id/chart_preview_card"
                     android:layout_width="match_parent"
                     android:layout_height="200dp"
-                    app:cardBackgroundColor="?attr/colorSurface"
+                    app:cardBackgroundColor="?attr/card_Surface"
                     app:cardCornerRadius="16dp"
                     app:cardElevation="4dp"
                     android:layout_marginBottom="16dp">
@@ -270,7 +276,7 @@
                     android:id="@+id/news_card"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    app:cardBackgroundColor="?attr/colorSurface"
+                    app:cardBackgroundColor="?attr/card_Surface"
                     app:cardCornerRadius="16dp"
                     app:cardElevation="4dp"
                     android:layout_marginBottom="16dp">
@@ -320,7 +326,7 @@
         android:layout_width="320dp"
         android:layout_height="match_parent"
         android:layout_gravity="start"
-        android:background="?attr/colorSurface">
+        android:background="?attr/ndc">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -333,7 +339,7 @@
                 android:id="@+id/profile_card"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardBackgroundColor="@color/surface_variant_color"
+                app:cardBackgroundColor="?attr/card_Surface"
                 app:cardCornerRadius="16dp"
                 app:cardElevation="2dp"
                 android:layout_marginBottom="16dp">
@@ -396,10 +402,13 @@
                 style="@style/Widget.MaterialComponents.Button.TextButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:textColor="?attr/tc"
                 android:text="Analytics Dashboard"
                 android:textAllCaps="false"
                 android:gravity="start|center_vertical"
                 app:icon="@drawable/ic_dashboard"
+                app:backgroundTint="?attr/card_Surface"
+                app:cardElevation="2dp"
                 android:layout_marginBottom="8dp" />
 
             <!-- Graph Button -->
@@ -409,9 +418,12 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Rate Trends Graph"
+                android:textColor="?attr/tc"
                 android:textAllCaps="false"
                 android:gravity="start|center_vertical"
                 app:icon="@drawable/ic_graph"
+                app:backgroundTint="?attr/card_Surface"
+                app:cardElevation="2dp"
                 android:layout_marginBottom="8dp" />
 
             <!-- Configure Rate Alerts Button -->
@@ -423,8 +435,12 @@
                 android:text="Configure Rate Alerts"
                 android:textAllCaps="false"
                 android:gravity="start|center_vertical"
-                app:icon="@drawable/ic_notification"
+                app:icon="@drawable/ic_alerts"
+                android:textColor="?attr/tc"
+                app:backgroundTint="?attr/card_Surface"
+                app:cardElevation="2dp"
                 android:layout_marginBottom="16dp" />
+
 
             <TextView
                 android:layout_width="match_parent"
@@ -440,9 +456,9 @@
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardBackgroundColor="@color/surface_variant_color"
+                app:cardBackgroundColor="?attr/card_Surface"
                 app:cardCornerRadius="12dp"
-                app:cardElevation="0dp"
+                app:cardElevation="2dp"
                 android:layout_marginBottom="8dp">
 
                 <LinearLayout
@@ -464,6 +480,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="Battery Optimization"
+                        android:textColor="?attr/tc"
                         android:textSize="16sp" />
 
                     <com.google.android.material.switchmaterial.SwitchMaterial
@@ -477,9 +494,9 @@
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardBackgroundColor="@color/surface_variant_color"
+                app:cardBackgroundColor="?attr/card_Surface"
                 app:cardCornerRadius="12dp"
-                app:cardElevation="0dp"
+                app:cardElevation="2dp"
                 android:layout_marginBottom="16dp">
 
                 <LinearLayout
@@ -501,6 +518,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="Auto Refresh"
+                        android:textColor="?attr/tc"
                         android:textSize="16sp" />
 
                     <com.google.android.material.switchmaterial.SwitchMaterial
@@ -521,8 +539,9 @@
                 android:textSize="18sp"
                 android:textAllCaps="false"
                 app:icon="@drawable/ic_logout"
+                app:cardElevation="4dp"
                 android:backgroundTint="@color/log_out"
-                android:textColor="@color/dark_text"
+                android:textColor="?attr/tc"
                 android:layout_marginTop="8dp" />
 
         </LinearLayout>

@@ -1,9 +1,14 @@
 package com.gcjewellers.rateswidget;
 
+import android.appwidget.AppWidgetManager;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
+import android.graphics.Color;
+import android.graphics.PorterDuff;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -15,6 +20,7 @@ import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+import androidx.core.view.GravityCompat;
 
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
@@ -38,11 +44,9 @@ import com.squareup.picasso.Picasso;
 public class MainActivity extends AppCompatActivity implements ProfileImageGenerator.ProfileImageCallback {
     private static final String TAG = "MainActivity";
 
-    // Drawer variables
     private DrawerLayout drawerLayout;
     private ActionBarDrawerToggle drawerToggle;
 
-    // UI Components
     private SwitchMaterial batteryOptSwitch;
     private SwitchMaterial widgetRefreshSwitch;
     private MaterialButton logoutButton;
@@ -57,11 +61,9 @@ public class MainActivity extends AppCompatActivity implements ProfileImageGener
     private MaterialCardView ratesCard;
     private View loadingIndicator;
 
-    // Firebase & Google Sign-In
     private FirebaseAuth mAuth;
     private GoogleSignInClient googleSignInClient;
 
-    // ViewModel
     private RatesViewModel ratesViewModel;
 
     @Override
@@ -69,7 +71,6 @@ public class MainActivity extends AppCompatActivity implements ProfileImageGener
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Initialize ViewModel
         ratesViewModel = new ViewModelProvider(this).get(RatesViewModel.class);
 
         try {
@@ -79,7 +80,6 @@ public class MainActivity extends AppCompatActivity implements ProfileImageGener
             setupUserInterface();
             observeRatesData();
 
-            // Initial data fetch
             refreshRates();
         } catch (Exception e) {
             Log.e(TAG, "Critical error in MainActivity onCreate", e);
@@ -93,10 +93,21 @@ public class MainActivity extends AppCompatActivity implements ProfileImageGener
         if (getSupportActionBar() != null) {
             getSupportActionBar().setTitle(R.string.app_name);
             getSupportActionBar().setDisplayShowTitleEnabled(true);
+            // Enable home button
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setHomeButtonEnabled(true);
+            // Set the double chevron icon for the navigation drawer
+            getSupportActionBar().setHomeAsUpIndicator(R.drawable.ic_double_chevron);
         }
 
-        applyThemeAdjustments(toolbar);
+        // Set custom title color
+        int titleColor = ContextCompat.getColor(this, R.color.toolbar_title_color);
+        toolbar.setTitleTextColor(titleColor);
+
+        // Still setup the drawer toggle for functionality but we'll override its
+        // appearance
         setupNavigationDrawer(toolbar);
+        applyThemeAdjustments(toolbar);
     }
 
     private void setupAuthentication() {
@@ -150,6 +161,7 @@ public class MainActivity extends AppCompatActivity implements ProfileImageGener
     private void observeRatesData() {
         ratesViewModel.getRatesData().observe(this, ratesData -> {
             if (ratesData != null) {
+                // Always update UI with latest data
                 updateRatesUI(
                         ratesData.getGoldRate(),
                         ratesData.getSilverRate(),
@@ -157,16 +169,19 @@ public class MainActivity extends AppCompatActivity implements ProfileImageGener
                         ratesData.getGoldChangePercent(),
                         ratesData.getSilverChangePercent());
 
-                // Animation for rates update
-                if (ratesData.isFromRealTimeUpdate()) {
+                // Don't animate for real-time updates since we're not using them for the UI
+                // Only animate for manual refreshes
+                if (!ratesData.isFromRealTimeUpdate()) {
                     ratesCard.startAnimation(AnimationUtils.loadAnimation(
                             MainActivity.this, R.anim.rates_update_animation));
                 }
 
-                // Hide loading indicator if it's visible
                 if (loadingIndicator.getVisibility() == View.VISIBLE) {
                     loadingIndicator.setVisibility(View.GONE);
                 }
+
+                // Update widget with latest data, keeping its auto-refresh settings intact
+                updateWidget(ratesData);
             }
         });
 
@@ -176,7 +191,6 @@ public class MainActivity extends AppCompatActivity implements ProfileImageGener
                 silverPriceText.setText("Check connection");
                 ratesUpdatedTimeText.setText("Update Failed");
 
-                // Hide loading indicator if it's visible
                 if (loadingIndicator.getVisibility() == View.VISIBLE) {
                     loadingIndicator.setVisibility(View.GONE);
                 }
@@ -189,12 +203,38 @@ public class MainActivity extends AppCompatActivity implements ProfileImageGener
         });
     }
 
+    private void updateWidget(RatesViewModel.RatesData ratesData) {
+        // Update widget with latest data (keep auto-refresh settings intact)
+        Intent updateIntent = new Intent(this, RatesWidgetProvider.class);
+        // Use standard AppWidget update action
+        updateIntent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
+
+        // Add required AppWidgetManager extras
+        AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(this);
+        int[] appWidgetIds = appWidgetManager.getAppWidgetIds(
+                new ComponentName(this, RatesWidgetProvider.class));
+        updateIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, appWidgetIds);
+
+        // Add our rates data
+        updateIntent.putExtra("goldRate", ratesData.getGoldRate());
+        updateIntent.putExtra("silverRate", ratesData.getSilverRate());
+        updateIntent.putExtra("lastUpdated", ratesData.getLastUpdated());
+        updateIntent.putExtra("goldChangePercent", ratesData.getGoldChangePercent());
+        updateIntent.putExtra("silverChangePercent", ratesData.getSilverChangePercent());
+
+        sendBroadcast(updateIntent);
+    }
+
     private void applyThemeAdjustments(Toolbar toolbar) {
         int currentNightMode = getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
-        if (currentNightMode == Configuration.UI_MODE_NIGHT_YES) {
-            toolbar.setTitleTextColor(ContextCompat.getColor(this, android.R.color.white));
-        } else {
-            toolbar.setTitleTextColor(ContextCompat.getColor(this, android.R.color.black));
+
+        // Always use custom color for toolbar title
+        toolbar.setTitleTextColor(ContextCompat.getColor(this, R.color.toolbar_title_color));
+
+        // Always make the navigation icon black regardless of theme
+        Drawable homeIcon = toolbar.getNavigationIcon();
+        if (homeIcon != null) {
+            homeIcon.setColorFilter(Color.BLACK, PorterDuff.Mode.SRC_ATOP);
         }
     }
 
@@ -207,6 +247,14 @@ public class MainActivity extends AppCompatActivity implements ProfileImageGener
                 R.string.navigation_drawer_open,
                 R.string.navigation_drawer_close);
 
+        // Set hamburger icon color to ensure visibility in dark theme
+        drawerToggle.getDrawerArrowDrawable().setColor(
+                ContextCompat.getColor(this, R.color.drawer_icon_color));
+
+        // Use more moderate size adjustments
+        drawerToggle.getDrawerArrowDrawable().setBarLength(30f); // Reduced from 100f
+        drawerToggle.getDrawerArrowDrawable().setBarThickness(4f); // Reduced from 8f
+
         drawerLayout.addDrawerListener(drawerToggle);
         drawerLayout.addDrawerListener(new DrawerLayout.SimpleDrawerListener() {
             @Override
@@ -216,6 +264,9 @@ public class MainActivity extends AppCompatActivity implements ProfileImageGener
             }
         });
         drawerToggle.syncState();
+
+        // Apply theme adjustments after toggle is created
+        applyThemeAdjustments(toolbar);
     }
 
     private void setupGestureListeners() {
@@ -320,7 +371,7 @@ public class MainActivity extends AppCompatActivity implements ProfileImageGener
 
             // Show feedback with more engaging UI
             Snackbar.make(findViewById(R.id.drawer_layout),
-                    isChecked ? "Auto-refresh enabled" : "Auto-refresh disabled",
+                    isChecked ? "Auto-refresh enabled for widget" : "Auto-refresh disabled for widget",
                     Snackbar.LENGTH_SHORT).show();
         });
     }
@@ -420,15 +471,22 @@ public class MainActivity extends AppCompatActivity implements ProfileImageGener
 
     @Override
     public boolean onCreateOptionsMenu(android.view.Menu menu) {
-        getMenuInflater().inflate(R.menu.main_activity_menu, menu);
+        // getMenuInflater().inflate(R.menu.main_activity_menu, menu);
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(android.view.MenuItem item) {
-        if (drawerToggle.onOptionsItemSelected(item)) {
+        // Handle the custom double chevron icon click
+        if (item.getItemId() == android.R.id.home) {
+            if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
+                drawerLayout.closeDrawer(GravityCompat.START);
+            } else {
+                drawerLayout.openDrawer(GravityCompat.START);
+            }
             return true;
         }
+
         if (item.getItemId() == R.id.action_rates_graphs) {
             startActivity(new Intent(this, RatesGraphsActivity.class));
             return true;
@@ -439,20 +497,23 @@ public class MainActivity extends AppCompatActivity implements ProfileImageGener
     @Override
     protected void onResume() {
         super.onResume();
-        ratesViewModel.startRealTimeUpdates();
+        // Just refresh rates once when app is resumed, without auto-refresh for the app
+        // UI
         refreshRates();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        ratesViewModel.stopRealTimeUpdates();
+        // We don't need to do anything here since we're not starting any updates for
+        // the UI
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        ratesViewModel.stopRealTimeUpdates();
+        // We don't need to do anything here since we're not starting any updates for
+        // the UI
     }
 
     private void handleFatalError(String message) {

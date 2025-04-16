@@ -1,0 +1,6 @@
+<!-- res/values/attrs.xml -->
+<resources>
+    <attr name="card_Surface" format="color" />
+    <attr name="ndc" format="color" />
+    <attr name="tc" format="color" />
+</resources>
