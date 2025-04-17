@@ -16,13 +16,12 @@ import android.os.PowerManager;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
+import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.core.view.GravityCompat;
-
-
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -66,8 +65,6 @@ public class MainActivity extends AppCompatActivity implements ProfileImageGener
     private TextView goldYesterdayPrice;
     private TextView goldPriceChange;
 
-    // Silver UI elements
-    private TextView silverDate;
     private TextView silverPrice;
     private TextView silverYesterdayPrice;
     private TextView silverPriceChange;
@@ -80,6 +77,24 @@ public class MainActivity extends AppCompatActivity implements ProfileImageGener
     private GoogleSignInClient googleSignInClient;
 
     private RatesRepository ratesRepository;
+
+    private TextView goldFutureRates;
+    private TextView silverFutureRates;
+    private TextView goldFutureLowHigh;
+    private TextView silverFutureLowHigh;
+
+    private TextView goldDollarRate;
+    private TextView silverDollarRate;
+    private TextView inrRate;
+
+    private TextView gold99Buy;
+    private TextView gold99Sell;
+    private TextView goldRefineBuy;
+    private TextView goldRefineSell;
+    private TextView bankGoldBuy;
+    private TextView bankGoldSell;
+
+    private boolean isDrawerAnimating = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -171,7 +186,8 @@ public class MainActivity extends AppCompatActivity implements ProfileImageGener
             goldPriceChange = findViewById(R.id.gold_price_change);
 
             // Silver UI elements
-            silverDate = findViewById(R.id.silver_date);
+            // Silver UI elements
+            TextView silverDate = findViewById(R.id.silver_date);
             silverPrice = findViewById(R.id.silver_price);
             silverYesterdayPrice = findViewById(R.id.silver_yesterday_price);
             silverPriceChange = findViewById(R.id.silver_price_change);
@@ -179,6 +195,25 @@ public class MainActivity extends AppCompatActivity implements ProfileImageGener
             ratesCard = findViewById(R.id.rates_card);
             fabRefresh = findViewById(R.id.fab_refresh);
             loadingIndicator = findViewById(R.id.loading_indicator);
+
+            // Future Rates
+            goldFutureRates = findViewById(R.id.gold_future_rates);
+            silverFutureRates = findViewById(R.id.silver_future_rates);
+            goldFutureLowHigh = findViewById(R.id.gold_future_low_high);
+            silverFutureLowHigh = findViewById(R.id.silver_future_low_high);
+
+            // Dollar Rates
+            goldDollarRate = findViewById(R.id.gold_dollar_rate);
+            silverDollarRate = findViewById(R.id.silver_dollar_rate);
+            inrRate = findViewById(R.id.inr_rate);
+
+            // Buy/Sell Rates
+            gold99Buy = findViewById(R.id.gold_99_buy);
+            gold99Sell = findViewById(R.id.gold_99_sell);
+            goldRefineBuy = findViewById(R.id.gold_refine_buy);
+            goldRefineSell = findViewById(R.id.gold_refine_sell);
+            bankGoldBuy = findViewById(R.id.bank_gold_buy);
+            bankGoldSell = findViewById(R.id.bank_gold_sell);
 
             // Set current date
             SimpleDateFormat dateFormat = new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault());
@@ -219,49 +254,81 @@ public class MainActivity extends AppCompatActivity implements ProfileImageGener
         }));
     }
 
+    // Update the refreshRates() method in MainActivity
     private void refreshRates() {
         // Show loading indicator if available
         if (loadingIndicator != null) {
             loadingIndicator.setVisibility(View.VISIBLE);
         }
 
-        // Fetch rates data
+        // Fetch extended rates
         if (ratesRepository != null) {
-            ratesRepository.fetchRates(new RatesRepository.RatesFetchCallback() {
+            ratesRepository.fetchExtendedRates(new RatesRepository.ExtendedRatesFetchCallback() {
                 @Override
-                public void onSuccess(String goldRate, String silverRate, String lastUpdated,
+                public void onSuccess(
+                        String goldRate, String silverRate, String lastUpdated,
                         String yesterdayGoldRate, String yesterdaySilverRate,
-                        String goldChangeValue, String silverChangeValue) {
+                        String goldChangeValue, String silverChangeValue,
+
+                        // New extended rate parameters
+                        String goldFutureRate, String silverFutureRate,
+                        String goldFutureLow, String goldFutureHigh,
+                        String silverFutureLow, String silverFutureHigh,
+                        String goldDollarRate, String silverDollarRate, String inrRate,
+                        String gold99Buy, String gold99Sell,
+                        String goldRefineBuy, String goldRefineSell,
+                        String bankGoldBuy, String bankGoldSell) {
                     runOnUiThread(() -> {
-                        updateRatesUI(goldRate, silverRate, yesterdayGoldRate, yesterdaySilverRate,
+                        // Update existing rates UI
+                        updateRatesUI(
+                                goldRate, silverRate, yesterdayGoldRate, yesterdaySilverRate,
                                 goldChangeValue, silverChangeValue);
 
+                        // Update new rates table UI
+                        updateExtendedRatesUI(
+                                goldFutureRate, silverFutureRate,
+                                goldFutureLow, goldFutureHigh,
+                                silverFutureLow, silverFutureHigh,
+                                goldDollarRate, silverDollarRate, inrRate,
+                                gold99Buy, gold99Sell,
+                                goldRefineBuy, goldRefineSell,
+                                bankGoldBuy, bankGoldSell);
+
+                        // Hide loading indicator
                         if (loadingIndicator != null) {
                             loadingIndicator.setVisibility(View.GONE);
                         }
 
-                        // Animate the rates card
+                        // Animate rates card
                         if (ratesCard != null) {
-                            ratesCard.startAnimation(AnimationUtils.loadAnimation(MainActivity.this,
-                                    R.anim.rates_update_animation));
+                            ratesCard.startAnimation(AnimationUtils.loadAnimation(
+                                    MainActivity.this, R.anim.rates_update_animation));
                         }
 
-                        // Update widgets
-                        updateWidgets(goldRate, silverRate, lastUpdated, yesterdayGoldRate,
-                                yesterdaySilverRate, goldChangeValue, silverChangeValue);
+                        // Update widgets with extended data
+                        updateWidgetsWithExtendedData(
+                                goldRate, silverRate, lastUpdated,
+                                yesterdayGoldRate, yesterdaySilverRate,
+                                goldChangeValue, silverChangeValue,
+                                goldFutureRate, silverFutureRate,
+                                goldDollarRate, silverDollarRate, inrRate);
                     });
                 }
 
                 @Override
                 public void onError(String errorMessage) {
                     runOnUiThread(() -> {
+                        // Hide loading indicator
                         if (loadingIndicator != null) {
                             loadingIndicator.setVisibility(View.GONE);
                         }
 
+                        // Show error Snackbar
                         if (findViewById(R.id.drawer_layout) != null) {
-                            Snackbar.make(findViewById(R.id.drawer_layout),
-                                    "Error: " + errorMessage, Snackbar.LENGTH_LONG)
+                            Snackbar.make(
+                                    findViewById(R.id.drawer_layout),
+                                    "Error: " + errorMessage,
+                                    Snackbar.LENGTH_LONG)
                                     .setAction("Retry", v -> refreshRates())
                                     .show();
                         }
@@ -269,6 +336,100 @@ public class MainActivity extends AppCompatActivity implements ProfileImageGener
                 }
             });
         }
+    }
+
+    // New method to update extended rates UI
+    private void updateExtendedRatesUI(
+            String goldFutureRate, String silverFutureRate,
+            String goldFutureLow, String goldFutureHigh,
+            String silverFutureLow, String silverFutureHigh,
+            String goldDollarRate, String silverDollarRate, String inrRate,
+            String gold99Buy, String gold99Sell,
+            String goldRefineBuy, String goldRefineSell,
+            String bankGoldBuy, String bankGoldSell) {
+        // Update Future Rates Section
+        if (this.goldFutureRates != null) {
+            this.goldFutureRates.setText(goldFutureRate);
+        }
+        if (this.silverFutureRates != null) {
+            this.silverFutureRates.setText(silverFutureRate);
+        }
+
+        // Update Future Low/High Section
+        if (this.goldFutureLowHigh != null) {
+            this.goldFutureLowHigh.setText(String.format("L: %s | H: %s", goldFutureLow, goldFutureHigh));
+        }
+        if (this.silverFutureLowHigh != null) {
+            this.silverFutureLowHigh.setText(String.format("L: %s | H: %s", silverFutureLow, silverFutureHigh));
+        }
+
+        // Update Dollar Rates Section
+        if (this.goldDollarRate != null) {
+            this.goldDollarRate.setText(goldDollarRate);
+        }
+        if (this.silverDollarRate != null) {
+            this.silverDollarRate.setText(silverDollarRate);
+        }
+        if (this.inrRate != null) {
+            this.inrRate.setText(inrRate);
+        }
+
+        // Update Buy/Sell Rates Section
+        if (this.gold99Buy != null) {
+            this.gold99Buy.setText(gold99Buy);
+        }
+        if (this.gold99Sell != null) {
+            this.gold99Sell.setText(gold99Sell);
+        }
+        if (this.goldRefineBuy != null) {
+            this.goldRefineBuy.setText(goldRefineBuy);
+        }
+        if (this.goldRefineSell != null) {
+            this.goldRefineSell.setText(goldRefineSell);
+        }
+        if (this.bankGoldBuy != null) {
+            this.bankGoldBuy.setText(bankGoldBuy);
+        }
+        if (this.bankGoldSell != null) {
+            this.bankGoldSell.setText(bankGoldSell);
+        }
+    }
+
+    // Update widget method to include extended data
+    private void updateWidgetsWithExtendedData(
+            String goldRate, String silverRate, String lastUpdated,
+            String yesterdayGoldRate, String yesterdaySilverRate,
+            String goldChangeValue, String silverChangeValue,
+            String goldFutureRate, String silverFutureRate,
+            String goldDollarRate, String silverDollarRate, String inrRate) {
+        // Create intent to update widgets
+        Intent updateIntent = new Intent(this, RatesWidgetProvider.class);
+        updateIntent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
+
+        // Get all widget IDs
+        AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(this);
+        int[] appWidgetIds = appWidgetManager.getAppWidgetIds(
+                new ComponentName(this, RatesWidgetProvider.class));
+        updateIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, appWidgetIds);
+
+        // Add extended rates data
+        updateIntent.putExtra("goldRate", goldRate);
+        updateIntent.putExtra("silverRate", silverRate);
+        updateIntent.putExtra("lastUpdated", lastUpdated);
+        updateIntent.putExtra("yesterdayGoldRate", yesterdayGoldRate);
+        updateIntent.putExtra("yesterdaySilverRate", yesterdaySilverRate);
+        updateIntent.putExtra("goldChangeValue", goldChangeValue);
+        updateIntent.putExtra("silverChangeValue", silverChangeValue);
+
+        // Add new extended data
+        updateIntent.putExtra("goldFutureRate", goldFutureRate);
+        updateIntent.putExtra("silverFutureRate", silverFutureRate);
+        updateIntent.putExtra("goldDollarRate", goldDollarRate);
+        updateIntent.putExtra("silverDollarRate", silverDollarRate);
+        updateIntent.putExtra("inrRate", inrRate);
+
+        // Send the broadcast
+        sendBroadcast(updateIntent);
     }
 
     private void updateWidgets(String goldRate, String silverRate, String lastUpdated,
@@ -400,6 +561,9 @@ public class MainActivity extends AppCompatActivity implements ProfileImageGener
 
     private void setupNavigationDrawer(Toolbar toolbar) {
         drawerLayout = findViewById(R.id.drawer_layout);
+        if (drawerLayout == null)
+            return;
+
         drawerToggle = new ActionBarDrawerToggle(
                 this,
                 drawerLayout,
@@ -407,26 +571,39 @@ public class MainActivity extends AppCompatActivity implements ProfileImageGener
                 R.string.navigation_drawer_open,
                 R.string.navigation_drawer_close);
 
-        // Set hamburger icon color to ensure visibility in dark theme
-        drawerToggle.getDrawerArrowDrawable().setColor(
-                ContextCompat.getColor(this, R.color.drawer_icon_color));
-
-        // Use more moderate size adjustments
-        drawerToggle.getDrawerArrowDrawable().setBarLength(30f);
-        drawerToggle.getDrawerArrowDrawable().setBarThickness(4f);
-
         drawerLayout.addDrawerListener(drawerToggle);
-        drawerLayout.addDrawerListener(new DrawerLayout.SimpleDrawerListener() {
-            @Override
-            public void onDrawerOpened(View drawerView) {
-                drawerView.startAnimation(AnimationUtils.loadAnimation(
-                        MainActivity.this, R.anim.drawer_open_animation));
-            }
-        });
         drawerToggle.syncState();
+    }
 
-        // Apply theme adjustments after toggle is created
-        applyThemeAdjustments(toolbar);
+    private void performDrawerOpenAnimation(View drawerView) {
+        if (isDrawerAnimating)
+            return;
+
+        isDrawerAnimating = true;
+        View navView = findViewById(R.id.nav_view);
+
+        if (navView != null) {
+            navView.clearAnimation();
+            Animation animation = AnimationUtils.loadAnimation(this, R.anim.drawer_open_animation);
+            animation.setAnimationListener(new Animation.AnimationListener() {
+                @Override
+                public void onAnimationStart(Animation animation) {
+                }
+
+                @Override
+                public void onAnimationEnd(Animation animation) {
+                    isDrawerAnimating = false;
+                }
+
+                @Override
+                public void onAnimationRepeat(Animation animation) {
+                }
+            });
+            navView.startAnimation(animation);
+        } else {
+            isDrawerAnimating = false;
+            Log.e(TAG, "Navigation view not found for animation");
+        }
     }
 
     private void setupGestureListeners() {

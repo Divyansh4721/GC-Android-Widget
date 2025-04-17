@@ -3,9 +3,9 @@
     <alpha
         android:fromAlpha="0.0"
         android:toAlpha="1.0"
-        android:duration="300" />
+        android:duration="200"/>
     <translate
-        android:fromXDelta="-10%"
+        android:fromXDelta="-3%"
         android:toXDelta="0%"
-        android:duration="300" />
+        android:duration="200"/>
 </set>

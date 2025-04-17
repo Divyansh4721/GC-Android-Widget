@@ -21,6 +21,8 @@
     <item name="widget_refresh_button" type="id" />
     <item name="widget_loading" type="id" />
     <item name="widget_content" type="id" />
+    <item name="gold_future_low_high" type="id" />
+    <item name="silver_future_low_high" type="id" />
 
 
 </resources>

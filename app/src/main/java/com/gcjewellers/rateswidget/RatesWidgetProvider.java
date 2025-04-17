@@ -9,8 +9,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.SystemClock;
 import android.util.Log;
+import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.RotateAnimation;
 import android.widget.RemoteViews;
 
 import java.text.SimpleDateFormat;
@@ -27,6 +32,8 @@ public class RatesWidgetProvider extends AppWidgetProvider {
     private static final String PREFS_NAME = "WidgetPrefs";
     private static final String KEY_AUTO_REFRESH = "autoRefresh";
     private static final long UPDATE_INTERVAL = 15 * 60 * 1000; // 15 minutes
+    private static final long REFRESH_ANIMATION_DELAY = 500; // 0.5 second animation duration
+    private static final long REFRESH_ANIMATION_DURATION = 500; // 0.5 second animation duration
     
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
@@ -56,7 +63,7 @@ public class RatesWidgetProvider extends AppWidgetProvider {
         switch (action) {
             case ACTION_UPDATE_WIDGET:
                 // Manual refresh button clicked
-                fetchRatesAndUpdateWidgets(context, appWidgetManager, appWidgetIds);
+                performRefreshAnimation(context, appWidgetManager, appWidgetIds);
                 break;
                 
             case ACTION_START_UPDATES:
@@ -79,14 +86,14 @@ public class RatesWidgetProvider extends AppWidgetProvider {
                     String goldRate = intent.getStringExtra("goldRate");
                     String silverRate = intent.getStringExtra("silverRate");
                     String lastUpdated = intent.getStringExtra("lastUpdated");
-                    String goldChangeValue = intent.getStringExtra("goldChangeValue");
-                    String silverChangeValue = intent.getStringExtra("silverChangeValue");
                     
                     Log.d(TAG, "Received data in widget update: Gold=" + goldRate + ", Silver=" + silverRate);
                     
-                    updateWidgetWithData(context, appWidgetManager, appWidgetIds, 
-                            goldRate, silverRate, lastUpdated,
-                            goldChangeValue, silverChangeValue);
+                    // Add a delay for the loading animation to be visible
+                    new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                        updateWidgetWithData(context, appWidgetManager, appWidgetIds, 
+                                goldRate, silverRate, lastUpdated);
+                    }, REFRESH_ANIMATION_DELAY);
                 } else {
                     Log.d(TAG, "No rate data in update intent, doing regular widget update");
                     // Regular widget update
@@ -94,6 +101,30 @@ public class RatesWidgetProvider extends AppWidgetProvider {
                 }
                 break;
         }
+    }
+    
+    private void performRefreshAnimation(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
+        Log.d(TAG, "performRefreshAnimation called");
+        
+        for (int appWidgetId : appWidgetIds) {
+            try {
+                RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.rates_widget);
+                
+                // Disable refresh button
+                views.setBoolean(R.id.refresh_button, "setEnabled", false);
+                
+                // Show progress, hide refresh button
+                views.setViewVisibility(R.id.refresh_progress, View.VISIBLE);
+                views.setViewVisibility(R.id.refresh_button, View.GONE);
+                
+                appWidgetManager.updateAppWidget(appWidgetId, views);
+            } catch (Exception e) {
+                Log.e(TAG, "Error preparing refresh animation for widget " + appWidgetId, e);
+            }
+        }
+        
+        // Fetch new rates after animation
+        fetchRatesAndUpdateWidgets(context, appWidgetManager, appWidgetIds);
     }
     
     private void updateWidgets(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
@@ -121,27 +152,31 @@ public class RatesWidgetProvider extends AppWidgetProvider {
                 
                 Log.d(TAG, "Successfully fetched rates for widget: Gold=" + goldRate + ", Silver=" + silverRate);
                 
-                // Update all widgets with fetched data
-                updateWidgetWithData(context, appWidgetManager, appWidgetIds,
-                        goldRate, silverRate, lastUpdated,
-                        goldChangeValue, silverChangeValue);
+                // Show loading state for at least 0.5 seconds
+                new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                    // Update all widgets with fetched data
+                    updateWidgetWithData(context, appWidgetManager, appWidgetIds,
+                            goldRate, silverRate, lastUpdated);
+                }, REFRESH_ANIMATION_DELAY);
             }
             
             @Override
             public void onError(String errorMessage) {
                 Log.e(TAG, "Error fetching rates for widget: " + errorMessage);
                 
-                // Show error state in widgets
-                for (int appWidgetId : appWidgetIds) {
-                    showErrorState(context, appWidgetManager, appWidgetId);
-                }
+                // Show loading state for at least 0.5 seconds
+                new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                    // Show error state in widgets
+                    for (int appWidgetId : appWidgetIds) {
+                        showErrorState(context, appWidgetManager, appWidgetId);
+                    }
+                }, REFRESH_ANIMATION_DELAY);
             }
         });
     }
     
     private void updateWidgetWithData(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds,
-                                     String goldRate, String silverRate, String lastUpdated,
-                                     String goldChangeValue, String silverChangeValue) {
+                                     String goldRate, String silverRate, String lastUpdated) {
         
         Log.d(TAG, "updateWidgetWithData: Gold=" + goldRate + ", Silver=" + silverRate);
         
@@ -151,46 +186,9 @@ public class RatesWidgetProvider extends AppWidgetProvider {
                 RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.rates_widget);
                 
                 // Set the rates data
-                views.setTextViewText(R.id.widget_gold_rate, "₹" + goldRate);
-                views.setTextViewText(R.id.widget_silver_rate, "₹" + silverRate);
-                views.setTextViewText(R.id.widget_last_updated, "Updated: " + lastUpdated);
-                
-                // Handle price changes
-                try {
-                    double goldChange = Double.parseDouble(goldChangeValue);
-                    double silverChange = Double.parseDouble(silverChangeValue);
-                    
-                    // Format with + sign for positive values
-                    String formattedGoldChange = (goldChange >= 0 ? "+" : "") + goldChangeValue;
-                    String formattedSilverChange = (silverChange >= 0 ? "+" : "") + silverChangeValue;
-                    
-                    views.setTextViewText(R.id.widget_gold_change, formattedGoldChange);
-                    views.setTextViewText(R.id.widget_silver_change, formattedSilverChange);
-                    
-                    // Set color based on change direction
-                    int goldChangeColor = goldChange >= 0 ? 
-                            context.getResources().getColor(R.color.price_up) : 
-                            context.getResources().getColor(R.color.price_down);
-                    
-                    int silverChangeColor = silverChange >= 0 ? 
-                            context.getResources().getColor(R.color.price_up) : 
-                            context.getResources().getColor(R.color.price_down);
-                    
-                    views.setTextColor(R.id.widget_gold_change, goldChangeColor);
-                    views.setTextColor(R.id.widget_silver_change, silverChangeColor);
-                    
-                    // Set up/down arrow icons
-                    views.setImageViewResource(R.id.widget_gold_arrow, 
-                            goldChange >= 0 ? R.drawable.ic_arrow_up : R.drawable.ic_arrow_down);
-                    views.setImageViewResource(R.id.widget_silver_arrow, 
-                            silverChange >= 0 ? R.drawable.ic_arrow_up : R.drawable.ic_arrow_down);
-                    
-                } catch (NumberFormatException e) {
-                    // Handle parsing errors
-                    Log.e(TAG, "Error parsing change values", e);
-                    views.setTextViewText(R.id.widget_gold_change, "0");
-                    views.setTextViewText(R.id.widget_silver_change, "0");
-                }
+                views.setTextViewText(R.id.gold_rate, "₹" + goldRate);
+                views.setTextViewText(R.id.silver_rate, "₹" + silverRate);
+                views.setTextViewText(R.id.rates_updated_time, lastUpdated);
                 
                 // Set up refresh button click intent
                 Intent refreshIntent = new Intent(context, RatesWidgetProvider.class);
@@ -200,14 +198,14 @@ public class RatesWidgetProvider extends AppWidgetProvider {
                         Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? 
                                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE : 
                                 PendingIntent.FLAG_UPDATE_CURRENT);
-                views.setOnClickPendingIntent(R.id.widget_refresh_button, refreshPendingIntent);
+                views.setOnClickPendingIntent(R.id.refresh_button, refreshPendingIntent);
                 
-                // Set last updated timestamp
-                views.setTextViewText(R.id.widget_last_updated, "Updated: " + lastUpdated);
+                // Re-enable refresh button
+                views.setBoolean(R.id.refresh_button, "setEnabled", true);
                 
-                // Hide loading indicators
-                views.setViewVisibility(R.id.widget_loading, android.view.View.GONE);
-                views.setViewVisibility(R.id.widget_content, android.view.View.VISIBLE);
+                // Hide loading indicator, show refresh button
+                views.setViewVisibility(R.id.refresh_progress, View.GONE);
+                views.setViewVisibility(R.id.refresh_button, View.VISIBLE);
                 
                 // Update the widget
                 appWidgetManager.updateAppWidget(appWidgetId, views);
@@ -223,8 +221,9 @@ public class RatesWidgetProvider extends AppWidgetProvider {
         try {
             RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.rates_widget);
             
-            views.setViewVisibility(R.id.widget_loading, android.view.View.VISIBLE);
-            views.setViewVisibility(R.id.widget_content, android.view.View.GONE);
+            // Show loading indicator, hide refresh button
+            views.setViewVisibility(R.id.refresh_progress, View.VISIBLE);
+            views.setViewVisibility(R.id.refresh_button, View.GONE);
             
             appWidgetManager.updateAppWidget(appWidgetId, views);
         } catch (Exception e) {
@@ -236,12 +235,14 @@ public class RatesWidgetProvider extends AppWidgetProvider {
         try {
             RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.rates_widget);
             
-            views.setTextViewText(R.id.widget_gold_rate, "Error");
-            views.setTextViewText(R.id.widget_silver_rate, "Check connection");
-            views.setTextViewText(R.id.widget_last_updated, "Update Failed");
+            // Set error text in rate fields
+            views.setTextViewText(R.id.gold_rate, "₹ Error");
+            views.setTextViewText(R.id.silver_rate, "₹ Error");
+            views.setTextViewText(R.id.rates_updated_time, "Update Failed");
             
-            views.setViewVisibility(R.id.widget_loading, android.view.View.GONE);
-            views.setViewVisibility(R.id.widget_content, android.view.View.VISIBLE);
+            // Hide loading indicator, show refresh button
+            views.setViewVisibility(R.id.refresh_progress, View.GONE);
+            views.setViewVisibility(R.id.refresh_button, View.VISIBLE);
             
             // Set up refresh button click intent
             Intent refreshIntent = new Intent(context, RatesWidgetProvider.class);
@@ -251,7 +252,10 @@ public class RatesWidgetProvider extends AppWidgetProvider {
                     Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? 
                             PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE : 
                             PendingIntent.FLAG_UPDATE_CURRENT);
-            views.setOnClickPendingIntent(R.id.widget_refresh_button, refreshPendingIntent);
+            views.setOnClickPendingIntent(R.id.refresh_button, refreshPendingIntent);
+            
+            // Re-enable refresh button
+            views.setBoolean(R.id.refresh_button, "setEnabled", true);
             
             appWidgetManager.updateAppWidget(appWidgetId, views);
         } catch (Exception e) {
@@ -259,6 +263,7 @@ public class RatesWidgetProvider extends AppWidgetProvider {
         }
     }
     
+    // Existing methods for handling auto-refresh
     private void startAutoRefresh(Context context) {
         AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         PendingIntent pendingIntent = getAlarmPendingIntent(context);
