@@ -19,6 +19,7 @@ import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.core.view.GravityCompat;
@@ -78,21 +79,46 @@ public class MainActivity extends AppCompatActivity implements ProfileImageGener
 
     private RatesRepository ratesRepository;
 
-    private TextView goldFutureRates;
-    private TextView silverFutureRates;
-    private TextView goldFutureLowHigh;
-    private TextView silverFutureLowHigh;
+    // Extended UI elements for all rates
+    private TextView gold995Buy;
+    private TextView gold995Sell;
+    private TextView gold995High;
+    private TextView gold995Low;
 
-    private TextView goldDollarRate;
-    private TextView silverDollarRate;
-    private TextView inrRate;
+    private TextView silverFutureBuy;
+    private TextView silverFutureSell;
+    private TextView silverFutureHigh;
+    private TextView silverFutureLow;
 
-    private TextView gold99Buy;
-    private TextView gold99Sell;
+    private TextView goldFuturesBuy;
+    private TextView goldFuturesSell;
+    private TextView goldFuturesHigh;
+    private TextView goldFuturesLow;
+
     private TextView goldRefineBuy;
     private TextView goldRefineSell;
-    private TextView bankGoldBuy;
-    private TextView bankGoldSell;
+    private TextView goldRefineHigh;
+    private TextView goldRefineLow;
+
+    private TextView goldRtgsBuy;
+    private TextView goldRtgsSell;
+    private TextView goldRtgsHigh;
+    private TextView goldRtgsLow;
+
+    private TextView goldDollarBuy;
+    private TextView goldDollarSell;
+    private TextView goldDollarHigh;
+    private TextView goldDollarLow;
+
+    private TextView silverDollarBuy;
+    private TextView silverDollarSell;
+    private TextView silverDollarHigh;
+    private TextView silverDollarLow;
+
+    private TextView dollarBuy;
+    private TextView dollarSell;
+    private TextView dollarHigh;
+    private TextView dollarLow;
 
     private boolean isDrawerAnimating = false;
 
@@ -180,40 +206,61 @@ public class MainActivity extends AppCompatActivity implements ProfileImageGener
             userProfileImage = findViewById(R.id.user_profile_image);
 
             // Gold UI elements
-            goldDate = findViewById(R.id.gold_date);
-            goldRate = findViewById(R.id.gold_rate);
-            goldYesterdayPrice = findViewById(R.id.gold_yesterday_price);
-            goldPriceChange = findViewById(R.id.gold_price_change);
-
-            // Silver UI elements
-            // Silver UI elements
-            TextView silverDate = findViewById(R.id.silver_date);
-            silverPrice = findViewById(R.id.silver_price);
-            silverYesterdayPrice = findViewById(R.id.silver_yesterday_price);
-            silverPriceChange = findViewById(R.id.silver_price_change);
+            // goldDate = findViewById(R.id.gold_date);
+            // goldRate = findViewById(R.id.gold_rate);
+            // goldYesterdayPrice = findViewById(R.id.gold_yesterday_price);
+            // goldPriceChange = findViewById(R.id.gold_price_change);
+            //
+            // // Silver UI elements
+            // TextView silverDate = findViewById(R.id.silver_date);
+            // silverPrice = findViewById(R.id.silver_price);
+            // silverYesterdayPrice = findViewById(R.id.silver_yesterday_price);
+            // silverPriceChange = findViewById(R.id.silver_price_change);
 
             ratesCard = findViewById(R.id.rates_card);
             fabRefresh = findViewById(R.id.fab_refresh);
             loadingIndicator = findViewById(R.id.loading_indicator);
 
-            // Future Rates
-            goldFutureRates = findViewById(R.id.gold_future_rates);
-            silverFutureRates = findViewById(R.id.silver_future_rates);
-            goldFutureLowHigh = findViewById(R.id.gold_future_low_high);
-            silverFutureLowHigh = findViewById(R.id.silver_future_low_high);
+            // Initialize all extended rate UI elements
+            gold995Buy = findViewById(R.id.gold_995_buy);
+            gold995Sell = findViewById(R.id.gold_995_sell);
+            gold995High = findViewById(R.id.gold_995_high);
+            gold995Low = findViewById(R.id.gold_995_low);
 
-            // Dollar Rates
-            goldDollarRate = findViewById(R.id.gold_dollar_rate);
-            silverDollarRate = findViewById(R.id.silver_dollar_rate);
-            inrRate = findViewById(R.id.inr_rate);
+            silverFutureBuy = findViewById(R.id.silver_future_buy);
+            silverFutureSell = findViewById(R.id.silver_future_sell);
+            silverFutureHigh = findViewById(R.id.silver_future_high);
+            silverFutureLow = findViewById(R.id.silver_future_low);
 
-            // Buy/Sell Rates
-            gold99Buy = findViewById(R.id.gold_99_buy);
-            gold99Sell = findViewById(R.id.gold_99_sell);
+            goldFuturesBuy = findViewById(R.id.gold_futures_buy);
+            goldFuturesSell = findViewById(R.id.gold_futures_sell);
+            goldFuturesHigh = findViewById(R.id.gold_futures_high);
+            goldFuturesLow = findViewById(R.id.gold_futures_low);
+
             goldRefineBuy = findViewById(R.id.gold_refine_buy);
             goldRefineSell = findViewById(R.id.gold_refine_sell);
-            bankGoldBuy = findViewById(R.id.bank_gold_buy);
-            bankGoldSell = findViewById(R.id.bank_gold_sell);
+            goldRefineHigh = findViewById(R.id.gold_refine_high);
+            goldRefineLow = findViewById(R.id.gold_refine_low);
+
+            goldRtgsBuy = findViewById(R.id.gold_rtgs_buy);
+            goldRtgsSell = findViewById(R.id.gold_rtgs_sell);
+            goldRtgsHigh = findViewById(R.id.gold_rtgs_high);
+            goldRtgsLow = findViewById(R.id.gold_rtgs_low);
+
+            goldDollarBuy = findViewById(R.id.gold_dollar_buy);
+            goldDollarSell = findViewById(R.id.gold_dollar_sell);
+            goldDollarHigh = findViewById(R.id.gold_dollar_high);
+            goldDollarLow = findViewById(R.id.gold_dollar_low);
+
+            silverDollarBuy = findViewById(R.id.silver_dollar_buy);
+            silverDollarSell = findViewById(R.id.silver_dollar_sell);
+            silverDollarHigh = findViewById(R.id.silver_dollar_high);
+            silverDollarLow = findViewById(R.id.silver_dollar_low);
+
+            dollarBuy = findViewById(R.id.dollar_buy);
+            dollarSell = findViewById(R.id.dollar_sell);
+            dollarHigh = findViewById(R.id.dollar_high);
+            dollarLow = findViewById(R.id.dollar_low);
 
             // Set current date
             SimpleDateFormat dateFormat = new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault());
@@ -223,9 +270,9 @@ public class MainActivity extends AppCompatActivity implements ProfileImageGener
                 goldDate.setText(currentDate);
             }
 
-            if (silverDate != null) {
-                silverDate.setText(currentDate);
-            }
+            // if (silverDate != null) {
+            // silverDate.setText(currentDate);
+            // }
         } catch (Exception e) {
             Log.e(TAG, "Error in initializeViews: " + e.getMessage());
         }
@@ -254,7 +301,8 @@ public class MainActivity extends AppCompatActivity implements ProfileImageGener
         }));
     }
 
-    // Update the refreshRates() method in MainActivity
+    // Update the refreshRates() method in MainActivity to use the updated
+    // ExtendedRatesFetchCallback
     private void refreshRates() {
         // Show loading indicator if available
         if (loadingIndicator != null) {
@@ -266,33 +314,34 @@ public class MainActivity extends AppCompatActivity implements ProfileImageGener
             ratesRepository.fetchExtendedRates(new RatesRepository.ExtendedRatesFetchCallback() {
                 @Override
                 public void onSuccess(
-                        String goldRate, String silverRate, String lastUpdated,
-                        String yesterdayGoldRate, String yesterdaySilverRate,
-                        String goldChangeValue, String silverChangeValue,
+                        String gold995Buy, String gold995Sell, String gold995High, String gold995Low,
+                        String silverFutureBuy, String silverFutureSell, String silverFutureHigh,
+                        String silverFutureLow,
+                        String goldFuturesBuy, String goldFuturesSell, String goldFuturesHigh, String goldFuturesLow,
+                        String goldRefineBuy, String goldRefineSell, String goldRefineHigh, String goldRefineLow,
+                        String goldRtgsBuy, String goldRtgsSell, String goldRtgsHigh, String goldRtgsLow,
+                        String goldDollarBuy, String goldDollarSell, String goldDollarHigh, String goldDollarLow,
+                        String silverDollarBuy, String silverDollarSell, String silverDollarHigh,
+                        String silverDollarLow,
+                        String dollarBuy, String dollarSell, String dollarHigh, String dollarLow) {
 
-                        // New extended rate parameters
-                        String goldFutureRate, String silverFutureRate,
-                        String goldFutureLow, String goldFutureHigh,
-                        String silverFutureLow, String silverFutureHigh,
-                        String goldDollarRate, String silverDollarRate, String inrRate,
-                        String gold99Buy, String gold99Sell,
-                        String goldRefineBuy, String goldRefineSell,
-                        String bankGoldBuy, String bankGoldSell) {
                     runOnUiThread(() -> {
-                        // Update existing rates UI
-                        updateRatesUI(
-                                goldRate, silverRate, yesterdayGoldRate, yesterdaySilverRate,
-                                goldChangeValue, silverChangeValue);
+                        // Update main rates UI (gold and silver primary rates)
+                        updateMainRatesUI(
+                                gold995Sell, silverFutureSell,
+                                calculateChangeValue(gold995Sell, gold995Low),
+                                calculateChangeValue(silverFutureSell, silverFutureLow));
 
-                        // Update new rates table UI
+                        // Update all extended rates UI
                         updateExtendedRatesUI(
-                                goldFutureRate, silverFutureRate,
-                                goldFutureLow, goldFutureHigh,
-                                silverFutureLow, silverFutureHigh,
-                                goldDollarRate, silverDollarRate, inrRate,
-                                gold99Buy, gold99Sell,
-                                goldRefineBuy, goldRefineSell,
-                                bankGoldBuy, bankGoldSell);
+                                gold995Buy, gold995Sell, gold995High, gold995Low,
+                                silverFutureBuy, silverFutureSell, silverFutureHigh, silverFutureLow,
+                                goldFuturesBuy, goldFuturesSell, goldFuturesHigh, goldFuturesLow,
+                                goldRefineBuy, goldRefineSell, goldRefineHigh, goldRefineLow,
+                                goldRtgsBuy, goldRtgsSell, goldRtgsHigh, goldRtgsLow,
+                                goldDollarBuy, goldDollarSell, goldDollarHigh, goldDollarLow,
+                                silverDollarBuy, silverDollarSell, silverDollarHigh, silverDollarLow,
+                                dollarBuy, dollarSell, dollarHigh, dollarLow);
 
                         // Hide loading indicator
                         if (loadingIndicator != null) {
@@ -305,13 +354,15 @@ public class MainActivity extends AppCompatActivity implements ProfileImageGener
                                     MainActivity.this, R.anim.rates_update_animation));
                         }
 
-                        // Update widgets with extended data
+                        // Update widgets with the data
                         updateWidgetsWithExtendedData(
-                                goldRate, silverRate, lastUpdated,
-                                yesterdayGoldRate, yesterdaySilverRate,
-                                goldChangeValue, silverChangeValue,
-                                goldFutureRate, silverFutureRate,
-                                goldDollarRate, silverDollarRate, inrRate);
+                                gold995Sell, silverFutureSell,
+                                new SimpleDateFormat("hh:mm a", Locale.getDefault()).format(new Date()),
+                                gold995Low, silverFutureLow,
+                                calculateChangeValue(gold995Sell, gold995Low),
+                                calculateChangeValue(silverFutureSell, silverFutureLow),
+                                goldFuturesSell, silverFutureSell,
+                                goldDollarSell, silverDollarSell, dollarSell);
                     });
                 }
 
@@ -338,60 +389,84 @@ public class MainActivity extends AppCompatActivity implements ProfileImageGener
         }
     }
 
-    // New method to update extended rates UI
+    // Helper method to calculate change value
+    private String calculateChangeValue(String currentRate, String previousRate) {
+        try {
+            float current = Float.parseFloat(currentRate.replace(",", ""));
+            float previous = Float.parseFloat(previousRate.replace(",", ""));
+            return String.valueOf(Math.round(current - previous));
+        } catch (NumberFormatException e) {
+            Log.e(TAG, "Error calculating change value", e);
+            return "0";
+        }
+    }
+
+    // Method to update the main rates UI (gold and silver primary displays)
+
+    // New method to update all extended rates UI
     private void updateExtendedRatesUI(
-            String goldFutureRate, String silverFutureRate,
-            String goldFutureLow, String goldFutureHigh,
-            String silverFutureLow, String silverFutureHigh,
-            String goldDollarRate, String silverDollarRate, String inrRate,
-            String gold99Buy, String gold99Sell,
-            String goldRefineBuy, String goldRefineSell,
-            String bankGoldBuy, String bankGoldSell) {
-        // Update Future Rates Section
-        if (this.goldFutureRates != null) {
-            this.goldFutureRates.setText(goldFutureRate);
-        }
-        if (this.silverFutureRates != null) {
-            this.silverFutureRates.setText(silverFutureRate);
-        }
+            String gold995Buy, String gold995Sell, String gold995High, String gold995Low,
+            String silverFutureBuy, String silverFutureSell, String silverFutureHigh, String silverFutureLow,
+            String goldFuturesBuy, String goldFuturesSell, String goldFuturesHigh, String goldFuturesLow,
+            String goldRefineBuy, String goldRefineSell, String goldRefineHigh, String goldRefineLow,
+            String goldRtgsBuy, String goldRtgsSell, String goldRtgsHigh, String goldRtgsLow,
+            String goldDollarBuy, String goldDollarSell, String goldDollarHigh, String goldDollarLow,
+            String silverDollarBuy, String silverDollarSell, String silverDollarHigh, String silverDollarLow,
+            String dollarBuy, String dollarSell, String dollarHigh, String dollarLow) {
 
-        // Update Future Low/High Section
-        if (this.goldFutureLowHigh != null) {
-            this.goldFutureLowHigh.setText(String.format("L: %s | H: %s", goldFutureLow, goldFutureHigh));
-        }
-        if (this.silverFutureLowHigh != null) {
-            this.silverFutureLowHigh.setText(String.format("L: %s | H: %s", silverFutureLow, silverFutureHigh));
-        }
+        // Update Gold 995 Section
+        setTextIfNotNull(this.gold995Buy, gold995Buy);
+        setTextIfNotNull(this.gold995Sell, gold995Sell);
+        setTextIfNotNull(this.gold995High, gold995High);
+        setTextIfNotNull(this.gold995Low, gold995Low);
 
-        // Update Dollar Rates Section
-        if (this.goldDollarRate != null) {
-            this.goldDollarRate.setText(goldDollarRate);
-        }
-        if (this.silverDollarRate != null) {
-            this.silverDollarRate.setText(silverDollarRate);
-        }
-        if (this.inrRate != null) {
-            this.inrRate.setText(inrRate);
-        }
+        // Update Silver Future Section
+        setTextIfNotNull(this.silverFutureBuy, silverFutureBuy);
+        setTextIfNotNull(this.silverFutureSell, silverFutureSell);
+        setTextIfNotNull(this.silverFutureHigh, silverFutureHigh);
+        setTextIfNotNull(this.silverFutureLow, silverFutureLow);
 
-        // Update Buy/Sell Rates Section
-        if (this.gold99Buy != null) {
-            this.gold99Buy.setText(gold99Buy);
-        }
-        if (this.gold99Sell != null) {
-            this.gold99Sell.setText(gold99Sell);
-        }
-        if (this.goldRefineBuy != null) {
-            this.goldRefineBuy.setText(goldRefineBuy);
-        }
-        if (this.goldRefineSell != null) {
-            this.goldRefineSell.setText(goldRefineSell);
-        }
-        if (this.bankGoldBuy != null) {
-            this.bankGoldBuy.setText(bankGoldBuy);
-        }
-        if (this.bankGoldSell != null) {
-            this.bankGoldSell.setText(bankGoldSell);
+        // Update Gold Futures Section
+        setTextIfNotNull(this.goldFuturesBuy, goldFuturesBuy);
+        setTextIfNotNull(this.goldFuturesSell, goldFuturesSell);
+        setTextIfNotNull(this.goldFuturesHigh, goldFuturesHigh);
+        setTextIfNotNull(this.goldFuturesLow, goldFuturesLow);
+
+        // Update Gold Refine Section
+        setTextIfNotNull(this.goldRefineBuy, goldRefineBuy);
+        setTextIfNotNull(this.goldRefineSell, goldRefineSell);
+        setTextIfNotNull(this.goldRefineHigh, goldRefineHigh);
+        setTextIfNotNull(this.goldRefineLow, goldRefineLow);
+
+        // Update Gold RTGS Section
+        setTextIfNotNull(this.goldRtgsBuy, goldRtgsBuy);
+        setTextIfNotNull(this.goldRtgsSell, goldRtgsSell);
+        setTextIfNotNull(this.goldRtgsHigh, goldRtgsHigh);
+        setTextIfNotNull(this.goldRtgsLow, goldRtgsLow);
+
+        // Update Gold Dollar Section
+        setTextIfNotNull(this.goldDollarBuy, goldDollarBuy);
+        setTextIfNotNull(this.goldDollarSell, goldDollarSell);
+        setTextIfNotNull(this.goldDollarHigh, goldDollarHigh);
+        setTextIfNotNull(this.goldDollarLow, goldDollarLow);
+
+        // Update Silver Dollar Section
+        setTextIfNotNull(this.silverDollarBuy, silverDollarBuy);
+        setTextIfNotNull(this.silverDollarSell, silverDollarSell);
+        setTextIfNotNull(this.silverDollarHigh, silverDollarHigh);
+        setTextIfNotNull(this.silverDollarLow, silverDollarLow);
+
+        // Update Dollar Section
+        setTextIfNotNull(this.dollarBuy, dollarBuy);
+        setTextIfNotNull(this.dollarSell, dollarSell);
+        setTextIfNotNull(this.dollarHigh, dollarHigh);
+        setTextIfNotNull(this.dollarLow, dollarLow);
+    }
+
+    // Helper method to set text if TextView is not null
+    private void setTextIfNotNull(TextView textView, String text) {
+        if (textView != null) {
+            textView.setText(text);
         }
     }
 
@@ -432,41 +507,14 @@ public class MainActivity extends AppCompatActivity implements ProfileImageGener
         sendBroadcast(updateIntent);
     }
 
-    private void updateWidgets(String goldRate, String silverRate, String lastUpdated,
-            String yesterdayGoldRate, String yesterdaySilverRate,
-            String goldChangeValue, String silverChangeValue) {
-        // Create intent to update widgets
-        Intent updateIntent = new Intent(this, RatesWidgetProvider.class);
-        updateIntent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
-
-        // Get all widget IDs
-        AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(this);
-        int[] appWidgetIds = appWidgetManager.getAppWidgetIds(
-                new ComponentName(this, RatesWidgetProvider.class));
-        updateIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, appWidgetIds);
-
-        // Add rates data
-        updateIntent.putExtra("goldRate", goldRate);
-        updateIntent.putExtra("silverRate", silverRate);
-        updateIntent.putExtra("lastUpdated", lastUpdated);
-        updateIntent.putExtra("yesterdayGoldRate", yesterdayGoldRate);
-        updateIntent.putExtra("yesterdaySilverRate", yesterdaySilverRate);
-        updateIntent.putExtra("goldChangeValue", goldChangeValue);
-        updateIntent.putExtra("silverChangeValue", silverChangeValue);
-
-        // Send the broadcast
-        sendBroadcast(updateIntent);
-    }
-
-    private void updateRatesUI(String goldRateValue, String silverRateValue,
-            String yesterdayGoldRateValue, String yesterdaySilverRateValue,
+    private void updateMainRatesUI(String goldRateValue, String silverRateValue,
             String goldChangeValue, String silverChangeValue) {
         // Set gold values
         if (goldRate != null) {
             goldRate.setText("₹" + goldRateValue);
         }
         if (goldYesterdayPrice != null) {
-            goldYesterdayPrice.setText("₹" + yesterdayGoldRateValue);
+            goldYesterdayPrice.setText("₹" + goldRateValue);
         }
 
         // Set silver values
@@ -474,7 +522,7 @@ public class MainActivity extends AppCompatActivity implements ProfileImageGener
             silverPrice.setText("₹" + silverRateValue);
         }
         if (silverYesterdayPrice != null) {
-            silverYesterdayPrice.setText("₹" + yesterdaySilverRateValue);
+            silverYesterdayPrice.setText("₹" + silverRateValue);
         }
 
         // Set price changes with proper sign and color
@@ -519,31 +567,6 @@ public class MainActivity extends AppCompatActivity implements ProfileImageGener
                 silverPriceChange.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_arrow_up, 0, 0, 0);
             }
         }
-    }
-
-    private void updateWidgets(String goldRate, String silverRate,
-            String yesterdayGoldRate, String yesterdaySilverRate,
-            String goldChangeValue, String silverChangeValue) {
-        // Create intent to update widgets
-        Intent updateIntent = new Intent(this, RatesWidgetProvider.class);
-        updateIntent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
-
-        // Get all widget IDs
-        AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(this);
-        int[] appWidgetIds = appWidgetManager.getAppWidgetIds(
-                new ComponentName(this, RatesWidgetProvider.class));
-        updateIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, appWidgetIds);
-
-        // Add rates data
-        updateIntent.putExtra("goldRate", goldRate);
-        updateIntent.putExtra("silverRate", silverRate);
-        updateIntent.putExtra("yesterdayGoldRate", yesterdayGoldRate);
-        updateIntent.putExtra("yesterdaySilverRate", yesterdaySilverRate);
-        updateIntent.putExtra("goldChangeValue", goldChangeValue);
-        updateIntent.putExtra("silverChangeValue", silverChangeValue);
-
-        // Send the broadcast
-        sendBroadcast(updateIntent);
     }
 
     private void applyThemeAdjustments(Toolbar toolbar) {
