@@ -12,8 +12,8 @@ android {
         applicationId = "com.gcjewellers.rateswidget"
         minSdk = 24
         targetSdk = 34
-        versionCode = 16
-        versionName = "2.6"
+        versionCode = 17
+        versionName = "2.7"
     }
 
     buildTypes {

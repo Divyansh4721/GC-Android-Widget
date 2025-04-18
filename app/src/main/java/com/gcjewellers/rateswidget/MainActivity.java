@@ -12,6 +12,7 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Looper;
 import android.os.PowerManager;
 import android.provider.Settings;
 import android.util.Log;
@@ -29,6 +30,7 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.lifecycle.ViewModelProvider;
+import android.os.Looper;
 
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
@@ -42,6 +44,8 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
+import android.os.Handler;
+import android.os.Looper;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -59,6 +63,11 @@ public class MainActivity extends AppCompatActivity implements ProfileImageGener
     private TextView userName;
     private TextView userEmail;
     private ImageView userProfileImage;
+
+    private android.os.Handler autoRefreshHandler;
+    private static final long AUTO_REFRESH_INTERVAL = 500; // 0.5 seconds in milliseconds
+    private boolean isAutoRefreshEnabled = true;
+    private Runnable autoRefreshRunnable;
 
     // Gold UI elements
     private TextView goldDate;
@@ -136,11 +145,25 @@ public class MainActivity extends AppCompatActivity implements ProfileImageGener
             // Initialize the rates repository
             ratesRepository = new RatesRepository(this);
 
+            // Initialize auto refresh handler
+            autoRefreshHandler = new android.os.Handler(Looper.getMainLooper());
+            autoRefreshRunnable = new Runnable() {
+                @Override
+                public void run() {
+                    if (!isFinishing() && isAutoRefreshEnabled) {
+                        refreshRates();
+                        autoRefreshHandler.postDelayed(this, AUTO_REFRESH_INTERVAL);
+                    }
+                }
+            };
+
             // Load rates data
             refreshRates();
 
+            // Start auto refresh
+            startAutoRefresh();
+
             // Setup refresh fab
-            // In onCreate method, add this after initializing repository
             if (fabRefresh != null) {
                 fabRefresh.setOnClickListener(v -> {
                     refreshRates();
@@ -153,6 +176,62 @@ public class MainActivity extends AppCompatActivity implements ProfileImageGener
             Log.e(TAG, "Critical error in MainActivity onCreate", e);
             handleFatalError("An error occurred. Please restart the app.");
         }
+    }
+
+    private void startAutoRefresh() {
+        if (autoRefreshHandler != null && autoRefreshRunnable != null) {
+            // Remove any existing callbacks to avoid duplicate refreshes
+            stopAutoRefresh();
+
+            // Start periodic refresh if enabled
+            if (isAutoRefreshEnabled) {
+                autoRefreshHandler.postDelayed(autoRefreshRunnable, AUTO_REFRESH_INTERVAL);
+            }
+        }
+    }
+
+    // Stop the auto refresh cycle
+    private void stopAutoRefresh() {
+        if (autoRefreshHandler != null && autoRefreshRunnable != null) {
+            autoRefreshHandler.removeCallbacks(autoRefreshRunnable);
+        }
+    }
+
+    // Toggle auto refresh state
+    public void toggleAutoRefresh(boolean enabled) {
+        isAutoRefreshEnabled = enabled;
+        if (isAutoRefreshEnabled) {
+            startAutoRefresh();
+        } else {
+            stopAutoRefresh();
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Original code from your existing onResume method
+        refreshRates();
+
+        // Add this new code for auto-refresh
+        isAutoRefreshEnabled = true;
+        startAutoRefresh();
+    }
+
+    // Add these lifecycle methods to handle auto-refresh
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        // Stop auto refresh when app is paused to save resources
+        stopAutoRefresh();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // Make sure to clean up when activity is destroyed
+        stopAutoRefresh();
     }
 
     private void setupToolbar() {
@@ -204,18 +283,6 @@ public class MainActivity extends AppCompatActivity implements ProfileImageGener
             userName = findViewById(R.id.user_name);
             userEmail = findViewById(R.id.user_email);
             userProfileImage = findViewById(R.id.user_profile_image);
-
-            // Gold UI elements
-            // goldDate = findViewById(R.id.gold_date);
-            // goldRate = findViewById(R.id.gold_rate);
-            // goldYesterdayPrice = findViewById(R.id.gold_yesterday_price);
-            // goldPriceChange = findViewById(R.id.gold_price_change);
-            //
-            // // Silver UI elements
-            // TextView silverDate = findViewById(R.id.silver_date);
-            // silverPrice = findViewById(R.id.silver_price);
-            // silverYesterdayPrice = findViewById(R.id.silver_yesterday_price);
-            // silverPriceChange = findViewById(R.id.silver_price_change);
 
             ratesCard = findViewById(R.id.rates_card);
             fabRefresh = findViewById(R.id.fab_refresh);
@@ -270,9 +337,6 @@ public class MainActivity extends AppCompatActivity implements ProfileImageGener
                 goldDate.setText(currentDate);
             }
 
-            // if (silverDate != null) {
-            // silverDate.setText(currentDate);
-            // }
         } catch (Exception e) {
             Log.e(TAG, "Error in initializeViews: " + e.getMessage());
         }
@@ -349,10 +413,10 @@ public class MainActivity extends AppCompatActivity implements ProfileImageGener
                         }
 
                         // Animate rates card
-                        if (ratesCard != null) {
-                            ratesCard.startAnimation(AnimationUtils.loadAnimation(
-                                    MainActivity.this, R.anim.rates_update_animation));
-                        }
+                        // if (ratesCard != null) {
+                        // ratesCard.startAnimation(AnimationUtils.loadAnimation(
+                        // MainActivity.this, R.anim.rates_update_animation));
+                        // }
 
                         // Update widgets with the data
                         updateWidgetsWithExtendedData(
@@ -817,12 +881,7 @@ public class MainActivity extends AppCompatActivity implements ProfileImageGener
         return super.onOptionsItemSelected(item);
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        // Refresh rates when app is resumed
-        refreshRates();
-    }
+    
 
     private void handleFatalError(String message) {
         Toast.makeText(this, message, Toast.LENGTH_LONG).show();
