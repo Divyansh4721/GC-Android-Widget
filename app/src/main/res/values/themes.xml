@@ -20,6 +20,7 @@
         <item name="card_Surface">@color/white</item>
         <item name="ndc">@color/white</item>
         <item name="tc">@color/black</item>
+        <item name="toolbar_title_color">@color/white</item>
         
         
 

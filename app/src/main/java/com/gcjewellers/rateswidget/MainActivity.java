@@ -20,7 +20,6 @@ import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
-import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.core.view.GravityCompat;
@@ -29,8 +28,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
-import androidx.lifecycle.ViewModelProvider;
-import android.os.Looper;
 
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
@@ -44,8 +41,6 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
-import android.os.Handler;
-import android.os.Looper;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -237,22 +232,52 @@ public class MainActivity extends AppCompatActivity implements ProfileImageGener
     private void setupToolbar() {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        
         if (getSupportActionBar() != null) {
-            getSupportActionBar().setTitle(R.string.app_name);
-            getSupportActionBar().setDisplayShowTitleEnabled(true);
-            // Enable home button
+            // Hide the default title since you're already showing the title with logo in the layout
+            getSupportActionBar().setDisplayShowTitleEnabled(false);
+            // Enable home button for the drawer
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
             getSupportActionBar().setHomeButtonEnabled(true);
-            // Set the double chevron icon for the navigation drawer
-            getSupportActionBar().setHomeAsUpIndicator(R.drawable.ic_double_chevron);
         }
-
-        // Set custom title color
-        int titleColor = ContextCompat.getColor(this, R.color.toolbar_title_color);
-        toolbar.setTitleTextColor(titleColor);
-
-        // Setup the drawer toggle for functionality but override its appearance
-        setupNavigationDrawer(toolbar);
+    
+        // Setup drawer with custom toggle
+        drawerLayout = findViewById(R.id.drawer_layout);
+        if (drawerLayout != null) {
+            // Create a custom drawer toggle that uses your logo
+            drawerToggle = new ActionBarDrawerToggle(
+                    this,
+                    drawerLayout,
+                    toolbar,
+                    R.string.navigation_drawer_open,
+                    R.string.navigation_drawer_close) {
+                
+                // Override this method to use your logo instead of the default drawer icon
+                @Override
+                public void onDrawerSlide(View drawerView, float slideOffset) {
+                    // This prevents the animation of the hamburger icon
+                    super.onDrawerSlide(drawerView, 0);
+                }
+            };
+            
+            // Use your logo as the drawer indicator
+            drawerToggle.setDrawerIndicatorEnabled(false);
+            drawerToggle.setHomeAsUpIndicator(R.drawable.gc_logo);
+            
+            // Set a click listener for the logo to open/close the drawer
+            drawerToggle.setToolbarNavigationClickListener(v -> {
+                if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
+                    drawerLayout.closeDrawer(GravityCompat.START);
+                } else {
+                    drawerLayout.openDrawer(GravityCompat.START);
+                }
+            });
+            
+            drawerLayout.addDrawerListener(drawerToggle);
+            drawerToggle.syncState();
+        }
+        
+        // Apply theme adjustments if needed
         applyThemeAdjustments(toolbar);
     }
 
@@ -880,8 +905,6 @@ public class MainActivity extends AppCompatActivity implements ProfileImageGener
         }
         return super.onOptionsItemSelected(item);
     }
-
-    
 
     private void handleFatalError(String message) {
         Toast.makeText(this, message, Toast.LENGTH_LONG).show();

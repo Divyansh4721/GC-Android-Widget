@@ -35,10 +35,14 @@ public class WidgetUpdateService extends Service {
                         new ComponentName(WidgetUpdateService.this, RatesWidgetProvider.class));
                 updateIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, appWidgetIds);
                 
-                // Add rates data
+                // Add rates data - no need to format with ₹ symbol as the widget handles that
                 updateIntent.putExtra("goldRate", goldRate);
                 updateIntent.putExtra("silverRate", silverRate);
                 updateIntent.putExtra("lastUpdated", lastUpdated);
+                updateIntent.putExtra("yesterdayGoldRate", yesterdayGoldRate);
+                updateIntent.putExtra("yesterdaySilverRate", yesterdaySilverRate);
+                updateIntent.putExtra("goldChangeValue", goldChangeValue);
+                updateIntent.putExtra("silverChangeValue", silverChangeValue);
                 
                 // Send the broadcast to update widgets
                 sendBroadcast(updateIntent);
@@ -59,6 +63,7 @@ public class WidgetUpdateService extends Service {
                 int[] appWidgetIds = appWidgetManager.getAppWidgetIds(
                         new ComponentName(WidgetUpdateService.this, RatesWidgetProvider.class));
                 updateIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, appWidgetIds);
+                updateIntent.putExtra("error", true);
                 
                 sendBroadcast(updateIntent);
                 

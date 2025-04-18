@@ -79,12 +79,14 @@
     <color name="price_up">#4CAF50</color>
     <color name="price_down">#F44336</color>
     <color name="log_out">#F44336</color>
-    <color name="toolbar_title_color">#FFFFFF</color>
     <color name="tc">#FFFFFF</color>
     <color name="ndc">#121212</color>
     <color name="card_Surface">#212121</color>
     <color name="drawer_icon_color">#FFFFFF</color>
     <color name="price_unchanged">#9E9E9E</color>
+    <color name="toolbar_title_color">#9E9E9E</color>
+    
+
 
 
 </resources>

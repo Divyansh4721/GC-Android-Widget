@@ -4,7 +4,7 @@
     android:id="@+id/root_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/widget_bg"
+    android:background="@drawable/widget_background"
     android:padding="6dp">
 
     <TextView
@@ -13,6 +13,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
+        android:layout_marginLeft="8dp"
         android:text="GC Jewellers"
         android:textColor="@android:color/white"
         android:textStyle="bold"
@@ -83,10 +84,10 @@
                 android:id="@+id/gold_rate"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="₹0000"
+                android:text="₹ 0000"
                 android:textColor="#FFD700"
                 android:textStyle="bold"
-                android:textSize="22sp"
+                android:textSize="24sp"
                 android:layout_marginTop="1dp" />
         </LinearLayout>
 
@@ -111,10 +112,10 @@
                 android:id="@+id/silver_rate"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="₹0000"
+                android:text="₹ 0000"
                 android:textColor="#C0C0C0"
                 android:textStyle="bold"
-                android:textSize="22sp"
+                android:textSize="24sp"
                 android:layout_marginTop="1dp" />
         </LinearLayout>
     </LinearLayout>

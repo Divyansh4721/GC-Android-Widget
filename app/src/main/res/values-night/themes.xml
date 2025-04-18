@@ -28,6 +28,7 @@
         <item name="card_Surface">@color/Surface</item>
         <item name="ndc">@color/black</item>
         <item name="tc">@color/white</item>
+        <item name="toolbar_title_color">@color/black</item>
 
         <!-- Button styles -->
         <item name="materialButtonStyle">@style/Widget.App.Button</item>

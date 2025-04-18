@@ -16,13 +16,33 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
-            <!-- Toolbar with Hamburger Icon -->
+            <!-- Toolbar with Logo and Hamburger Icon -->
             <androidx.appcompat.widget.Toolbar
                 android:id="@+id/toolbar"
                 android:layout_width="match_parent"
                 android:layout_height="?attr/actionBarSize"
                 android:background="?attr/colorPrimary"
-                app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
+                app:contentInsetStartWithNavigation="0dp"
+                app:popupTheme="@style/ThemeOverlay.AppCompat.Light">
+
+                <!-- Logo in Toolbar -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/toolbar_title"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/app_name"
+                        android:textColor="?attr/toolbar_title_color"
+                        android:textSize="24sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+            </androidx.appcompat.widget.Toolbar>
         </com.google.android.material.appbar.AppBarLayout>
 
         <!-- Main Content ScrollView -->
@@ -30,8 +50,8 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             app:layout_behavior="@string/appbar_scrolling_view_behavior"
-            android:background="@color/black"
-            android:padding="10dp">
+            android:background="?attr/ndc"
+            android:padding="8dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -44,7 +64,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     card_view:cardCornerRadius="24dp"
-                    card_view:cardBackgroundColor="#000"
+                    card_view:cardBackgroundColor="?attr/ndc"
                     card_view:strokeColor="#FFA500"
                     card_view:strokeWidth="4dp"
                     android:layout_marginBottom="16dp">
@@ -64,7 +84,7 @@
                                 android:layout_height="wrap_content"
                                 android:text="Gold 995"
                                 android:textColor="#FFA500"
-                                android:textSize="24sp"
+                                android:textSize="22sp"
                                 android:textStyle="bold" />
                             <View
                                 android:layout_width="0dp"
@@ -75,7 +95,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="93501"
-                                android:textColor="#FFF"
+                                android:textColor="?attr/tc"
                                 android:textSize="24sp"
                                 android:textStyle="bold"
                                 android:layout_marginEnd="16dp" />
@@ -84,7 +104,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="94501"
-                                android:textColor="#FFF"
+                                android:textColor="?attr/tc"
                                 android:textSize="24sp"
                                 android:textStyle="bold" />
                         </LinearLayout>
@@ -116,14 +136,14 @@
                                         android:layout_height="wrap_content"
                                         android:layout_weight="1"
                                         android:text="Today Highest"
-                                        android:textColor="#FFF"
+                                        android:textColor="?attr/tc"
                                         android:textSize="20sp" />
                                     <TextView
                                         android:id="@+id/gold_995_high"
                                         android:layout_width="wrap_content"
                                         android:layout_height="wrap_content"
                                         android:text="94501"
-                                        android:textColor="#FFF"
+                                        android:textColor="?attr/tc"
                                         android:textSize="20sp" />
                                 </LinearLayout>
                                 <LinearLayout
@@ -136,14 +156,14 @@
                                         android:layout_height="wrap_content"
                                         android:layout_weight="1"
                                         android:text="Today Lowest"
-                                        android:textColor="#FFF"
+                                        android:textColor="?attr/tc"
                                         android:textSize="20sp" />
                                     <TextView
                                         android:id="@+id/gold_995_low"
                                         android:layout_width="wrap_content"
                                         android:layout_height="wrap_content"
                                         android:text="93442"
-                                        android:textColor="#FFF"
+                                        android:textColor="?attr/tc"
                                         android:textSize="20sp" />
                                 </LinearLayout>
                             </LinearLayout>
@@ -158,7 +178,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     card_view:cardCornerRadius="24dp"
-                    card_view:cardBackgroundColor="#000"
+                    card_view:cardBackgroundColor="?attr/ndc"
                     card_view:strokeColor="#FFA500"
                     card_view:strokeWidth="4dp"
                     android:layout_marginBottom="16dp">
@@ -178,7 +198,7 @@
                                 android:layout_height="wrap_content"
                                 android:text="Silver Futures"
                                 android:textColor="#FFA500"
-                                android:textSize="24sp"
+                                android:textSize="22sp"
                                 android:textStyle="bold" />
                             <View
                                 android:layout_width="0dp"
@@ -189,7 +209,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="93420"
-                                android:textColor="#FFF"
+                                android:textColor="?attr/tc"
                                 android:textSize="24sp"
                                 android:textStyle="bold"
                                 android:layout_marginEnd="16dp" />
@@ -198,7 +218,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="94420"
-                                android:textColor="#FFF"
+                                android:textColor="?attr/tc"
                                 android:textSize="24sp"
                                 android:textStyle="bold" />
                         </LinearLayout>
@@ -230,14 +250,14 @@
                                         android:layout_height="wrap_content"
                                         android:layout_weight="1"
                                         android:text="Today Highest"
-                                        android:textColor="#FFF"
+                                        android:textColor="?attr/tc"
                                         android:textSize="20sp" />
                                     <TextView
                                         android:id="@+id/silver_future_high"
                                         android:layout_width="wrap_content"
                                         android:layout_height="wrap_content"
                                         android:text="96420"
-                                        android:textColor="#FFF"
+                                        android:textColor="?attr/tc"
                                         android:textSize="20sp" />
                                 </LinearLayout>
                                 <LinearLayout
@@ -250,14 +270,14 @@
                                         android:layout_height="wrap_content"
                                         android:layout_weight="1"
                                         android:text="Today Lowest"
-                                        android:textColor="#FFF"
+                                        android:textColor="?attr/tc"
                                         android:textSize="20sp" />
                                     <TextView
                                         android:id="@+id/silver_future_low"
                                         android:layout_width="wrap_content"
                                         android:layout_height="wrap_content"
                                         android:text="93442"
-                                        android:textColor="#FFF"
+                                        android:textColor="?attr/tc"
                                         android:textSize="20sp" />
                                 </LinearLayout>
                             </LinearLayout>
@@ -266,724 +286,719 @@
                 </com.google.android.material.card.MaterialCardView>
 
                 <com.google.android.material.card.MaterialCardView
-                
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                card_view:cardCornerRadius="24dp"
-                card_view:cardBackgroundColor="#000000"
-                card_view:strokeColor="#FFA500"
-                card_view:strokeWidth="4dp"
-                android:layout_marginBottom="16dp">
-
-                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
+                    card_view:cardCornerRadius="24dp"
+                    card_view:cardBackgroundColor="?attr/ndc"
+                    card_view:strokeColor="#FFA500"
+                    card_view:strokeWidth="4dp"
+                    android:layout_marginBottom="16dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical">
+                        android:orientation="vertical"
+                        android:padding="16dp">
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Gold Futures"
-                            android:textColor="#FFA500"
-                            android:textSize="24sp"
-                            android:textStyle="bold"
-                            android:layout_marginStart="0dp" />
-
-                        <View
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1" />
-
-                        <TextView
-                            android:id="@+id/gold_futures_buy"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="93420"
-                            android:textColor="#FFFFFF"
-                            android:textSize="24sp"
-                            android:textStyle="bold"
-                            android:layout_marginEnd="16dp" />
-
-                        <TextView
-                            android:id="@+id/gold_futures_sell"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="94420"
-                            android:textColor="#FFFFFF"
-                            android:textSize="24sp"
-                            android:textStyle="bold" />
-                    </LinearLayout>
-
-                    <!-- Logo + Today Range -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:layout_marginTop="12dp"
-                        android:gravity="center_vertical">
-                        <ImageView
-                            android:id="@+id/gold_futures_logo"
-                            android:layout_width="40dp"
-                            android:layout_height="40dp"
-                            android:src="@drawable/gold_fut"
-                            android:contentDescription="Gold Futures logo" />
                         <LinearLayout
-                            android:layout_width="0dp"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:orientation="vertical"
-                            android:layout_marginStart="16dp">
-                            <LinearLayout
-                                android:layout_width="match_parent"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:orientation="horizontal">
-                                <TextView
-                                    android:layout_width="0dp"
-                                    android:layout_height="wrap_content"
-                                    android:layout_weight="1"
-                                    android:text="Today Highest"
-                                    android:textColor="#FFFFFF"
-                                    android:textSize="20sp" />
-                                <TextView
-                                    android:id="@+id/gold_futures_high"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="96420"
-                                    android:textColor="#FFFFFF"
-                                    android:textSize="20sp" />
-                            </LinearLayout>
-                            <LinearLayout
-                                android:layout_width="match_parent"
+                                android:text="Gold Futures"
+                                android:textColor="#FFA500"
+                                android:textSize="22sp"
+                                android:textStyle="bold"
+                                android:layout_marginStart="0dp" />
+
+                            <View
+                                android:layout_width="0dp"
                                 android:layout_height="wrap_content"
-                                android:orientation="horizontal"
-                                android:layout_marginTop="4dp">
-                                <TextView
-                                    android:layout_width="0dp"
+                                android:layout_weight="1" />
+
+                            <TextView
+                                android:id="@+id/gold_futures_buy"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="93420"
+                                android:textColor="?attr/tc"
+                                android:textSize="24sp"
+                                android:textStyle="bold"
+                                android:layout_marginEnd="16dp" />
+
+                            <TextView
+                                android:id="@+id/gold_futures_sell"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="94420"
+                                android:textColor="?attr/tc"
+                                android:textSize="24sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+
+                        <!-- Logo + Today Range -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:layout_marginTop="12dp"
+                            android:gravity="center_vertical">
+                            <ImageView
+                                android:id="@+id/gold_futures_logo"
+                                android:layout_width="40dp"
+                                android:layout_height="40dp"
+                                android:src="@drawable/gold_fut"
+                                android:contentDescription="Gold Futures logo" />
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical"
+                                android:layout_marginStart="16dp">
+                                <LinearLayout
+                                    android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
-                                    android:layout_weight="1"
-                                    android:text="Today Lowest"
-                                    android:textColor="#FFFFFF"
-                                    android:textSize="20sp" />
-                                <TextView
-                                    android:id="@+id/gold_futures_low"
-                                    android:layout_width="wrap_content"
+                                    android:orientation="horizontal">
+                                    <TextView
+                                        android:layout_width="0dp"
+                                        android:layout_height="wrap_content"
+                                        android:layout_weight="1"
+                                        android:text="Today Highest"
+                                        android:textColor="?attr/tc"
+                                        android:textSize="20sp" />
+                                    <TextView
+                                        android:id="@+id/gold_futures_high"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="96420"
+                                        android:textColor="?attr/tc"
+                                        android:textSize="20sp" />
+                                </LinearLayout>
+                                <LinearLayout
+                                    android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
-                                    android:text="93442"
-                                    android:textColor="#FFFFFF"
-                                    android:textSize="20sp" />
+                                    android:orientation="horizontal"
+                                    android:layout_marginTop="4dp">
+                                    <TextView
+                                        android:layout_width="0dp"
+                                        android:layout_height="wrap_content"
+                                        android:layout_weight="1"
+                                        android:text="Today Lowest"
+                                        android:textColor="?attr/tc"
+                                        android:textSize="20sp" />
+                                    <TextView
+                                        android:id="@+id/gold_futures_low"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="93442"
+                                        android:textColor="?attr/tc"
+                                        android:textSize="20sp" />
+                                </LinearLayout>
                             </LinearLayout>
                         </LinearLayout>
+
                     </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
 
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/rates_card"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                card_view:cardCornerRadius="24dp"
-                card_view:cardBackgroundColor="#000000"
-                card_view:strokeColor="#FFA500"
-                card_view:strokeWidth="4dp"
-                android:layout_marginBottom="16dp">
-
-                <LinearLayout
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/rates_card"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
+                    card_view:cardCornerRadius="24dp"
+                    card_view:cardBackgroundColor="?attr/ndc"
+                    card_view:strokeColor="#FFA500"
+                    card_view:strokeWidth="4dp"
+                    android:layout_marginBottom="16dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical">
+                        android:orientation="vertical"
+                        android:padding="16dp">
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Gold Refine"
-                            android:textColor="#FFA500"
-                            android:textSize="24sp"
-                            android:textStyle="bold"
-                            android:layout_marginStart="0dp" />
-
-                        <View
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1" />
-
-                        <TextView
-                            android:id="@+id/gold_refine_buy"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="93420"
-                            android:textColor="#FFFFFF"
-                            android:textSize="24sp"
-                            android:textStyle="bold"
-                            android:layout_marginEnd="16dp" />
-
-                        <TextView
-                            android:id="@+id/gold_refine_sell"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="94420"
-                            android:textColor="#FFFFFF"
-                            android:textSize="24sp"
-                            android:textStyle="bold" />
-                    </LinearLayout>
-
-                    <!-- Logo + Today Range -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:layout_marginTop="12dp"
-                        android:gravity="center_vertical">
-                        <ImageView
-                            android:id="@+id/gold_refine_logo"
-                            android:layout_width="40dp"
-                            android:layout_height="40dp"
-                            android:src="@drawable/gold_refine"
-                            android:contentDescription="Gold Refine logo" />
                         <LinearLayout
-                            android:layout_width="0dp"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:orientation="vertical"
-                            android:layout_marginStart="16dp">
-                            <LinearLayout
-                                android:layout_width="match_parent"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:orientation="horizontal">
-                                <TextView
-                                    android:layout_width="0dp"
-                                    android:layout_height="wrap_content"
-                                    android:layout_weight="1"
-                                    android:text="Today Highest"
-                                    android:textColor="#FFFFFF"
-                                    android:textSize="20sp" />
-                                <TextView
-                                    android:id="@+id/gold_refine_high"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="96420"
-                                    android:textColor="#FFFFFF"
-                                    android:textSize="20sp" />
-                            </LinearLayout>
-                            <LinearLayout
-                                android:layout_width="match_parent"
+                                android:text="Gold Refine"
+                                android:textColor="#FFA500"
+                                android:textSize="22sp"
+                                android:textStyle="bold"
+                                android:layout_marginStart="0dp" />
+
+                            <View
+                                android:layout_width="0dp"
                                 android:layout_height="wrap_content"
-                                android:orientation="horizontal"
-                                android:layout_marginTop="4dp">
-                                <TextView
-                                    android:layout_width="0dp"
+                                android:layout_weight="1" />
+
+                            <TextView
+                                android:id="@+id/gold_refine_buy"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="93420"
+                                android:textColor="?attr/tc"
+                                android:textSize="24sp"
+                                android:textStyle="bold"
+                                android:layout_marginEnd="16dp" />
+
+                            <TextView
+                                android:id="@+id/gold_refine_sell"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="94420"
+                                android:textColor="?attr/tc"
+                                android:textSize="24sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+
+                        <!-- Logo + Today Range -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:layout_marginTop="12dp"
+                            android:gravity="center_vertical">
+                            <ImageView
+                                android:id="@+id/gold_refine_logo"
+                                android:layout_width="40dp"
+                                android:layout_height="40dp"
+                                android:src="@drawable/gold_refine"
+                                android:contentDescription="Gold Refine logo" />
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical"
+                                android:layout_marginStart="16dp">
+                                <LinearLayout
+                                    android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
-                                    android:layout_weight="1"
-                                    android:text="Today Lowest"
-                                    android:textColor="#FFFFFF"
-                                    android:textSize="20sp" />
-                                <TextView
-                                    android:id="@+id/gold_refine_low"
-                                    android:layout_width="wrap_content"
+                                    android:orientation="horizontal">
+                                    <TextView
+                                        android:layout_width="0dp"
+                                        android:layout_height="wrap_content"
+                                        android:layout_weight="1"
+                                        android:text="Today Highest"
+                                        android:textColor="?attr/tc"
+                                        android:textSize="20sp" />
+                                    <TextView
+                                        android:id="@+id/gold_refine_high"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="96420"
+                                        android:textColor="?attr/tc"
+                                        android:textSize="20sp" />
+                                </LinearLayout>
+                                <LinearLayout
+                                    android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
-                                    android:text="93442"
-                                    android:textColor="#FFFFFF"
-                                    android:textSize="20sp" />
+                                    android:orientation="horizontal"
+                                    android:layout_marginTop="4dp">
+                                    <TextView
+                                        android:layout_width="0dp"
+                                        android:layout_height="wrap_content"
+                                        android:layout_weight="1"
+                                        android:text="Today Lowest"
+                                        android:textColor="?attr/tc"
+                                        android:textSize="20sp" />
+                                    <TextView
+                                        android:id="@+id/gold_refine_low"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="93442"
+                                        android:textColor="?attr/tc"
+                                        android:textSize="20sp" />
+                                </LinearLayout>
                             </LinearLayout>
                         </LinearLayout>
+
                     </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
 
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <com.google.android.material.card.MaterialCardView
-                
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                card_view:cardCornerRadius="24dp"
-                card_view:cardBackgroundColor="#000000"
-                card_view:strokeColor="#FFA500"
-                card_view:strokeWidth="4dp"
-                android:layout_marginBottom="16dp">
-
-                <LinearLayout
+                <com.google.android.material.card.MaterialCardView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
+                    card_view:cardCornerRadius="24dp"
+                    card_view:cardBackgroundColor="?attr/ndc"
+                    card_view:strokeColor="#FFA500"
+                    card_view:strokeWidth="4dp"
+                    android:layout_marginBottom="16dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical">
+                        android:orientation="vertical"
+                        android:padding="16dp">
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Gold RTGS"
-                            android:textColor="#FFA500"
-                            android:textSize="24sp"
-                            android:textStyle="bold"
-                            android:layout_marginStart="0dp" />
-
-                        <View
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1" />
-
-                        <TextView
-                            android:id="@+id/gold_rtgs_buy"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="93420"
-                            android:textColor="#FFFFFF"
-                            android:textSize="24sp"
-                            android:textStyle="bold"
-                            android:layout_marginEnd="16dp" />
-
-                        <TextView
-                            android:id="@+id/gold_rtgs_sell"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="94420"
-                            android:textColor="#FFFFFF"
-                            android:textSize="24sp"
-                            android:textStyle="bold" />
-                    </LinearLayout>
-
-                    <!-- Logo + Today Range -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:layout_marginTop="12dp"
-                        android:gravity="center_vertical">
-                        <ImageView
-                            android:id="@+id/gold_rtgs_logo"
-                            android:layout_width="40dp"
-                            android:layout_height="40dp"
-                            android:src="@drawable/gold_rtgs"
-                            android:contentDescription="Gold RTGS logo" />
                         <LinearLayout
-                            android:layout_width="0dp"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:orientation="vertical"
-                            android:layout_marginStart="16dp">
-                            <LinearLayout
-                                android:layout_width="match_parent"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:orientation="horizontal">
-                                <TextView
-                                    android:layout_width="0dp"
-                                    android:layout_height="wrap_content"
-                                    android:layout_weight="1"
-                                    android:text="Today Highest"
-                                    android:textColor="#FFFFFF"
-                                    android:textSize="20sp" />
-                                <TextView
-                                    android:id="@+id/gold_rtgs_high"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="96420"
-                                    android:textColor="#FFFFFF"
-                                    android:textSize="20sp" />
-                            </LinearLayout>
-                            <LinearLayout
-                                android:layout_width="match_parent"
+                                android:text="Gold RTGS"
+                                android:textColor="#FFA500"
+                                android:textSize="22sp"
+                                android:textStyle="bold"
+                                android:layout_marginStart="0dp" />
+
+                            <View
+                                android:layout_width="0dp"
                                 android:layout_height="wrap_content"
-                                android:orientation="horizontal"
-                                android:layout_marginTop="4dp">
-                                <TextView
-                                    android:layout_width="0dp"
+                                android:layout_weight="1" />
+
+                            <TextView
+                                android:id="@+id/gold_rtgs_buy"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="93420"
+                                android:textColor="?attr/tc"
+                                android:textSize="24sp"
+                                android:textStyle="bold"
+                                android:layout_marginEnd="16dp" />
+
+                            <TextView
+                                android:id="@+id/gold_rtgs_sell"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="94420"
+                                android:textColor="?attr/tc"
+                                android:textSize="24sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+
+                        <!-- Logo + Today Range -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:layout_marginTop="12dp"
+                            android:gravity="center_vertical">
+                            <ImageView
+                                android:id="@+id/gold_rtgs_logo"
+                                android:layout_width="40dp"
+                                android:layout_height="40dp"
+                                android:src="@drawable/gold_rtgs"
+                                android:contentDescription="Gold RTGS logo" />
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical"
+                                android:layout_marginStart="16dp">
+                                <LinearLayout
+                                    android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
-                                    android:layout_weight="1"
-                                    android:text="Today Lowest"
-                                    android:textColor="#FFFFFF"
-                                    android:textSize="20sp" />
-                                <TextView
-                                    android:id="@+id/gold_rtgs_low"
-                                    android:layout_width="wrap_content"
+                                    android:orientation="horizontal">
+                                    <TextView
+                                        android:layout_width="0dp"
+                                        android:layout_height="wrap_content"
+                                        android:layout_weight="1"
+                                        android:text="Today Highest"
+                                        android:textColor="?attr/tc"
+                                        android:textSize="20sp" />
+                                    <TextView
+                                        android:id="@+id/gold_rtgs_high"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="96420"
+                                        android:textColor="?attr/tc"
+                                        android:textSize="20sp" />
+                                </LinearLayout>
+                                <LinearLayout
+                                    android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
-                                    android:text="93442"
-                                    android:textColor="#FFFFFF"
-                                    android:textSize="20sp" />
+                                    android:orientation="horizontal"
+                                    android:layout_marginTop="4dp">
+                                    <TextView
+                                        android:layout_width="0dp"
+                                        android:layout_height="wrap_content"
+                                        android:layout_weight="1"
+                                        android:text="Today Lowest"
+                                        android:textColor="?attr/tc"
+                                        android:textSize="20sp" />
+                                    <TextView
+                                        android:id="@+id/gold_rtgs_low"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="93442"
+                                        android:textColor="?attr/tc"
+                                        android:textSize="20sp" />
+                                </LinearLayout>
                             </LinearLayout>
                         </LinearLayout>
+
                     </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
 
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <com.google.android.material.card.MaterialCardView
-                
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                card_view:cardCornerRadius="24dp"
-                card_view:cardBackgroundColor="#000000"
-                card_view:strokeColor="#FFA500"
-                card_view:strokeWidth="4dp"
-                android:layout_marginBottom="16dp">
-
-                <LinearLayout
+                <com.google.android.material.card.MaterialCardView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
+                    card_view:cardCornerRadius="24dp"
+                    card_view:cardBackgroundColor="?attr/ndc"
+                    card_view:strokeColor="#FFA500"
+                    card_view:strokeWidth="4dp"
+                    android:layout_marginBottom="16dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical">
+                        android:orientation="vertical"
+                        android:padding="16dp">
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Gold $"
-                            android:textColor="#FFA500"
-                            android:textSize="24sp"
-                            android:textStyle="bold"
-                            android:layout_marginStart="0dp" />
-
-                        <View
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1" />
-
-                        <TextView
-                            android:id="@+id/gold_dollar_buy"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="93420"
-                            android:textColor="#FFFFFF"
-                            android:textSize="24sp"
-                            android:textStyle="bold"
-                            android:layout_marginEnd="16dp" />
-
-                        <TextView
-                            android:id="@+id/gold_dollar_sell"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="94420"
-                            android:textColor="#FFFFFF"
-                            android:textSize="24sp"
-                            android:textStyle="bold" />
-                    </LinearLayout>
-
-                    <!-- Logo + Today Range -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:layout_marginTop="12dp"
-                        android:gravity="center_vertical">
-                        <ImageView
-                            android:id="@+id/gold_dollar_logo"
-                            android:layout_width="40dp"
-                            android:layout_height="40dp"
-                            android:src="@drawable/ic_dollar"
-                            android:contentDescription="Gold Dollar logo" />
                         <LinearLayout
-                            android:layout_width="0dp"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:orientation="vertical"
-                            android:layout_marginStart="16dp">
-                            <LinearLayout
-                                android:layout_width="match_parent"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:orientation="horizontal">
-                                <TextView
-                                    android:layout_width="0dp"
-                                    android:layout_height="wrap_content"
-                                    android:layout_weight="1"
-                                    android:text="Today Highest"
-                                    android:textColor="#FFFFFF"
-                                    android:textSize="20sp" />
-                                <TextView
-                                    android:id="@+id/gold_dollar_high"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="96420"
-                                    android:textColor="#FFFFFF"
-                                    android:textSize="20sp" />
-                            </LinearLayout>
-                            <LinearLayout
-                                android:layout_width="match_parent"
+                                android:text="Gold $"
+                                android:textColor="#FFA500"
+                                android:textSize="22sp"
+                                android:textStyle="bold"
+                                android:layout_marginStart="0dp" />
+
+                            <View
+                                android:layout_width="0dp"
                                 android:layout_height="wrap_content"
-                                android:orientation="horizontal"
-                                android:layout_marginTop="4dp">
-                                <TextView
-                                    android:layout_width="0dp"
+                                android:layout_weight="1" />
+
+                            <TextView
+                                android:id="@+id/gold_dollar_buy"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="93420"
+                                android:textColor="?attr/tc"
+                                android:textSize="24sp"
+                                android:textStyle="bold"
+                                android:layout_marginEnd="16dp" />
+
+                            <TextView
+                                android:id="@+id/gold_dollar_sell"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="94420"
+                                android:textColor="?attr/tc"
+                                android:textSize="24sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+
+                        <!-- Logo + Today Range -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:layout_marginTop="12dp"
+                            android:gravity="center_vertical">
+                            <ImageView
+                                android:id="@+id/gold_dollar_logo"
+                                android:layout_width="40dp"
+                                android:layout_height="40dp"
+                                android:src="@drawable/ic_dollar"
+                                android:contentDescription="Gold Dollar logo" />
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical"
+                                android:layout_marginStart="16dp">
+                                <LinearLayout
+                                    android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
-                                    android:layout_weight="1"
-                                    android:text="Today Lowest"
-                                    android:textColor="#FFFFFF"
-                                    android:textSize="20sp" />
-                                <TextView
-                                    android:id="@+id/gold_dollar_low"
-                                    android:layout_width="wrap_content"
+                                    android:orientation="horizontal">
+                                    <TextView
+                                        android:layout_width="0dp"
+                                        android:layout_height="wrap_content"
+                                        android:layout_weight="1"
+                                        android:text="Today Highest"
+                                        android:textColor="?attr/tc"
+                                        android:textSize="20sp" />
+                                    <TextView
+                                        android:id="@+id/gold_dollar_high"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="96420"
+                                        android:textColor="?attr/tc"
+                                        android:textSize="20sp" />
+                                </LinearLayout>
+                                <LinearLayout
+                                    android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
-                                    android:text="93442"
-                                    android:textColor="#FFFFFF"
-                                    android:textSize="20sp" />
+                                    android:orientation="horizontal"
+                                    android:layout_marginTop="4dp">
+                                    <TextView
+                                        android:layout_width="0dp"
+                                        android:layout_height="wrap_content"
+                                        android:layout_weight="1"
+                                        android:text="Today Lowest"
+                                        android:textColor="?attr/tc"
+                                        android:textSize="20sp" />
+                                    <TextView
+                                        android:id="@+id/gold_dollar_low"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="93442"
+                                        android:textColor="?attr/tc"
+                                        android:textSize="20sp" />
+                                </LinearLayout>
                             </LinearLayout>
                         </LinearLayout>
+
                     </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
 
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <com.google.android.material.card.MaterialCardView
-                
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                card_view:cardCornerRadius="24dp"
-                card_view:cardBackgroundColor="#000000"
-                card_view:strokeColor="#FFA500"
-                card_view:strokeWidth="4dp"
-                android:layout_marginBottom="16dp">
-
-                <LinearLayout
+                <com.google.android.material.card.MaterialCardView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
+                    card_view:cardCornerRadius="24dp"
+                    card_view:cardBackgroundColor="?attr/ndc"
+                    card_view:strokeColor="#FFA500"
+                    card_view:strokeWidth="4dp"
+                    android:layout_marginBottom="16dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical">
+                        android:orientation="vertical"
+                        android:padding="16dp">
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Silver $"
-                            android:textColor="#FFA500"
-                            android:textSize="24sp"
-                            android:textStyle="bold"
-                            android:layout_marginStart="0dp" />
-
-                        <View
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1" />
-
-                        <TextView
-                            android:id="@+id/silver_dollar_buy"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="93420"
-                            android:textColor="#FFFFFF"
-                            android:textSize="24sp"
-                            android:textStyle="bold"
-                            android:layout_marginEnd="16dp" />
-
-                        <TextView
-                            android:id="@+id/silver_dollar_sell"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="94420"
-                            android:textColor="#FFFFFF"
-                            android:textSize="24sp"
-                            android:textStyle="bold" />
-                    </LinearLayout>
-
-                    <!-- Logo + Today Range -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:layout_marginTop="12dp"
-                        android:gravity="center_vertical">
-                        <ImageView
-                            android:id="@+id/silver_dollar_logo"
-                            android:layout_width="40dp"
-                            android:layout_height="40dp"
-                            android:src="@drawable/ic_silver_bars"
-                            android:contentDescription="Silver Dollar logo" />
                         <LinearLayout
-                            android:layout_width="0dp"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:orientation="vertical"
-                            android:layout_marginStart="16dp">
-                            <LinearLayout
-                                android:layout_width="match_parent"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:orientation="horizontal">
-                                <TextView
-                                    android:layout_width="0dp"
-                                    android:layout_height="wrap_content"
-                                    android:layout_weight="1"
-                                    android:text="Today Highest"
-                                    android:textColor="#FFFFFF"
-                                    android:textSize="20sp" />
-                                <TextView
-                                    android:id="@+id/silver_dollar_high"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="96420"
-                                    android:textColor="#FFFFFF"
-                                    android:textSize="20sp" />
-                            </LinearLayout>
-                            <LinearLayout
-                                android:layout_width="match_parent"
+                                android:text="Silver $"
+                                android:textColor="#FFA500"
+                                android:textSize="22sp"
+                                android:textStyle="bold"
+                                android:layout_marginStart="0dp" />
+
+                            <View
+                                android:layout_width="0dp"
                                 android:layout_height="wrap_content"
-                                android:orientation="horizontal"
-                                android:layout_marginTop="4dp">
-                                <TextView
-                                    android:layout_width="0dp"
+                                android:layout_weight="1" />
+
+                            <TextView
+                                android:id="@+id/silver_dollar_buy"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="93420"
+                                android:textColor="?attr/tc"
+                                android:textSize="24sp"
+                                android:textStyle="bold"
+                                android:layout_marginEnd="16dp" />
+
+                            <TextView
+                                android:id="@+id/silver_dollar_sell"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="94420"
+                                android:textColor="?attr/tc"
+                                android:textSize="24sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+
+                        <!-- Logo + Today Range -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:layout_marginTop="12dp"
+                            android:gravity="center_vertical">
+                            <ImageView
+                                android:id="@+id/silver_dollar_logo"
+                                android:layout_width="40dp"
+                                android:layout_height="40dp"
+                                android:src="@drawable/ic_silver_bars"
+                                android:contentDescription="Silver Dollar logo" />
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical"
+                                android:layout_marginStart="16dp">
+                                <LinearLayout
+                                    android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
-                                    android:layout_weight="1"
-                                    android:text="Today Lowest"
-                                    android:textColor="#FFFFFF"
-                                    android:textSize="20sp" />
-                                <TextView
-                                    android:id="@+id/silver_dollar_low"
-                                    android:layout_width="wrap_content"
+                                    android:orientation="horizontal">
+                                    <TextView
+                                        android:layout_width="0dp"
+                                        android:layout_height="wrap_content"
+                                        android:layout_weight="1"
+                                        android:text="Today Highest"
+                                        android:textColor="?attr/tc"
+                                        android:textSize="20sp" />
+                                    <TextView
+                                        android:id="@+id/silver_dollar_high"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="96420"
+                                        android:textColor="?attr/tc"
+                                        android:textSize="20sp" />
+                                </LinearLayout>
+                                <LinearLayout
+                                    android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
-                                    android:text="93442"
-                                    android:textColor="#FFFFFF"
-                                    android:textSize="20sp" />
+                                    android:orientation="horizontal"
+                                    android:layout_marginTop="4dp">
+                                    <TextView
+                                        android:layout_width="0dp"
+                                        android:layout_height="wrap_content"
+                                        android:layout_weight="1"
+                                        android:text="Today Lowest"
+                                        android:textColor="?attr/tc"
+                                        android:textSize="20sp" />
+                                    <TextView
+                                        android:id="@+id/silver_dollar_low"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="93442"
+                                        android:textColor="?attr/tc"
+                                        android:textSize="20sp" />
+                                </LinearLayout>
                             </LinearLayout>
                         </LinearLayout>
+
                     </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
 
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <com.google.android.material.card.MaterialCardView
-                
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                card_view:cardCornerRadius="24dp"
-                card_view:cardBackgroundColor="#000000"
-                card_view:strokeColor="#FFA500"
-                card_view:strokeWidth="4dp"
-                android:layout_marginBottom="16dp">
-
-                <LinearLayout
+                <com.google.android.material.card.MaterialCardView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
+                    card_view:cardCornerRadius="24dp"
+                    card_view:cardBackgroundColor="?attr/ndc"
+                    card_view:strokeColor="#FFA500"
+                    card_view:strokeWidth="4dp"
+                    android:layout_marginBottom="16dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical">
+                        android:orientation="vertical"
+                        android:padding="16dp">
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Dollar $"
-                            android:textColor="#FFA500"
-                            android:textSize="24sp"
-                            android:textStyle="bold"
-                            android:layout_marginStart="0dp" />
-
-                        <View
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1" />
-
-                        <TextView
-                            android:id="@+id/dollar_buy"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="93420"
-                            android:textColor="#FFFFFF"
-                            android:textSize="24sp"
-                            android:textStyle="bold"
-                            android:layout_marginEnd="16dp" />
-
-                        <TextView
-                            android:id="@+id/dollar_sell"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="94420"
-                            android:textColor="#FFFFFF"
-                            android:textSize="24sp"
-                            android:textStyle="bold" />
-                    </LinearLayout>
-
-                    <!-- Logo + Today Range -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:layout_marginTop="12dp"
-                        android:gravity="center_vertical">
-                        <ImageView
-                            android:id="@+id/dollar_logo"
-                            android:layout_width="40dp"
-                            android:layout_height="40dp"
-                            android:src="@drawable/dollar_to_rupee"
-                            android:contentDescription="Dollar logo" />
                         <LinearLayout
-                            android:layout_width="0dp"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:orientation="vertical"
-                            android:layout_marginStart="16dp">
-                            <LinearLayout
-                                android:layout_width="match_parent"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:orientation="horizontal">
-                                <TextView
-                                    android:layout_width="0dp"
-                                    android:layout_height="wrap_content"
-                                    android:layout_weight="1"
-                                    android:text="Today Highest"
-                                    android:textColor="#FFFFFF"
-                                    android:textSize="20sp" />
-                                <TextView
-                                    android:id="@+id/dollar_high"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="96420"
-                                    android:textColor="#FFFFFF"
-                                    android:textSize="20sp" />
-                            </LinearLayout>
-                            <LinearLayout
-                                android:layout_width="match_parent"
+                                android:text="Dollar $"
+                                android:textColor="#FFA500"
+                                android:textSize="22sp"
+                                android:textStyle="bold"
+                                android:layout_marginStart="0dp" />
+
+                            <View
+                                android:layout_width="0dp"
                                 android:layout_height="wrap_content"
-                                android:orientation="horizontal"
-                                android:layout_marginTop="4dp">
-                                <TextView
-                                    android:layout_width="0dp"
+                                android:layout_weight="1" />
+
+                            <TextView
+                                android:id="@+id/dollar_buy"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="93420"
+                                android:textColor="?attr/tc"
+                                android:textSize="24sp"
+                                android:textStyle="bold"
+                                android:layout_marginEnd="16dp" />
+
+                            <TextView
+                                android:id="@+id/dollar_sell"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="94420"
+                                android:textColor="?attr/tc"
+                                android:textSize="24sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+
+                        <!-- Logo + Today Range -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:layout_marginTop="12dp"
+                            android:gravity="center_vertical">
+                            <ImageView
+                                android:id="@+id/dollar_logo"
+                                android:layout_width="40dp"
+                                android:layout_height="40dp"
+                                android:src="@drawable/dollar_to_rupee"
+                                android:contentDescription="Dollar logo" />
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical"
+                                android:layout_marginStart="16dp">
+                                <LinearLayout
+                                    android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
-                                    android:layout_weight="1"
-                                    android:text="Today Lowest"
-                                    android:textColor="#FFFFFF"
-                                    android:textSize="20sp" />
-                                <TextView
-                                    android:id="@+id/dollar_low"
-                                    android:layout_width="wrap_content"
+                                    android:orientation="horizontal">
+                                    <TextView
+                                        android:layout_width="0dp"
+                                        android:layout_height="wrap_content"
+                                        android:layout_weight="1"
+                                        android:text="Today Highest"
+                                        android:textColor="?attr/tc"
+                                        android:textSize="20sp" />
+                                    <TextView
+                                        android:id="@+id/dollar_high"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="96420"
+                                        android:textColor="?attr/tc"
+                                        android:textSize="20sp" />
+                                </LinearLayout>
+                                <LinearLayout
+                                    android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
-                                    android:text="93442"
-                                    android:textColor="#FFFFFF"
-                                    android:textSize="20sp" />
+                                    android:orientation="horizontal"
+                                    android:layout_marginTop="4dp">
+                                    <TextView
+                                        android:layout_width="0dp"
+                                        android:layout_height="wrap_content"
+                                        android:layout_weight="1"
+                                        android:text="Today Lowest"
+                                        android:textColor="?attr/tc"
+                                        android:textSize="20sp" />
+                                    <TextView
+                                        android:id="@+id/dollar_low"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="93442"
+                                        android:textColor="?attr/tc"
+                                        android:textSize="20sp" />
+                                </LinearLayout>
                             </LinearLayout>
                         </LinearLayout>
-                    </LinearLayout>
 
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
 
             </LinearLayout>
         </androidx.core.widget.NestedScrollView>
@@ -1226,5 +1241,4 @@
 
         </LinearLayout>
     </com.google.android.material.navigation.NavigationView>
-
 </androidx.drawerlayout.widget.DrawerLayout>
