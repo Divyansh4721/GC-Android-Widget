@@ -4,6 +4,7 @@ import android.appwidget.AppWidgetManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.Color;
@@ -13,11 +14,9 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Looper;
-import android.os.PowerManager;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
-import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -29,16 +28,11 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
-import com.google.android.gms.auth.api.signin.GoogleSignIn;
-import com.google.android.gms.auth.api.signin.GoogleSignInClient;
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.switchmaterial.SwitchMaterial;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 
@@ -46,13 +40,12 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
-public class MainActivity extends AppCompatActivity implements ProfileImageGenerator.ProfileImageCallback {
+public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
 
     private DrawerLayout drawerLayout;
     private ActionBarDrawerToggle drawerToggle;
 
-    private SwitchMaterial batteryOptSwitch;
     private SwitchMaterial widgetRefreshSwitch;
     private MaterialButton logoutButton;
     private TextView userName;
@@ -60,7 +53,7 @@ public class MainActivity extends AppCompatActivity implements ProfileImageGener
     private ImageView userProfileImage;
 
     private android.os.Handler autoRefreshHandler;
-    private static final long AUTO_REFRESH_INTERVAL = 500; // 0.5 seconds in milliseconds
+    private static final long AUTO_REFRESH_INTERVAL = 2000;
     private boolean isAutoRefreshEnabled = true;
     private Runnable autoRefreshRunnable;
 
@@ -77,9 +70,6 @@ public class MainActivity extends AppCompatActivity implements ProfileImageGener
     private MaterialCardView ratesCard;
     private FloatingActionButton fabRefresh;
     private View loadingIndicator;
-
-    private FirebaseAuth mAuth;
-    private GoogleSignInClient googleSignInClient;
 
     private RatesRepository ratesRepository;
 
@@ -133,7 +123,6 @@ public class MainActivity extends AppCompatActivity implements ProfileImageGener
 
         try {
             setupToolbar();
-            setupAuthentication();
             initializeViews();
             setupUserInterface();
 
@@ -185,14 +174,12 @@ public class MainActivity extends AppCompatActivity implements ProfileImageGener
         }
     }
 
-    // Stop the auto refresh cycle
     private void stopAutoRefresh() {
         if (autoRefreshHandler != null && autoRefreshRunnable != null) {
             autoRefreshHandler.removeCallbacks(autoRefreshRunnable);
         }
     }
 
-    // Toggle auto refresh state
     public void toggleAutoRefresh(boolean enabled) {
         isAutoRefreshEnabled = enabled;
         if (isAutoRefreshEnabled) {
@@ -205,66 +192,53 @@ public class MainActivity extends AppCompatActivity implements ProfileImageGener
     @Override
     protected void onResume() {
         super.onResume();
-        // Original code from your existing onResume method
         refreshRates();
 
-        // Add this new code for auto-refresh
         isAutoRefreshEnabled = true;
         startAutoRefresh();
     }
 
-    // Add these lifecycle methods to handle auto-refresh
-
     @Override
     protected void onPause() {
         super.onPause();
-        // Stop auto refresh when app is paused to save resources
         stopAutoRefresh();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        // Make sure to clean up when activity is destroyed
         stopAutoRefresh();
     }
 
     private void setupToolbar() {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        
+
         if (getSupportActionBar() != null) {
-            // Hide the default title since you're already showing the title with logo in the layout
             getSupportActionBar().setDisplayShowTitleEnabled(false);
-            // Enable home button for the drawer
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
             getSupportActionBar().setHomeButtonEnabled(true);
         }
-    
+
         // Setup drawer with custom toggle
         drawerLayout = findViewById(R.id.drawer_layout);
         if (drawerLayout != null) {
-            // Create a custom drawer toggle that uses your logo
             drawerToggle = new ActionBarDrawerToggle(
                     this,
                     drawerLayout,
                     toolbar,
                     R.string.navigation_drawer_open,
                     R.string.navigation_drawer_close) {
-                
-                // Override this method to use your logo instead of the default drawer icon
+
                 @Override
                 public void onDrawerSlide(View drawerView, float slideOffset) {
-                    // This prevents the animation of the hamburger icon
                     super.onDrawerSlide(drawerView, 0);
                 }
             };
-            
-            // Use your logo as the drawer indicator
+
             drawerToggle.setDrawerIndicatorEnabled(false);
             drawerToggle.setHomeAsUpIndicator(R.drawable.gc_logo);
-            
-            // Set a click listener for the logo to open/close the drawer
+
             drawerToggle.setToolbarNavigationClickListener(v -> {
                 if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
                     drawerLayout.closeDrawer(GravityCompat.START);
@@ -272,46 +246,32 @@ public class MainActivity extends AppCompatActivity implements ProfileImageGener
                     drawerLayout.openDrawer(GravityCompat.START);
                 }
             });
-            
+
             drawerLayout.addDrawerListener(drawerToggle);
             drawerToggle.syncState();
         }
-        
-        // Apply theme adjustments if needed
+
         applyThemeAdjustments(toolbar);
-    }
-
-    private void setupAuthentication() {
-        mAuth = FirebaseAuth.getInstance();
-        FirebaseUser currentUser = mAuth.getCurrentUser();
-
-        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestIdToken(getString(R.string.default_web_client_id))
-                .requestEmail()
-                .build();
-        googleSignInClient = GoogleSignIn.getClient(this, gso);
-
-        if (currentUser == null) {
-            Log.d(TAG, "No user logged in, redirecting to SignInActivity");
-            startActivity(new Intent(this, SignInActivity.class));
-            finish();
-            throw new RuntimeException("No authenticated user");
-        }
     }
 
     private void initializeViews() {
         try {
             // Navigation drawer elements
-            batteryOptSwitch = findViewById(R.id.battery_optimization_switch);
             widgetRefreshSwitch = findViewById(R.id.widget_refresh_switch);
-            logoutButton = findViewById(R.id.logout_button);
-            userName = findViewById(R.id.user_name);
-            userEmail = findViewById(R.id.user_email);
-            userProfileImage = findViewById(R.id.user_profile_image);
-
             ratesCard = findViewById(R.id.rates_card);
             fabRefresh = findViewById(R.id.fab_refresh);
             loadingIndicator = findViewById(R.id.loading_indicator);
+
+            // Set default user information
+            if (userName != null) {
+                userName.setText("Guest User");
+            }
+            if (userEmail != null) {
+                userEmail.setText("guest@example.com");
+            }
+            if (userProfileImage != null) {
+                userProfileImage.setImageResource(R.drawable.ic_default_profile);
+            }
 
             // Initialize all extended rate UI elements
             gold995Buy = findViewById(R.id.gold_995_buy);
@@ -368,19 +328,12 @@ public class MainActivity extends AppCompatActivity implements ProfileImageGener
     }
 
     private void setupUserInterface() {
-        FirebaseUser currentUser = mAuth.getCurrentUser();
-
-        if (currentUser != null) {
-            setupUserProfile(currentUser);
-        }
-
-        setupBatteryOptimizationSwitch();
         setupWidgetRefreshSwitch();
-        setupLogoutButton();
         setupNavigationButtons();
-        setupGestureListeners();
+        setupSwipeToRefresh();
+    }
 
-        // Setup swipe to refresh
+    private void setupSwipeToRefresh() {
         ratesCard.setOnTouchListener(new SwipeGestureDetector(this, direction -> {
             if (direction == SwipeGestureDetector.SWIPE_DOWN) {
                 refreshRates();
@@ -390,8 +343,6 @@ public class MainActivity extends AppCompatActivity implements ProfileImageGener
         }));
     }
 
-    // Update the refreshRates() method in MainActivity to use the updated
-    // ExtendedRatesFetchCallback
     private void refreshRates() {
         // Show loading indicator if available
         if (loadingIndicator != null) {
@@ -415,7 +366,7 @@ public class MainActivity extends AppCompatActivity implements ProfileImageGener
                         String dollarBuy, String dollarSell, String dollarHigh, String dollarLow) {
 
                     runOnUiThread(() -> {
-                        // Update main rates UI (gold and silver primary rates)
+                        // Update main rates UI
                         updateMainRatesUI(
                                 gold995Sell, silverFutureSell,
                                 calculateChangeValue(gold995Sell, gold995Low),
@@ -437,22 +388,25 @@ public class MainActivity extends AppCompatActivity implements ProfileImageGener
                             loadingIndicator.setVisibility(View.GONE);
                         }
 
-                        // Animate rates card
-                        // if (ratesCard != null) {
-                        // ratesCard.startAnimation(AnimationUtils.loadAnimation(
-                        // MainActivity.this, R.anim.rates_update_animation));
-                        // }
-
                         // Update widgets with the data
+                        // Update widgets with the data
+
                         updateWidgetsWithExtendedData(
-                                gold995Sell, silverFutureSell,
+                                gold995Sell,
+                                silverFutureSell,
                                 new SimpleDateFormat("hh:mm a", Locale.getDefault()).format(new Date()),
-                                gold995Low, silverFutureLow,
+                                gold995Low,
+                                silverFutureLow,
                                 calculateChangeValue(gold995Sell, gold995Low),
                                 calculateChangeValue(silverFutureSell, silverFutureLow),
-                                goldFuturesSell, silverFutureSell,
-                                goldDollarSell, silverDollarSell, dollarSell);
-                    });
+                                goldFuturesSell,
+                                silverFutureSell,
+                                goldDollarSell,
+                                silverDollarSell,
+                                dollarSell);
+                    }
+
+                    );
                 }
 
                 @Override
@@ -491,111 +445,6 @@ public class MainActivity extends AppCompatActivity implements ProfileImageGener
     }
 
     // Method to update the main rates UI (gold and silver primary displays)
-
-    // New method to update all extended rates UI
-    private void updateExtendedRatesUI(
-            String gold995Buy, String gold995Sell, String gold995High, String gold995Low,
-            String silverFutureBuy, String silverFutureSell, String silverFutureHigh, String silverFutureLow,
-            String goldFuturesBuy, String goldFuturesSell, String goldFuturesHigh, String goldFuturesLow,
-            String goldRefineBuy, String goldRefineSell, String goldRefineHigh, String goldRefineLow,
-            String goldRtgsBuy, String goldRtgsSell, String goldRtgsHigh, String goldRtgsLow,
-            String goldDollarBuy, String goldDollarSell, String goldDollarHigh, String goldDollarLow,
-            String silverDollarBuy, String silverDollarSell, String silverDollarHigh, String silverDollarLow,
-            String dollarBuy, String dollarSell, String dollarHigh, String dollarLow) {
-
-        // Update Gold 995 Section
-        setTextIfNotNull(this.gold995Buy, gold995Buy);
-        setTextIfNotNull(this.gold995Sell, gold995Sell);
-        setTextIfNotNull(this.gold995High, gold995High);
-        setTextIfNotNull(this.gold995Low, gold995Low);
-
-        // Update Silver Future Section
-        setTextIfNotNull(this.silverFutureBuy, silverFutureBuy);
-        setTextIfNotNull(this.silverFutureSell, silverFutureSell);
-        setTextIfNotNull(this.silverFutureHigh, silverFutureHigh);
-        setTextIfNotNull(this.silverFutureLow, silverFutureLow);
-
-        // Update Gold Futures Section
-        setTextIfNotNull(this.goldFuturesBuy, goldFuturesBuy);
-        setTextIfNotNull(this.goldFuturesSell, goldFuturesSell);
-        setTextIfNotNull(this.goldFuturesHigh, goldFuturesHigh);
-        setTextIfNotNull(this.goldFuturesLow, goldFuturesLow);
-
-        // Update Gold Refine Section
-        setTextIfNotNull(this.goldRefineBuy, goldRefineBuy);
-        setTextIfNotNull(this.goldRefineSell, goldRefineSell);
-        setTextIfNotNull(this.goldRefineHigh, goldRefineHigh);
-        setTextIfNotNull(this.goldRefineLow, goldRefineLow);
-
-        // Update Gold RTGS Section
-        setTextIfNotNull(this.goldRtgsBuy, goldRtgsBuy);
-        setTextIfNotNull(this.goldRtgsSell, goldRtgsSell);
-        setTextIfNotNull(this.goldRtgsHigh, goldRtgsHigh);
-        setTextIfNotNull(this.goldRtgsLow, goldRtgsLow);
-
-        // Update Gold Dollar Section
-        setTextIfNotNull(this.goldDollarBuy, goldDollarBuy);
-        setTextIfNotNull(this.goldDollarSell, goldDollarSell);
-        setTextIfNotNull(this.goldDollarHigh, goldDollarHigh);
-        setTextIfNotNull(this.goldDollarLow, goldDollarLow);
-
-        // Update Silver Dollar Section
-        setTextIfNotNull(this.silverDollarBuy, silverDollarBuy);
-        setTextIfNotNull(this.silverDollarSell, silverDollarSell);
-        setTextIfNotNull(this.silverDollarHigh, silverDollarHigh);
-        setTextIfNotNull(this.silverDollarLow, silverDollarLow);
-
-        // Update Dollar Section
-        setTextIfNotNull(this.dollarBuy, dollarBuy);
-        setTextIfNotNull(this.dollarSell, dollarSell);
-        setTextIfNotNull(this.dollarHigh, dollarHigh);
-        setTextIfNotNull(this.dollarLow, dollarLow);
-    }
-
-    // Helper method to set text if TextView is not null
-    private void setTextIfNotNull(TextView textView, String text) {
-        if (textView != null) {
-            textView.setText(text);
-        }
-    }
-
-    // Update widget method to include extended data
-    private void updateWidgetsWithExtendedData(
-            String goldRate, String silverRate, String lastUpdated,
-            String yesterdayGoldRate, String yesterdaySilverRate,
-            String goldChangeValue, String silverChangeValue,
-            String goldFutureRate, String silverFutureRate,
-            String goldDollarRate, String silverDollarRate, String inrRate) {
-        // Create intent to update widgets
-        Intent updateIntent = new Intent(this, RatesWidgetProvider.class);
-        updateIntent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
-
-        // Get all widget IDs
-        AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(this);
-        int[] appWidgetIds = appWidgetManager.getAppWidgetIds(
-                new ComponentName(this, RatesWidgetProvider.class));
-        updateIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, appWidgetIds);
-
-        // Add extended rates data
-        updateIntent.putExtra("goldRate", goldRate);
-        updateIntent.putExtra("silverRate", silverRate);
-        updateIntent.putExtra("lastUpdated", lastUpdated);
-        updateIntent.putExtra("yesterdayGoldRate", yesterdayGoldRate);
-        updateIntent.putExtra("yesterdaySilverRate", yesterdaySilverRate);
-        updateIntent.putExtra("goldChangeValue", goldChangeValue);
-        updateIntent.putExtra("silverChangeValue", silverChangeValue);
-
-        // Add new extended data
-        updateIntent.putExtra("goldFutureRate", goldFutureRate);
-        updateIntent.putExtra("silverFutureRate", silverFutureRate);
-        updateIntent.putExtra("goldDollarRate", goldDollarRate);
-        updateIntent.putExtra("silverDollarRate", silverDollarRate);
-        updateIntent.putExtra("inrRate", inrRate);
-
-        // Send the broadcast
-        sendBroadcast(updateIntent);
-    }
-
     private void updateMainRatesUI(String goldRateValue, String silverRateValue,
             String goldChangeValue, String silverChangeValue) {
         // Set gold values
@@ -658,6 +507,173 @@ public class MainActivity extends AppCompatActivity implements ProfileImageGener
         }
     }
 
+    // New method to update all extended rates UI
+    private void setRateStyle(TextView textView, String currentRate, String previousRate) {
+        if (textView == null)
+            return;
+
+        try {
+            // Parse rates, removing any commas
+            double current = Double.parseDouble(currentRate.replace(",", ""));
+            double previous = Double.parseDouble(previousRate.replace(",", ""));
+
+            // Calculate change
+            double change = current - previous;
+
+            // Set base text
+            textView.setText(currentRate);
+
+            // Apply styling based on change
+            if (change > 0) {
+                // Rate increased - red color, up arrow
+                textView.setTextColor(ContextCompat.getColor(this, R.color.price_up_red));
+                textView.setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.ic_arrow_up, 0);
+            } else if (change < 0) {
+                // Rate decreased - green color, down arrow
+                textView.setTextColor(ContextCompat.getColor(this, R.color.price_down_green));
+                textView.setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.ic_arrow_down, 0);
+            } else {
+                // No change - default color, no arrow
+                textView.setTextColor(ContextCompat.getColor(this, R.color.price_unchanged));
+                textView.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
+            }
+        } catch (NumberFormatException e) {
+            Log.e(TAG, "Error parsing rate: " + currentRate, e);
+            // Default styling if parsing fails
+            textView.setTextColor(ContextCompat.getColor(this, R.color.price_unchanged));
+            textView.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
+        }
+    }
+
+    private void updateExtendedRatesUI(
+            String gold995Buy, String gold995Sell, String gold995High, String gold995Low,
+            String silverFutureBuy, String silverFutureSell, String silverFutureHigh, String silverFutureLow,
+            String goldFuturesBuy, String goldFuturesSell, String goldFuturesHigh, String goldFuturesLow,
+            String goldRefineBuy, String goldRefineSell, String goldRefineHigh, String goldRefineLow,
+            String goldRtgsBuy, String goldRtgsSell, String goldRtgsHigh, String goldRtgsLow,
+            String goldDollarBuy, String goldDollarSell, String goldDollarHigh, String goldDollarLow,
+            String silverDollarBuy, String silverDollarSell, String silverDollarHigh, String silverDollarLow,
+            String dollarBuy, String dollarSell, String dollarHigh, String dollarLow) {
+
+        // Method to set text color and drawable based on rate change
+
+        // Retrieve previous rates from SharedPreferences or your preferred storage
+        SharedPreferences prefs = getSharedPreferences("RateTracker", MODE_PRIVATE);
+
+        // Gold 995 Rates
+        setRateStyle(this.gold995Buy, gold995Buy,
+                prefs.getString("previous_gold_995_buy", gold995Buy));
+        setRateStyle(this.gold995Sell, gold995Sell,
+                prefs.getString("previous_gold_995_sell", gold995Sell));
+
+        // Silver Future Rates
+        setRateStyle(this.silverFutureBuy, silverFutureBuy,
+                prefs.getString("previous_silver_future_buy", silverFutureBuy));
+        setRateStyle(this.silverFutureSell, silverFutureSell,
+                prefs.getString("previous_silver_future_sell", silverFutureSell));
+
+        // Gold Futures Rates
+        setRateStyle(this.goldFuturesBuy, goldFuturesBuy,
+                prefs.getString("previous_gold_futures_buy", goldFuturesBuy));
+        setRateStyle(this.goldFuturesSell, goldFuturesSell,
+                prefs.getString("previous_gold_futures_sell", goldFuturesSell));
+
+        // Gold Refine Section
+        setRateStyle(this.goldRefineBuy, goldRefineBuy,
+                prefs.getString("previous_gold_refine_buy", goldRefineBuy));
+        setRateStyle(this.goldRefineSell, goldRefineSell,
+                prefs.getString("previous_gold_refine_sell", goldRefineSell));
+
+        // Gold RTGS Section
+        setRateStyle(this.goldRtgsBuy, goldRtgsBuy,
+                prefs.getString("previous_gold_rtgs_buy", goldRtgsBuy));
+        setRateStyle(this.goldRtgsSell, goldRtgsSell,
+                prefs.getString("previous_gold_rtgs_sell", goldRtgsSell));
+
+        // Gold Dollar Section
+        setRateStyle(this.goldDollarBuy, goldDollarBuy,
+                prefs.getString("previous_gold_dollar_buy", goldDollarBuy));
+        setRateStyle(this.goldDollarSell, goldDollarSell,
+                prefs.getString("previous_gold_dollar_sell", goldDollarSell));
+
+        // Silver Dollar Section
+        setRateStyle(this.silverDollarBuy, silverDollarBuy,
+                prefs.getString("previous_silver_dollar_buy", silverDollarBuy));
+        setRateStyle(this.silverDollarSell, silverDollarSell,
+                prefs.getString("previous_silver_dollar_sell", silverDollarSell));
+
+        // Dollar Section
+        setRateStyle(this.dollarBuy, dollarBuy,
+                prefs.getString("previous_dollar_buy", dollarBuy));
+        setRateStyle(this.dollarSell, dollarSell,
+                prefs.getString("previous_dollar_sell", dollarSell));
+
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putString("previous_gold_995_buy", gold995Buy);
+        editor.putString("previous_gold_995_sell", gold995Sell);
+        editor.putString("previous_silver_future_buy", silverFutureBuy);
+        editor.putString("previous_silver_future_sell", silverFutureSell);
+        editor.putString("previous_gold_futures_buy", goldFuturesBuy);
+        editor.putString("previous_gold_futures_sell", goldFuturesSell);
+        editor.putString("previous_gold_refine_buy", goldRefineBuy);
+        editor.putString("previous_gold_refine_sell", goldRefineSell);
+        editor.putString("previous_gold_rtgs_buy", goldRtgsBuy);
+        editor.putString("previous_gold_rtgs_sell", goldRtgsSell);
+        editor.putString("previous_gold_dollar_buy", goldDollarBuy);
+        editor.putString("previous_gold_dollar_sell", goldDollarSell);
+        editor.putString("previous_silver_dollar_buy", silverDollarBuy);
+        editor.putString("previous_silver_dollar_sell", silverDollarSell);
+        editor.putString("previous_dollar_buy", dollarBuy);
+        editor.putString("previous_dollar_sell", dollarSell);
+
+        editor.apply();
+
+    }
+
+    // Helper method to set text if TextView is not null
+    private void setTextIfNotNull(TextView textView, String text) {
+        if (textView != null) {
+            textView.setText(text);
+        }
+    }
+
+    // Update widget method to include extended data
+    private void updateWidgetsWithExtendedData(
+            String goldRate, String silverRate, String lastUpdated,
+            String yesterdayGoldRate, String yesterdaySilverRate,
+            String goldChangeValue, String silverChangeValue,
+            String goldFutureRate, String silverFutureRate,
+            String goldDollarRate, String silverDollarRate, String inrRate) {
+        // Create intent to update widgets
+        Intent updateIntent = new Intent(this, RatesWidgetProvider.class);
+        updateIntent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
+
+        // Get all widget IDs
+        AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(this);
+        int[] appWidgetIds = appWidgetManager.getAppWidgetIds(
+                new ComponentName(this, RatesWidgetProvider.class));
+        updateIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, appWidgetIds);
+
+        // Add extended rates data
+        updateIntent.putExtra("goldRate", goldRate);
+        updateIntent.putExtra("silverRate", silverRate);
+        updateIntent.putExtra("lastUpdated", lastUpdated);
+        updateIntent.putExtra("yesterdayGoldRate", yesterdayGoldRate);
+        updateIntent.putExtra("yesterdaySilverRate", yesterdaySilverRate);
+        updateIntent.putExtra("goldChangeValue", goldChangeValue);
+        updateIntent.putExtra("silverChangeValue", silverChangeValue);
+
+        // Add new extended data
+        updateIntent.putExtra("goldFutureRate", goldFutureRate);
+        updateIntent.putExtra("silverFutureRate", silverFutureRate);
+        updateIntent.putExtra("goldDollarRate", goldDollarRate);
+        updateIntent.putExtra("silverDollarRate", silverDollarRate);
+        updateIntent.putExtra("inrRate", inrRate);
+
+        // Send the broadcast
+        sendBroadcast(updateIntent);
+    }
+
     private void applyThemeAdjustments(Toolbar toolbar) {
         int currentNightMode = getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
 
@@ -671,125 +687,6 @@ public class MainActivity extends AppCompatActivity implements ProfileImageGener
         }
     }
 
-    private void setupNavigationDrawer(Toolbar toolbar) {
-        drawerLayout = findViewById(R.id.drawer_layout);
-        if (drawerLayout == null)
-            return;
-
-        drawerToggle = new ActionBarDrawerToggle(
-                this,
-                drawerLayout,
-                toolbar,
-                R.string.navigation_drawer_open,
-                R.string.navigation_drawer_close);
-
-        drawerLayout.addDrawerListener(drawerToggle);
-        drawerToggle.syncState();
-    }
-
-    private void performDrawerOpenAnimation(View drawerView) {
-        if (isDrawerAnimating)
-            return;
-
-        isDrawerAnimating = true;
-        View navView = findViewById(R.id.nav_view);
-
-        if (navView != null) {
-            navView.clearAnimation();
-            Animation animation = AnimationUtils.loadAnimation(this, R.anim.drawer_open_animation);
-            animation.setAnimationListener(new Animation.AnimationListener() {
-                @Override
-                public void onAnimationStart(Animation animation) {
-                }
-
-                @Override
-                public void onAnimationEnd(Animation animation) {
-                    isDrawerAnimating = false;
-                }
-
-                @Override
-                public void onAnimationRepeat(Animation animation) {
-                }
-            });
-            navView.startAnimation(animation);
-        } else {
-            isDrawerAnimating = false;
-            Log.e(TAG, "Navigation view not found for animation");
-        }
-    }
-
-    private void setupGestureListeners() {
-        // Already setup in setupUserInterface for swipe-to-refresh
-    }
-
-    private void setupUserProfile(FirebaseUser user) {
-        if (user == null)
-            return;
-
-        String displayName = (user.getDisplayName() != null) ? user.getDisplayName() : "User";
-        userName.setText(displayName);
-
-        String email = (user.getEmail() != null) ? user.getEmail() : "No email";
-        userEmail.setText(email);
-
-        if (user.getPhotoUrl() != null) {
-            loadUserProfileImage(user.getPhotoUrl(), displayName);
-        } else {
-            ProfileImageGenerator.generateProfileImageAsync(displayName, this);
-        }
-    }
-
-    @Override
-    public void onImageGenerated(Bitmap bitmap) {
-        userProfileImage.setImageBitmap(bitmap);
-    }
-
-    @Override
-    public void onError(Exception e) {
-        userProfileImage.setImageResource(R.drawable.ic_default_profile);
-    }
-
-    private void loadUserProfileImage(Uri photoUrl, String displayName) {
-        try {
-            Picasso.get()
-                    .load(photoUrl)
-                    .placeholder(R.drawable.ic_default_profile)
-                    .error(R.drawable.ic_default_profile)
-                    .into(userProfileImage, new Callback() {
-                        @Override
-                        public void onSuccess() {
-                            Log.d(TAG, "Profile image loaded successfully");
-                        }
-
-                        @Override
-                        public void onError(Exception e) {
-                            Log.e(TAG, "Error loading profile image", e);
-                            ProfileImageGenerator.generateProfileImageAsync(displayName, MainActivity.this);
-                        }
-                    });
-        } catch (Exception e) {
-            Log.e(TAG, "Exception loading profile image", e);
-            ProfileImageGenerator.generateProfileImageAsync(displayName, MainActivity.this);
-        }
-    }
-
-    private void setupBatteryOptimizationSwitch() {
-        if (batteryOptSwitch == null) {
-            Log.e(TAG, "Battery Optimization Switch not found. Skipping setup.");
-            return;
-        }
-
-        boolean isIgnoringBattery = isIgnoringBatteryOptimization();
-        batteryOptSwitch.setChecked(isIgnoringBattery);
-        batteryOptSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            if (isChecked) {
-                requestBatteryOptimizationExemption();
-            } else {
-                enableBatteryOptimization();
-            }
-        });
-    }
-
     private void setupWidgetRefreshSwitch() {
         if (widgetRefreshSwitch == null) {
             Log.e(TAG, "Widget Refresh Switch not found. Skipping setup.");
@@ -801,15 +698,11 @@ public class MainActivity extends AppCompatActivity implements ProfileImageGener
         widgetRefreshSwitch.setChecked(isAutoRefreshEnabled);
 
         widgetRefreshSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            Intent intent = new Intent(this, RatesWidgetProvider.class);
-            intent.setAction(isChecked
-                    ? RatesWidgetProvider.ACTION_START_UPDATES
-                    : RatesWidgetProvider.ACTION_STOP_UPDATES);
-            sendBroadcast(intent);
+            toggleAutoRefresh(isChecked);
 
             // Show feedback
             Snackbar.make(findViewById(R.id.drawer_layout),
-                    isChecked ? "Auto-refresh enabled for widget" : "Auto-refresh disabled for widget",
+                    isChecked ? "Auto-refresh enabled" : "Auto-refresh disabled",
                     Snackbar.LENGTH_SHORT).show();
         });
     }
@@ -850,46 +743,7 @@ public class MainActivity extends AppCompatActivity implements ProfileImageGener
             }
         } catch (Exception e) {
             Log.e(TAG, "Error in setupNavigationButtons: " + e.getMessage());
-            // Continue gracefully without crashing
         }
-    }
-
-    private void setupLogoutButton() {
-        logoutButton.setOnClickListener(v -> logout());
-    }
-
-    private boolean isIgnoringBatteryOptimization() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
-            return powerManager.isIgnoringBatteryOptimizations(getPackageName());
-        }
-        return true;
-    }
-
-    private void requestBatteryOptimizationExemption() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            Intent intent = new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
-            intent.setData(Uri.parse("package:" + getPackageName()));
-            startActivity(intent);
-        }
-    }
-
-    private void enableBatteryOptimization() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            Intent intent = new Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
-            startActivity(intent);
-        }
-    }
-
-    private void logout() {
-        mAuth.signOut();
-        googleSignInClient.signOut().addOnCompleteListener(this, task -> {
-            Intent intent = new Intent(MainActivity.this, SignInActivity.class);
-            intent.putExtra("fromLogout", true);
-            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(intent);
-            finish();
-        });
     }
 
     @Override
@@ -908,10 +762,11 @@ public class MainActivity extends AppCompatActivity implements ProfileImageGener
 
     private void handleFatalError(String message) {
         Toast.makeText(this, message, Toast.LENGTH_LONG).show();
-        if (mAuth != null) {
-            mAuth.signOut();
-        }
-        startActivity(new Intent(this, SignInActivity.class));
+
+        // Redirect to the same activity to restart
+        Intent intent = new Intent(this, MainActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
         finish();
     }
 }

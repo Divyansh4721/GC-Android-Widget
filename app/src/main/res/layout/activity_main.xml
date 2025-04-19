@@ -68,6 +68,7 @@
                     card_view:strokeColor="#FFA500"
                     card_view:strokeWidth="4dp"
                     android:layout_marginBottom="16dp">
+
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -90,23 +91,34 @@
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1" />
+                            <!-- Gold 995 Buy Rate -->
                             <TextView
                                 android:id="@+id/gold_995_buy"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="93501"
+                                android:drawableEnd="@drawable/ic_arrow_up"
+                                android:drawableTintMode="src_in"
+                                android:drawableTint="@color/price_up_red"
                                 android:textColor="?attr/tc"
+                                android:text="93501"
                                 android:textSize="24sp"
                                 android:textStyle="bold"
-                                android:layout_marginEnd="16dp" />
+                                android:layout_marginEnd="16dp"
+                                android:drawablePadding="4dp"/>
+
+                            <!-- Gold 995 Sell Rate -->
                             <TextView
                                 android:id="@+id/gold_995_sell"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="94501"
+                                android:drawableEnd="@drawable/ic_arrow_down"
+                                android:drawableTintMode="src_in"
+                                android:drawableTint="@color/price_down_green"
                                 android:textColor="?attr/tc"
+                                android:text="94501"
                                 android:textSize="24sp"
-                                android:textStyle="bold" />
+                                android:textStyle="bold"
+                                android:drawablePadding="4dp" />
                         </LinearLayout>
                         <!-- Logo + Today Range -->
                         <LinearLayout
@@ -208,19 +220,27 @@
                                 android:id="@+id/silver_future_buy"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="93420"
+                                android:drawableEnd="@drawable/ic_arrow_up"
+                                android:drawableTintMode="src_in"
+                                android:drawableTint="@color/price_up_red"
                                 android:textColor="?attr/tc"
+                                android:text="93421"
                                 android:textSize="24sp"
                                 android:textStyle="bold"
-                                android:layout_marginEnd="16dp" />
+                                android:layout_marginEnd="16dp"
+                                android:drawablePadding="4dp"/>
                             <TextView
                                 android:id="@+id/silver_future_sell"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="94420"
+                                android:drawableEnd="@drawable/ic_arrow_down"
+                                android:drawableTintMode="src_in"
+                                android:drawableTint="@color/price_down_green"
                                 android:textColor="?attr/tc"
+                                android:text="94420"
                                 android:textSize="24sp"
-                                android:textStyle="bold" />
+                                android:textStyle="bold"
+                                android:drawablePadding="4dp" />
                         </LinearLayout>
                         <!-- Logo + Today Range -->
                         <LinearLayout
@@ -320,24 +340,36 @@
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1" />
 
+
                             <TextView
                                 android:id="@+id/gold_futures_buy"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="93420"
+                                android:drawableEnd="@drawable/ic_arrow_up"
+                                android:drawableTintMode="src_in"
+                                android:drawableTint="@color/price_up_red"
                                 android:textColor="?attr/tc"
+                                android:text="93420"
                                 android:textSize="24sp"
                                 android:textStyle="bold"
-                                android:layout_marginEnd="16dp" />
+                                android:layout_marginEnd="16dp"
+                                android:drawablePadding="4dp"/>
+
 
                             <TextView
                                 android:id="@+id/gold_futures_sell"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="94420"
+                                android:drawableEnd="@drawable/ic_arrow_down"
+                                android:drawableTintMode="src_in"
+                                android:drawableTint="@color/price_down_green"
                                 android:textColor="?attr/tc"
+                                android:text="94420"
                                 android:textSize="24sp"
-                                android:textStyle="bold" />
+                                android:textStyle="bold"
+                                android:drawablePadding="4dp" />
+
+
                         </LinearLayout>
 
                         <!-- Logo + Today Range -->
@@ -444,20 +476,29 @@
                                 android:id="@+id/gold_refine_buy"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="93420"
+                                android:drawableEnd="@drawable/ic_arrow_up"
+                                android:drawableTintMode="src_in"
+                                android:drawableTint="@color/price_up_red"
                                 android:textColor="?attr/tc"
+                                android:text="93420"
                                 android:textSize="24sp"
                                 android:textStyle="bold"
-                                android:layout_marginEnd="16dp" />
+                                android:layout_marginEnd="16dp"
+                                android:drawablePadding="4dp"/>
+
 
                             <TextView
                                 android:id="@+id/gold_refine_sell"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="94420"
+                                android:drawableEnd="@drawable/ic_arrow_down"
+                                android:drawableTintMode="src_in"
+                                android:drawableTint="@color/price_down_green"
                                 android:textColor="?attr/tc"
+                                android:text="94420"
                                 android:textSize="24sp"
-                                android:textStyle="bold" />
+                                android:textStyle="bold"
+                                android:drawablePadding="4dp" />
                         </LinearLayout>
 
                         <!-- Logo + Today Range -->
@@ -563,20 +604,29 @@
                                 android:id="@+id/gold_rtgs_buy"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="93420"
+                                android:drawableEnd="@drawable/ic_arrow_up"
+                                android:drawableTintMode="src_in"
+                                android:drawableTint="@color/price_up_red"
                                 android:textColor="?attr/tc"
+                                android:text="93420"
                                 android:textSize="24sp"
                                 android:textStyle="bold"
-                                android:layout_marginEnd="16dp" />
+                                android:layout_marginEnd="16dp"
+                                android:drawablePadding="4dp" />
+
 
                             <TextView
                                 android:id="@+id/gold_rtgs_sell"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="94420"
+                                android:drawableEnd="@drawable/ic_arrow_down"
+                                android:drawableTintMode="src_in"
+                                android:drawableTint="@color/price_down_green"
                                 android:textColor="?attr/tc"
+                                android:text="94420"
                                 android:textSize="24sp"
-                                android:textStyle="bold" />
+                                android:textStyle="bold"
+                                android:drawablePadding="4dp" />
                         </LinearLayout>
 
                         <!-- Logo + Today Range -->
@@ -682,20 +732,29 @@
                                 android:id="@+id/gold_dollar_buy"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="93420"
+                                android:drawableEnd="@drawable/ic_arrow_up"
+                                android:drawableTintMode="src_in"
+                                android:drawableTint="@color/price_up_red"
                                 android:textColor="?attr/tc"
+                                android:text="93420"
                                 android:textSize="24sp"
                                 android:textStyle="bold"
-                                android:layout_marginEnd="16dp" />
+                                android:layout_marginEnd="16dp"
+                                android:drawablePadding="4dp" />
+
 
                             <TextView
                                 android:id="@+id/gold_dollar_sell"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="94420"
+                                android:drawableEnd="@drawable/ic_arrow_down"
+                                android:drawableTintMode="src_in"
+                                android:drawableTint="@color/price_down_green"
                                 android:textColor="?attr/tc"
+                                android:text="94420"
                                 android:textSize="24sp"
-                                android:textStyle="bold" />
+                                android:textStyle="bold"
+                                android:drawablePadding="4dp" />
                         </LinearLayout>
 
                         <!-- Logo + Today Range -->
@@ -801,20 +860,30 @@
                                 android:id="@+id/silver_dollar_buy"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="93420"
+                                android:drawableEnd="@drawable/ic_arrow_up"
+                                android:drawableTintMode="src_in"
+                                android:drawableTint="@color/price_up_red"
                                 android:textColor="?attr/tc"
+                                android:text="93420"
                                 android:textSize="24sp"
                                 android:textStyle="bold"
-                                android:layout_marginEnd="16dp" />
+                                android:layout_marginEnd="16dp"
+                                android:drawablePadding="4dp" />
+
 
                             <TextView
                                 android:id="@+id/silver_dollar_sell"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="94420"
+                                android:drawableEnd="@drawable/ic_arrow_down"
+                                android:drawableTintMode="src_in"
+                                android:drawableTint="@color/price_down_green"
                                 android:textColor="?attr/tc"
+                                android:text="94420"
                                 android:textSize="24sp"
-                                android:textStyle="bold" />
+                                android:textStyle="bold"
+                                android:drawablePadding="4dp" />
+
                         </LinearLayout>
 
                         <!-- Logo + Today Range -->
@@ -920,20 +989,30 @@
                                 android:id="@+id/dollar_buy"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="93420"
+                                android:drawableEnd="@drawable/ic_arrow_up"
+                                android:drawableTintMode="src_in"
+                                android:drawableTint="@color/price_up_red"
                                 android:textColor="?attr/tc"
+                                android:text="93420"
                                 android:textSize="24sp"
                                 android:textStyle="bold"
-                                android:layout_marginEnd="16dp" />
+                                android:layout_marginEnd="16dp"
+                                android:drawablePadding="4dp" />
+
 
                             <TextView
                                 android:id="@+id/dollar_sell"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="94420"
+                                android:drawableEnd="@drawable/ic_arrow_down"
+                                android:drawableTintMode="src_in"
+                                android:drawableTint="@color/price_down_green"
                                 android:textColor="?attr/tc"
+                                android:text="94420"
                                 android:textSize="24sp"
-                                android:textStyle="bold" />
+                                android:textStyle="bold"
+                                android:drawablePadding="4dp"/>
+
                         </LinearLayout>
 
                         <!-- Logo + Today Range -->
@@ -1031,56 +1110,6 @@
             android:orientation="vertical"
             android:padding="16dp">
 
-            <!-- User Profile Card with animation-ready layout -->
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/profile_card"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                app:cardBackgroundColor="?attr/card_Surface"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="2dp"
-                android:layout_marginBottom="16dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:padding="16dp"
-                    android:gravity="center_vertical">
-
-                    <de.hdodenhof.circleimageview.CircleImageView
-                        android:id="@+id/user_profile_image"
-                        android:layout_width="64dp"
-                        android:layout_height="64dp"
-                        android:src="@drawable/ic_default_profile"
-                        android:contentDescription="User Profile Image"
-                        android:layout_marginEnd="16dp" />
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:id="@+id/user_name"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="John Doe"
-                            android:textColor="?attr/colorPrimary"
-                            android:textSize="18sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:id="@+id/user_email"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="johndoe@example.com"
-                            android:textColor="?attr/colorOnSurfaceVariant"
-                            android:textSize="14sp" />
-                    </LinearLayout>
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
 
             <!-- Menu Items with animations and modern styling -->
             <TextView
@@ -1138,106 +1167,6 @@
                 app:cardElevation="2dp"
                 android:layout_marginBottom="16dp" />
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Settings"
-                android:textStyle="bold"
-                android:textSize="14sp"
-                android:textColor="?attr/colorPrimary"
-                android:layout_marginBottom="8dp"
-                android:layout_marginStart="8dp" />
-
-            <!-- Battery Optimization Toggle with enhanced UI -->
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                app:cardBackgroundColor="?attr/card_Surface"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="2dp"
-                android:layout_marginBottom="8dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:padding="12dp"
-                    android:gravity="center_vertical">
-
-                    <ImageView
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        android:src="@drawable/ic_battery"
-                        android:layout_marginEnd="12dp"
-                        android:contentDescription="Battery Icon" />
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Battery Optimization"
-                        android:textColor="?attr/tc"
-                        android:textSize="16sp" />
-
-                    <com.google.android.material.switchmaterial.SwitchMaterial
-                        android:id="@+id/battery_optimization_switch"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- Auto Refresh Toggle with enhanced UI -->
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                app:cardBackgroundColor="?attr/card_Surface"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="2dp"
-                android:layout_marginBottom="16dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:padding="12dp"
-                    android:gravity="center_vertical">
-
-                    <ImageView
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        android:src="@drawable/ic_autorefresh"
-                        android:layout_marginEnd="12dp"
-                        android:contentDescription="Auto Refresh Icon" />
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Auto Refresh"
-                        android:textColor="?attr/tc"
-                        android:textSize="16sp" />
-
-                    <com.google.android.material.switchmaterial.SwitchMaterial
-                        android:id="@+id/widget_refresh_switch"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- Sign Out Button -->
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/logout_button"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Sign Out"
-                android:textSize="18sp"
-                android:textAllCaps="false"
-                app:icon="@drawable/ic_logout"
-                app:cardElevation="4dp"
-                android:backgroundTint="@color/log_out"
-                android:textColor="?attr/tc"
-                android:layout_marginTop="8dp" />
 
         </LinearLayout>
     </com.google.android.material.navigation.NavigationView>
